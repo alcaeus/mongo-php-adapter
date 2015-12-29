@@ -19,7 +19,7 @@ addons:
 
 before_script:
   - pecl install -f mongodb-${DRIVER_VERSION}
-  - composer install --dev
+  - composer install
 
 script:
     - vendor/bin/phpunit

@@ -13,9 +13,6 @@
     "require-dev": {
         "phpunit/phpunit": "^4.8 || ^5.0"
     },
-    "conflict": {
-        "ext-mongo": "*"
-    },
     "replace": {
         "ext-mongo": "self.version"
     },
