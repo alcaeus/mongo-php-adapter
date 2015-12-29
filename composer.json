@@ -1,0 +1,36 @@
+{
+    "name": "alcaeus/mongo-php-adapter",
+    "type": "library",
+    "description": "Adapter to provide ext-mongo interface on top of mongo-php-libary",
+    "keywords": ["mongodb", "database"],
+    "authors": [
+        { "name": "alcaeus", "email": "alcaeus@alcaeus.org" }
+    ],
+    "require": {
+        "php": "^5.5 || ^7.0",
+        "mongodb/mongodb": "1.0.0-beta2"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^4.8 || ^5.0"
+    },
+    "conflict": {
+        "ext-mongo": "*"
+    },
+    "replace": {
+        "ext-mongo": "self.version"
+    },
+    "autoload": {
+        "psr-4": {
+            "": "lib/Mongo",
+            "Alcaeus\\MongoDbAdapter\\": "lib/Alcaeus/MongoDbAdapter"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": { "Alcaeus\\MongoDbAdapter\\Tests\\": "tests/Alcaeus/MongoDbAdapter" }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0.x-dev"
+        }
+    }
+}
