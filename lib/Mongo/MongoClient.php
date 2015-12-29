@@ -66,8 +66,12 @@ class MongoClient
      * @param array $driverOptions An array of options for the MongoDB driver.
      * @throws MongoConnectionException
      */
-    public function __construct($server = 'mongodb://' . self::DEFAULT_HOST . ':' . self::DEFAULT_PORT, array $options = ["connect" => true], array $driverOptions = [])
+    public function __construct($server = 'default', array $options = ["connect" => true], array $driverOptions = [])
     {
+        if ($server === 'default') {
+            $server = 'mongodb://' . self::DEFAULT_HOST . ':' . self::DEFAULT_PORT;
+        }
+
         $this->server = $server;
         $this->client = new Client($server, $options, $driverOptions);
 
