@@ -4,10 +4,15 @@ namespace Alcaeus\MongoDbAdapter\Tests;
 
 /**
  * @author alcaeus <alcaeus@alcaeus.org>
- * @covers MongoCollection
  */
 class MongoCollectionTest extends TestCase
 {
+    public function testGetNestedCollections()
+    {
+        $collection = $this->getCollection()->foo->bar;
+        $this->assertSame('mongo-php-adapter.test.foo.bar', (string) $collection);
+    }
+
     public function testCreateRecord()
     {
         $id = '54203e08d51d4a1f868b456e';
@@ -24,6 +29,26 @@ class MongoCollectionTest extends TestCase
         $this->assertSame($id, (string) $object->_id);
         $this->assertObjectHasAttribute('foo', $object);
         $this->assertAttributeSame('bar', 'foo', $object);
+    }
+
+    public function testFindReturnsCursor()
+    {
+        $collection = $this->getCollection();
+
+        $collection->insert(['sorter' => 1]);
+
+        $this->assertInstanceOf('MongoCursor', $collection->find());
+    }
+
+    public function testCount()
+    {
+        $collection = $this->getCollection();
+
+        $collection->insert(['foo' => 'bar']);
+        $collection->insert(['foo' => 'foo']);
+
+        $this->assertSame(2, $collection->count());
+        $this->assertSame(1, $collection->count(['foo' => 'bar']));
     }
 
     /**

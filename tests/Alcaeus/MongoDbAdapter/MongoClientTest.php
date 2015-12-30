@@ -4,7 +4,6 @@ namespace Alcaeus\MongoDbAdapter\Tests;
 
 /**
  * @author alcaeus <alcaeus@alcaeus.org>
- * @covers MongoClient
  */
 class MongoClientTest extends TestCase
 {
