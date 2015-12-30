@@ -47,7 +47,7 @@ class TypeConverter
     public static function convertToLegacyType($value)
     {
         switch (true) {
-            case $value instanceof \MongoDB\Driver\ObjectID:
+            case $value instanceof \MongoDB\BSON\ObjectID:
                 return new \MongoId($value);
 
             default:
