@@ -3,6 +3,7 @@
     "type": "library",
     "description": "Adapter to provide ext-mongo interface on top of mongo-php-libary",
     "keywords": ["mongodb", "database"],
+    "license": "MIT",
     "authors": [
         { "name": "alcaeus", "email": "alcaeus@alcaeus.org" }
     ],
