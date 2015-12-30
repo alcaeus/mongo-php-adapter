@@ -13,11 +13,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+use Alcaeus\MongoDbAdapter\TypeConverter;
+use MongoDB\Collection;
+use MongoDB\Driver\Cursor;
+use MongoDB\Operation\Find;
+
 /**
  * Result object for database query.
  * @link http://www.php.net/manual/en/class.mongocursor.php
  */
-class MongoCursor implements Iterator, Traversable {
+class MongoCursor implements Iterator
+{
     /**
      * @link http://php.net/manual/en/class.mongocursor.php#mongocursor.props.slaveokay
      * @static
@@ -36,6 +42,53 @@ class MongoCursor implements Iterator, Traversable {
      * </p>
      */
     static $timeout = 30000;
+
+    /**
+     * @var MongoClient
+     */
+    private $connection;
+
+    /**
+     * @var string
+     */
+    private $ns;
+
+    /**
+     * @var array
+     */
+    private $query;
+
+    /**
+     * @var
+     */
+    private $filter;
+
+    /**
+     * @var Collection
+     */
+    private $collection;
+
+    /**
+     * @var Cursor
+     */
+    private $cursor;
+
+    /**
+     * @var IteratorIterator
+     */
+    private $iterator;
+
+    private $awaitData;
+    private $batchSize;
+    private $limit;
+    private $maxTimeMS;
+    private $noCursorTimeout;
+    private $options = [];
+    private $projection;
+    private $skip;
+    private $sort;
+    private $tailable;
+
     /**
      * Create a new cursor
      * @link http://www.php.net/manual/en/mongocursor.construct.php
@@ -45,7 +98,34 @@ class MongoCursor implements Iterator, Traversable {
      * @param array $fields Fields to return.
      * @return MongoCursor Returns the new cursor
      */
-    public function __construct($connection, $ns, array $query = array(), array $fields = array()) {}
+    public function __construct(MongoClient $connection, $ns, array $query = array(), array $fields = array())
+    {
+        $this->connection = $connection;
+        $this->ns = $ns;
+        $this->query = $query;
+        $this->projection = $fields;
+
+        $nsParts = explode('.', $ns);
+        $db = array_shift($nsParts);
+
+        $this->collection = $connection->selectCollection($db, implode('.', $nsParts))->getCollection();
+    }
+
+    /**
+     * Adds a top-level key/value pair to a query
+     * @link http://www.php.net/manual/en/mongocursor.addoption.php
+     * @param string $key Fieldname to add.
+     * @param mixed $value Value to add.
+     * @throws MongoCursorException
+     * @return MongoCursor Returns this cursor
+     */
+    public function addOption($key, $value)
+    {
+        $this->errorIfOpened();
+        $this->options[$key] = $value;
+
+        return $this;
+    }
 
     /**
      * (PECL mongo &gt;= 1.2.11)<br/>
@@ -53,15 +133,106 @@ class MongoCursor implements Iterator, Traversable {
      * @param bool $wait [optional] <p>If the cursor should wait for more data to become available.</p>
      * @return MongoCursor Returns this cursor.
      */
-    public function awaitData ($wait = true) {}
+    public function awaitData($wait = true)
+    {
+        $this->errorIfOpened();
+        $this->awaitData = $wait;
+
+        return $this;
+    }
+
     /**
-     * Checks if there are any more elements in this cursor
-     * @link http://www.php.net/manual/en/mongocursor.hasnext.php
-     * @throws MongoConnectionException
-     * @throws MongoCursorTimeoutException
-     * @return bool Returns true if there is another element
+     * Limits the number of elements returned in one batch.
+     *
+     * @link http://docs.php.net/manual/en/mongocursor.batchsize.php
+     * @param int $batchSize The number of results to return per batch
+     * @return MongoCursor Returns this cursor.
      */
-    public function hasNext() {}
+    public function batchSize($batchSize)
+    {
+        $this->errorIfOpened();
+        $this->batchSize = $batchSize;
+
+        return $this;
+    }
+
+    /**
+     * Counts the number of results for this query
+     * @link http://www.php.net/manual/en/mongocursor.count.php
+     * @param bool $foundOnly Send cursor limit and skip information to the count function, if applicable.
+     * @return int The number of documents returned by this cursor's query.
+     */
+    public function count($foundOnly = false)
+    {
+        if ($foundOnly && $this->cursor !== null) {
+            return iterator_count($this->cursor);
+        }
+
+        $options = $foundOnly ? $this->applyOptions($this->options, ['skip', 'limit']) : $this->options;
+
+        return $this->collection->count($this->query, $options);
+    }
+
+    /**
+     * Returns the current element
+     * @link http://www.php.net/manual/en/mongocursor.current.php
+     * @return array
+     */
+    public function current()
+    {
+        $document = $this->ensureIterator()->current();
+        if ($document !== null) {
+            $document = TypeConverter::convertObjectToLegacyArray($document);
+        }
+
+        return $document;
+    }
+
+    /**
+     * Checks if there are documents that have not been sent yet from the database for this cursor
+     * @link http://www.php.net/manual/en/mongocursor.dead.php
+     * @return boolean Returns if there are more results that have not been sent to the client, yet.
+     */
+    public function dead()
+    {
+        return $this->ensureCursor()->isDead();
+    }
+
+    /**
+     * Execute the query
+     * @link http://www.php.net/manual/en/mongocursor.doquery.php
+     * @throws MongoConnectionException if it cannot reach the database.
+     * @return void
+     */
+    protected function doQuery()
+    {
+        $this->notImplemented();
+    }
+
+    /**
+     * Return an explanation of the query, often useful for optimization and debugging
+     * @link http://www.php.net/manual/en/mongocursor.explain.php
+     * @return array Returns an explanation of the query.
+     */
+    public function explain()
+    {
+        $this->notImplemented();
+    }
+
+    /**
+     * Sets the fields for a query
+     * @link http://www.php.net/manual/en/mongocursor.fields.php
+     * @param array $f Fields to return (or not return).
+     * @throws MongoCursorException
+     * @return MongoCursor
+     */
+    public function fields(array $f)
+    {
+        $this->errorIfOpened();
+        $this->projection = $f;
+
+        return $this;
+    }
 
     /**
      * Return the next object to which this cursor points, and advance the cursor
@@ -70,7 +241,12 @@ class MongoCursor implements Iterator, Traversable {
      * @throws MongoCursorTimeoutException
      * @return array Returns the next object
      */
-    public function getNext() {}
+    public function getNext()
+    {
+        $this->next();
+
+        return $this->current();
+    }
 
     /**
      * (PECL mongo &gt;= 1.3.3)<br/>
@@ -78,7 +254,69 @@ class MongoCursor implements Iterator, Traversable {
      * @return array This function returns an array describing the read preference. The array contains the values <em>type</em> for the string
      * read preference mode (corresponding to the {@link http://www.php.net/manual/en/class.mongoclient.php MongoClient} constants), and <em>tagsets</em> containing a list of all tag set criteria. If no tag sets were specified, <em>tagsets</em> will not be present in the array.
      */
-    public function getReadPreference () { }
+    public function getReadPreference()
+    {
+        $this->notImplemented();
+    }
+
+    /**
+     * Checks if there are any more elements in this cursor
+     * @link http://www.php.net/manual/en/mongocursor.hasnext.php
+     * @throws MongoConnectionException
+     * @throws MongoCursorTimeoutException
+     * @return bool Returns true if there is another element
+     */
+    public function hasNext()
+    {
+        $this->notImplemented();
+    }
+
+    /**
+     * Gives the database a hint about the query
+     * @link http://www.php.net/manual/en/mongocursor.hint.php
+     * @param array $key_pattern Indexes to use for the query.
+     * @throws MongoCursorException
+     * @return MongoCursor Returns this cursor
+     */
+    public function hint(array $key_pattern)
+    {
+        $this->notImplemented();
+    }
+
+    /**
+     * Sets whether this cursor will timeout
+     * @link http://www.php.net/manual/en/mongocursor.immortal.php
+     * @param bool $liveForever If the cursor should be immortal.
+     * @throws MongoCursorException
+     * @return MongoCursor Returns this cursor
+     */
+    public function immortal($liveForever = true)
+    {
+        $this->errorIfOpened();
+        $this->noCursorTimeout = $liveForever;
+
+        return $this;
+    }
+
+    /**
+     * Gets the query, fields, limit, and skip for this cursor
+     * @link http://www.php.net/manual/en/mongocursor.info.php
+     * @return array The query, fields, limit, and skip for this cursor as an associative array.
+     */
+    public function info()
+    {
+        $this->notImplemented();
+    }
+
+    /**
+     * Returns the current result's _id
+     * @link http://www.php.net/manual/en/mongocursor.key.php
+     * @return string The current result's _id as a string.
+     */
+    public function key()
+    {
+        return $this->ensureIterator()->key();
+    }
 
     /**
      * Limits the number of results returned
@@ -87,7 +325,38 @@ class MongoCursor implements Iterator, Traversable {
      * @throws MongoCursorException
      * @return MongoCursor Returns this cursor
      */
-    public function limit($num) {}
+    public function limit($num)
+    {
+        $this->errorIfOpened();
+        $this->limit = $num;
+
+        return $this;
+    }
+
+    /**
+     * @param int $ms
+     * @return $this
+     * @throws MongoCursorException
+     */
+    public function maxTimeMS($ms)
+    {
+        $this->errorIfOpened();
+        $this->maxTimeMs = $ms;
+
+        return $this;
+    }
+
+    /**
+     * Advances the cursor to the next result
+     * @link http://www.php.net/manual/en/mongocursor.next.php
+     * @throws MongoConnectionException
+     * @throws MongoCursorTimeoutException
+     * @return void
+     */
+    public function next()
+    {
+        $this->ensureIterator()->next();
+    }
 
     /**
      * (PECL mongo &gt;= 1.2.0)<br/>
@@ -95,7 +364,34 @@ class MongoCursor implements Iterator, Traversable {
      * @param bool $okay [optional] <p>If receiving partial results is okay.</p>
      * @return MongoCursor Returns this cursor.
      */
-    public function partial ($okay = true) {}
+    public function partial($okay = true)
+    {
+        $this->notImplemented();
+    }
+
+    /**
+     * Clears the cursor
+     * @link http://www.php.net/manual/en/mongocursor.reset.php
+     * @return void
+     */
+    public function reset()
+    {
+        $this->cursor = null;
+        $this->iterator = null;
+    }
+
+    /**
+     * Returns the cursor to the beginning of the result set
+     * @throws MongoConnectionException
+     * @throws MongoCursorTimeoutException
+     * @return void
+     */
+    public function rewind()
+    {
+        // Note: rewinding the cursor means recreating it internally
+        $this->reset();
+        $this->ensureIterator()->rewind();
+    }
 
     /**
      * (PECL mongo &gt;= 1.2.1)<br/>
@@ -109,7 +405,10 @@ class MongoCursor implements Iterator, Traversable {
      * @param bool $set [optional] <p>Whether the flag should be set (<b>TRUE</b>) or unset (<b>FALSE</b>).</p>
      * @return MongoCursor
      */
-    public function setFlag ($flag, $set = true ) {}
+    public function setFlag($flag, $set = true )
+    {
+        $this->notImplemented();
+    }
 
     /**
      * (PECL mongo &gt;= 1.3.3)<br/>
@@ -118,7 +417,10 @@ class MongoCursor implements Iterator, Traversable {
      * @param array $tags [optional] <p>The read preference mode: MongoClient::RP_PRIMARY, MongoClient::RP_PRIMARY_PREFERRED, MongoClient::RP_SECONDARY, MongoClient::RP_SECONDARY_PREFERRED, or MongoClient::RP_NEAREST.</p>
      * @return MongoCursor Returns this cursor.
      */
-    public function setReadPreference ($read_preference, array $tags) {}
+    public function setReadPreference($read_preference, array $tags)
+    {
+        $this->notImplemented();
+    }
 
     /**
      * Skips a number of results
@@ -127,7 +429,13 @@ class MongoCursor implements Iterator, Traversable {
      * @throws MongoCursorException
      * @return MongoCursor Returns this cursor
      */
-    public function skip($num) {}
+    public function skip($num)
+    {
+        $this->errorIfOpened();
+        $this->skip = $num;
+
+        return $this;
+    }
 
     /**
      * Sets whether this query can be done on a slave
@@ -137,40 +445,10 @@ class MongoCursor implements Iterator, Traversable {
      * @throws MongoCursorException
      * @return MongoCursor Returns this cursor
      */
-    public function slaveOkay($okay = true) {}
-
-    /**
-     * Sets whether this cursor will be left open after fetching the last results
-     * @link http://www.php.net/manual/en/mongocursor.tailable.php
-     * @param bool $tail If the cursor should be tailable.
-     * @return MongoCursor Returns this cursor
-     */
-    public function tailable($tail = true) {}
-
-    /**
-     * Sets whether this cursor will timeout
-     * @link http://www.php.net/manual/en/mongocursor.immortal.php
-     * @param bool $liveForever If the cursor should be immortal.
-     * @throws MongoCursorException
-     * @return MongoCursor Returns this cursor
-     */
-    public function immortal($liveForever = true) {}
-
-    /**
-     * Sets a client-side timeout for this query
-     * @link http://www.php.net/manual/en/mongocursor.timeout.php
-     * @param int $ms The number of milliseconds for the cursor to wait for a response. By default, the cursor will wait forever.
-     * @throws MongoCursorTimeoutException
-     * @return MongoCursor Returns this cursor
-     */
-    public function timeout($ms) {}
-
-    /**
-     * Checks if there are documents that have not been sent yet from the database for this cursor
-     * @link http://www.php.net/manual/en/mongocursor.dead.php
-     * @return boolean Returns if there are more results that have not been sent to the client, yet.
-     */
-    public function dead() {}
+    public function slaveOkay($okay = true)
+    {
+        $this->notImplemented();
+    }
 
     /**
      * Use snapshot mode for the query
@@ -178,7 +456,10 @@ class MongoCursor implements Iterator, Traversable {
      * @throws MongoCursorException
      * @return MongoCursor Returns this cursor
      */
-    public function snapshot() {}
+    public function snapshot()
+    {
+        $this->notImplemented();
+    }
 
     /**
      * Sorts the results by given fields
@@ -187,140 +468,104 @@ class MongoCursor implements Iterator, Traversable {
      * @throws MongoCursorException
      * @return MongoCursor Returns the same cursor that this method was called on
      */
-    public function sort(array $fields) {}
+    public function sort(array $fields)
+    {
+        $this->errorIfOpened();
+        $this->sort = $fields;
+
+        return $this;
+    }
 
     /**
-     * Gives the database a hint about the query
-     * @link http://www.php.net/manual/en/mongocursor.hint.php
-     * @param array $key_pattern Indexes to use for the query.
-     * @throws MongoCursorException
+     * Sets whether this cursor will be left open after fetching the last results
+     * @link http://www.php.net/manual/en/mongocursor.tailable.php
+     * @param bool $tail If the cursor should be tailable.
      * @return MongoCursor Returns this cursor
      */
-    public function hint(array $key_pattern) {}
+    public function tailable($tail = true)
+    {
+        $this->errorIfOpened();
+        $this->tailable = $tail;
 
+        return $this;
+    }
 
     /**
-     * Adds a top-level key/value pair to a query
-     * @link http://www.php.net/manual/en/mongocursor.addoption.php
-     * @param string $key Fieldname to add.
-     * @param mixed $value Value to add.
-     * @throws MongoCursorException
+     * Sets a client-side timeout for this query
+     * @link http://www.php.net/manual/en/mongocursor.timeout.php
+     * @param int $ms The number of milliseconds for the cursor to wait for a response. By default, the cursor will wait forever.
+     * @throws MongoCursorTimeoutException
      * @return MongoCursor Returns this cursor
      */
-    public function addOption($key, $value) {}
-
-    /**
-     * Execute the query
-     * @link http://www.php.net/manual/en/mongocursor.doquery.php
-     * @throws MongoConnectionException if it cannot reach the database.
-     * @return void
-     */
-    protected function doQuery() {}
-
-    /**
-     * Returns the current element
-     * @link http://www.php.net/manual/en/mongocursor.current.php
-     * @return array
-     */
-    public function current() {}
-
-    /**
-     * Returns the current result's _id
-     * @link http://www.php.net/manual/en/mongocursor.key.php
-     * @return string The current result's _id as a string.
-     */
-    public function key() {}
-
-    /**
-     * Advances the cursor to the next result
-     * @link http://www.php.net/manual/en/mongocursor.next.php
-     * @throws MongoConnectionException
-     * @throws MongoCursorTimeoutException
-     * @return void
-     */
-    public function next() {}
-
-    /**
-     * Returns the cursor to the beginning of the result set
-     * @throws MongoConnectionException
-     * @throws MongoCursorTimeoutException
-     * @return void
-     */
-    public function rewind() {}
+    public function timeout($ms)
+    {
+        $this->notImplemented();
+    }
 
     /**
      * Checks if the cursor is reading a valid result.
      * @link http://www.php.net/manual/en/mongocursor.valid.php
      * @return boolean If the current result is not null.
      */
-    public function valid() {}
+    public function valid()
+    {
+        return $this->ensureIterator()->valid();
+    }
+
+    private function applyOptions($options, $optionNames)
+    {
+        foreach ($optionNames as $option) {
+            if ($this->$option === null) {
+                continue;
+            }
+
+            $options[$option] = $this->$option;
+        }
+
+        return $options;
+    }
 
     /**
-     * Clears the cursor
-     * @link http://www.php.net/manual/en/mongocursor.reset.php
-     * @return void
+     * @return Cursor
      */
-    public function reset() {}
+    private function ensureCursor()
+    {
+        if ($this->cursor === null) {
+            $options = $this->applyOptions($this->options, ['skip', 'limit', 'sort', 'batchSize', 'projection']);
+
+            if ($this->tailable) {
+                $options['cursorType'] = $this->awaitData ? Find::TAILABLE : Find::TAILABLE_AWAIT;
+            }
+
+            $this->cursor = $this->collection->find($this->query, $options);
+        }
+
+        return $this->cursor;
+    }
+
+    private function errorIfOpened()
+    {
+        if ($this->cursor === null) {
+            return;
+        }
+
+        throw new MongoCursorException('cannot modify cursor after beginning iteration.');
+    }
 
     /**
-     * Return an explanation of the query, often useful for optimization and debugging
-     * @link http://www.php.net/manual/en/mongocursor.explain.php
-     * @return array Returns an explanation of the query.
+     * @return IteratorIterator
      */
-    public function explain() {}
+    private function ensureIterator()
+    {
+        if ($this->iterator === null) {
+            $this->iterator = new IteratorIterator($this->ensureCursor());
+        }
 
-    /**
-     * Counts the number of results for this query
-     * @link http://www.php.net/manual/en/mongocursor.count.php
-     * @param bool $all Send cursor limit and skip information to the count function, if applicable.
-     * @return int The number of documents returned by this cursor's query.
-     */
-    public function count($all = FALSE) {}
+        return $this->iterator;
+    }
 
-    /**
-     * Sets the fields for a query
-     * @link http://www.php.net/manual/en/mongocursor.fields.php
-     * @param array $f Fields to return (or not return).
-     * @throws MongoCursorException
-     * @return MongoCursor
-     */
-    public function fields(array $f){}
-
-    /**
-     * Gets the query, fields, limit, and skip for this cursor
-     * @link http://www.php.net/manual/en/mongocursor.info.php
-     * @return array The query, fields, limit, and skip for this cursor as an associative array.
-     */
-    public function info(){}
-
-    /**
-     * PECL mongo >=1.0.11
-     * Limits the number of elements returned in one batch.
-     * <p>A cursor typically fetches a batch of result objects and store them locally.
-     * This method sets the batchSize value to configure the amount of documents retrieved from the server in one data packet.
-     * However, it will never return more documents than fit in the max batch size limit (usually 4MB).
-     *
-     * @param int $batchSize The number of results to return per batch. Each batch requires a round-trip to the server.
-     * <p>If batchSize is 2 or more, it represents the size of each batch of objects retrieved.
-     * It can be adjusted to optimize performance and limit data transfer.
-     *
-     * <p>If batchSize is 1 or negative, it will limit of number returned documents to the absolute value of batchSize,
-     * and the cursor will be closed. For example if batchSize is -10, then the server will return a maximum of 10
-     * documents and as many as can fit in 4MB, then close the cursor.
-     * <b>Warning</b>
-     * <p>A batchSize of 1 is special, and means the same as -1, i.e. a value of 1 makes the cursor only capable of returning one document.
-     * <p>Note that this feature is different from MongoCursor::limit() in that documents must fit within a maximum size,
-     * and it removes the need to send a request to close the cursor server-side.
-     * The batch size can be changed even after a cursor is iterated, in which case the setting will apply on the next batch retrieval.
-     * <p>This cannot override MongoDB's limit on the amount of data it will return to the client (i.e.,
-     * if you set batch size to 1,000,000,000, MongoDB will still only return 4-16MB of results per batch).
-     * <p>To ensure consistent behavior, the rules of MongoCursor::batchSize() and MongoCursor::limit() behave a little complex
-     * but work "as expected". The rules are: hard limits override soft limits with preference given to MongoCursor::limit() over
-     * MongoCursor::batchSize(). After that, whichever is set and lower than the other will take precedence.
-     * See below. section for some examples.
-     * @return MongoCursor Returns this cursor.
-     * @link http://docs.php.net/manual/en/mongocursor.batchsize.php
-     */
-    public function batchSize($batchSize){}
+    protected function notImplemented()
+    {
+        throw new \Exception('Not implemented');
+    }
 }
-

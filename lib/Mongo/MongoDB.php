@@ -111,6 +111,15 @@ class MongoDB
     }
 
     /**
+     * @return MongoClient
+     * @internal This method is not part of the ext-mongo API
+     */
+    public function getConnection()
+    {
+        return $this->connection;
+    }
+
+    /**
      * (PECL mongo &gt;= 0.9.0)<br/>
      * Fetches toolkit for dealing with files stored in this database
      * @link http://www.php.net/manual/en/mongodb.getgridfs.php
