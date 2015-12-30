@@ -13,7 +13,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-class MongoBinData {
+use Alcaeus\MongoDbAdapter\TypeInterface;
+use MongoDB\BSON\Binary;
+use MongoDB\BSON\Type;
+
+class MongoBinData implements TypeInterface
+{
     /**
      * Generic binary data.
      * @link http://php.net/manual/en/class.mongobindata.php#mongobindata.constants.custom
@@ -70,7 +75,6 @@ class MongoBinData {
      */
     public $type;
 
-
     /**
      * Creates a new binary data object.
      *
@@ -79,11 +83,35 @@ class MongoBinData {
      * @param int $type Data type
      * @return MongoBinData Returns a new binary data object
      */
-    public function __construct($data, $type = 2) {}
+    public function __construct($data, $type = 2)
+    {
+        if ($data instanceof Binary) {
+            $this->bin = $data->getData();
+            $this->type = $data->getType();
+        } else {
+            $this->bin = $data;
+            $this->type = $type;
+        }
+    }
 
     /**
-     * Returns the string representation of this binary data object.
+     * Returns the string "<Mongo Binary Data>". To access the contents of a MongoBinData, use the bin field.
+     *
      * @return string
      */
-    public function __toString() {}
+    public function __toString()
+    {
+        return '<Mongo Binary Data>';
+    }
+
+    /**
+     * Converts this MongoBinData to the new BSON Binary type
+     *
+     * @return Binary
+     * @internal This method is not part of the ext-mongo API
+     */
+    public function toBSONType()
+    {
+        return new Binary($this->bin, $this->type);
+    }
 }

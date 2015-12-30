@@ -13,30 +13,35 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-class MongoCode {
+class MongoCode
+{
     /**
-     * @var $code
+     * @var string
      */
-    public $code;
+    private $code;
 
     /**
-     * @var $scope
+     * @var array
      */
-    public $scope;
+    private $scope;
 
     /**
-     * .
-     *
      * @link http://php.net/manual/en/mongocode.construct.php
      * @param string $code A string of code
      * @param array $scope The scope to use for the code
-     * @return MongoCode Returns a new code object
      */
-    public function __construct($code, array $scope = array()) {}
+    public function __construct($code, array $scope = [])
+    {
+        $this->code = $code;
+        $this->scope = $scope;
+    }
 
     /**
      * Returns this code as a string
      * @return string
      */
-    public function __toString() {}
+    public function __toString()
+    {
+        return $this->code;
+    }
 }

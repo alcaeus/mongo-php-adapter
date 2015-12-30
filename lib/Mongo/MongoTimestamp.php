@@ -13,16 +13,25 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-class MongoTimestamp {
+use Alcaeus\MongoDbAdapter\TypeInterface;
+use MongoDB\BSON\Timestamp;
+
+class MongoTimestamp implements TypeInterface
+{
+    /**
+     * @var int
+     */
+    private static $globalInc = 0;
+
     /**
      * @link http://php.net/manual/en/class.mongotimestamp.php#mongotimestamp.props.sec
-     * @var $sec
+     * @var int
      */
     public $sec;
 
     /**
      * @link http://php.net/manual/en/class.mongotimestamp.php#mongotimestamp.props.inc
-     * @var $inc
+     * @var int
      */
     public $inc;
 
@@ -36,10 +45,46 @@ class MongoTimestamp {
      * @param int $sec [optional] Number of seconds since January 1st, 1970
      * @param int $inc [optional] Increment
      */
-    public function __construct($sec = 0, $inc) {}
+    public function __construct($sec = 0, $inc = 0)
+    {
+        if ($sec instanceof Timestamp) {
+            // Only way is to convert is from string: [<sec>:<inc>]
+            $parts = explode(':', substr((string) $sec, 1, -1));
+            $this->sec = (int) $parts[0];
+            $this->inc = (int) $parts[1];
+
+            return;
+        }
+
+        if (func_num_args() == 0) {
+            $sec = time();
+        }
+
+        if (func_num_args() <= 1) {
+            $inc = static::$globalInc;
+            static::$globalInc++;
+        }
+
+        $this->sec = (int) $sec;
+        $this->inc = (int) $inc;
+    }
 
     /**
      * @return string
      */
-    public function __toString() {}
+    public function __toString()
+    {
+        return (string) $this->sec;
+    }
+
+    /**
+     * Converts this MongoTimestamp to the new BSON Timestamp type
+     *
+     * @return Timestamp
+     * @internal This method is not part of the ext-mongo API
+     */
+    public function toBSONType()
+    {
+        return new Timestamp($this->sec, $this->inc);
+    }
 }

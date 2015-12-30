@@ -26,7 +26,7 @@ class TypeConverter
         $result = new \stdClass();
 
         foreach ($array as $key => $value) {
-            $result->$key = (is_array($value)) ? static::convertLegacyArrayToObject($value) : static::convertToModernType($value);
+            $result->$key = (is_array($value)) ? static::convertLegacyArrayToObject($value) : static::convertToBSONType($value);
         }
 
         return $result;
@@ -55,11 +55,11 @@ class TypeConverter
         }
     }
 
-    public static function convertToModernType($value)
+    public static function convertToBSONType($value)
     {
         switch (true) {
-            case $value instanceof \MongoId:
-                return $value->getObjectID();
+            case $value instanceof TypeInterface:
+                return $value->toBSONType();
 
             default:
                 return $value;

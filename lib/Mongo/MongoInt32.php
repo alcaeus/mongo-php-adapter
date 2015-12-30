@@ -13,13 +13,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-class MongoInt32 {
+use Alcaeus\MongoDbAdapter\TypeInterface;
+
+class MongoInt32 implements TypeInterface
+{
     /**
      * @link http://php.net/manual/en/class.mongoint32.php#mongoint32.props.value
-     * @var $value
+     * @var string
      */
     public $value;
-
 
     /**
      * Creates a new 32-bit number with the given value.
@@ -27,10 +29,27 @@ class MongoInt32 {
      * @link http://php.net/manual/en/mongoint32.construct.php
      * @param string $value A number
      */
-    public function __construct($value) {}
+    public function __construct($value)
+    {
+        $this->value = (string) $value;
+    }
 
     /**
      * @return string
      */
-    public function __toString() {}
+    public function __toString()
+    {
+        return (string) $this->value;
+    }
+
+    /**
+     * Converts this MongoInt32 to a native integer
+     *
+     * @return int
+     * @internal This method is not part of the ext-mongo API
+     */
+    public function toBSONType()
+    {
+        return (int) $this->value;
+    }
 }

@@ -13,9 +13,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+use Alcaeus\MongoDbAdapter\TypeInterface;
 use MongoDB\BSON\ObjectID;
 
-class MongoId implements Serializable
+class MongoId implements Serializable, TypeInterface
 {
     /*
      * @var ObjectID
@@ -66,11 +67,12 @@ class MongoId implements Serializable
     }
 
     /**
-     * Returns the ObjectID used internally
+     * Converts this MongoId to the new BSON ObjectID type
+     *
      * @return ObjectID
-     * @internal This method is not part of the ext-mongo API. Do not use this!
+     * @internal This method is not part of the ext-mongo API
      */
-    public function getObjectID()
+    public function toBSONType()
     {
         return $this->objectID;
     }

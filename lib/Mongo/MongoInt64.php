@@ -13,13 +13,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-class MongoInt64 {
+use Alcaeus\MongoDbAdapter\TypeInterface;
+
+class MongoInt64 implements TypeInterface
+{
     /**
      * @link http://php.net/manual/en/class.mongoint64.php#mongoint64.props.value
-     * @var $value
+     * @var string
      */
     public $value;
-
 
     /**
      * Creates a new 64-bit number with the given value.
@@ -27,10 +29,27 @@ class MongoInt64 {
      * @link http://php.net/manual/en/mongoint64.construct.php
      * @param string $value A number
      */
-    public function __construct($value) {}
+    public function __construct($value)
+    {
+        $this->value = (string) $value;
+    }
 
     /**
      * @return string
      */
-    public function __toString() {}
+    public function __toString()
+    {
+        return (string) $this->value;
+    }
+
+    /**
+     * Converts this MongoInt64 to a native integer
+     *
+     * @return int
+     * @internal This method is not part of the ext-mongo API
+     */
+    public function toBSONType()
+    {
+        return (int) $this->value;
+    }
 }

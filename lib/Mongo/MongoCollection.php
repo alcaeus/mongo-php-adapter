@@ -351,7 +351,15 @@ class MongoCollection
      * @param array $fields Fields of the results to return.
      * @return array|null
      */
-    public function findOne(array $query = array(), array $fields = array()) {}
+    public function findOne(array $query = array(), array $fields = array())
+    {
+        $document = $this->collection->findOne(TypeConverter::convertLegacyArrayToObject($query));
+        if ($document !== null) {
+            $document = TypeConverter::convertObjectToLegacyArray($document);
+        }
+
+        return $document;
+    }
 
     /**
      * Creates an index on the given field(s), or does nothing if the index already exists

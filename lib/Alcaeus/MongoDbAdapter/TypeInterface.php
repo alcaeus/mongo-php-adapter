@@ -13,19 +13,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-use Alcaeus\MongoDbAdapter\TypeInterface;
-use MongoDB\BSON\MinKey;
+namespace Alcaeus\MongoDbAdapter;
 
-class MongoMinKey implements TypeInterface
+use MongoDB\BSON\Type;
+
+interface TypeInterface
 {
     /**
-     * Converts this to the new BSON MinKey type
+     * Converts the type to the corresponding BSON type
      *
-     * @return MinKey
-     * @internal This method is not part of the ext-mongo API
+     * @return mixed
      */
-    public function toBSONType()
-    {
-        return new MinKey();
-    }
+    public function toBSONType();
 }

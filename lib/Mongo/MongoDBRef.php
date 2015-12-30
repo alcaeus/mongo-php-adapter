@@ -13,7 +13,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-class MongoDBRef {
+class MongoDBRef
+{
     /**
      * @static
      * @var $refKey
@@ -36,7 +37,19 @@ class MongoDBRef {
      * @param string $database Database name
      * @return array Returns the reference
      */
-    public static function create($collection, $id, $database = null) {}
+    public static function create($collection, $id, $database = null)
+    {
+        $ref = [
+            static::$refKey => $collection,
+            static::$idKey => $id
+        ];
+
+        if ($database !== null) {
+            $ref['$db'] = $database;
+        }
+
+        return $ref;
+    }
 
     /**
      * This not actually follow the reference, so it does not determine if it is broken or not.
@@ -47,7 +60,12 @@ class MongoDBRef {
      * @param mixed $ref Array or object to check
      * @return boolean Returns true if $ref is a reference
      */
-    public static function isRef($ref) {}
+    public static function isRef($ref)
+    {
+        $check = (array) $ref;
+
+        return array_key_exists(static::$refKey, $check) && array_key_exists(static::$idKey, $check);
+    }
 
     /**
      * Fetches the object pointed to by a reference
@@ -57,5 +75,12 @@ class MongoDBRef {
      * @param array $ref Reference to fetch
      * @return array|null Returns the document to which the reference refers or null if the document does not exist (the reference is broken)
      */
-    public static function get($db, $ref) {}
+    public static function get($db, $ref)
+    {
+        if (! static::isRef($ref)) {
+            return null;
+        }
+
+        return $db->selectCollection($ref[static::$refKey])->findOne(['_id' => $ref[static::$idKey]]);
+    }
 }

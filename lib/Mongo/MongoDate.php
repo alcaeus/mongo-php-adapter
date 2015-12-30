@@ -13,7 +13,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-class MongoDate {
+use Alcaeus\MongoDbAdapter\TypeInterface;
+use MongoDB\BSON\UTCDateTime;
+
+class MongoDate implements TypeInterface
+{
     /**
      * @link http://php.net/manual/en/class.mongodate.php#mongodate.props.sec
      * @var int $sec
@@ -34,18 +38,69 @@ class MongoDate {
      * @param int $usec Microseconds
      * @return MongoDate Returns this new date
      */
-    public function __construct($sec = 0, $usec = 0) {}
+    public function __construct($sec = 0, $usec = 0)
+    {
+        if (func_num_args() == 0) {
+            $time = microtime(true);
+            $sec = floor($time);
+            $usec = ($time - $sec) * 1000000.0;
+        } elseif ($sec instanceof UTCDateTime) {
+            $msecString = (string) $sec;
+
+            $sec = (int) substr($msecString, 0, -3);
+            $usec = ((int) substr($msecString, -3)) * 1000;
+        }
+
+        $this->sec = $sec;
+        $this->usec = $this->truncateMicroSeconds($usec);
+    }
+
+    /**
+     * Returns a string representation of this date
+     * @return string
+     */
+    public function __toString()
+    {
+        return (string) sprintf('%.8f', $this->truncateMicroSeconds($this->usec) / 1000000) . ' ' . $this->sec;
+    }
+
+    /**
+     * Converts this MongoDate to the new BSON UTCDateTime type
+     *
+     * @return UTCDateTime
+     * @internal This method is not part of the ext-mongo API
+     */
+    public function toBSONType()
+    {
+        $milliSeconds = ($this->sec * 1000) + ($this->truncateMicroSeconds($this->usec) / 1000);
+
+        return new UTCDateTime($milliSeconds);
+    }
 
     /**
      * Returns a DateTime object representing this date
      * @link http://php.net/manual/en/mongodate.todatetime.php
      * @return DateTime
      */
-    public function toDateTime() {}
+    public function toDateTime()
+    {
+        $datetime = new \DateTime();
+        $datetime->setTimestamp($this->sec);
+
+        $microSeconds = $this->truncateMicroSeconds($this->usec);
+        if ($microSeconds > 0) {
+            $datetime = \DateTime::createFromFormat('Y-m-d H:i:s.u', $datetime->format('Y-m-d H:i:s') . '.' . $microSeconds);
+        }
+
+        return $datetime;
+    }
 
     /**
-     * Returns a string representation of this date
-     * @return string
+     * @param int $usec
+     * @return int
      */
-    public function __toString() {}
+    private function truncateMicroSeconds($usec)
+    {
+        return (int) floor($usec / 1000) * 1000;
+    }
 }
