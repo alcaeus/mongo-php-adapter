@@ -313,9 +313,7 @@ class MongoCollection
      */
     public function find(array $query = array(), array $fields = array())
     {
-        $cursor = $this->collection->find($query);
-
-        return new MongoCursor($this->db->getConnection(), (string) $this, $query, $fields, $cursor);
+        return new MongoCursor($this->db->getConnection(), (string) $this, $query, $fields);
     }
 
     /**

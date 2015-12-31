@@ -16,6 +16,7 @@
 use Alcaeus\MongoDbAdapter\TypeConverter;
 use MongoDB\Collection;
 use MongoDB\Driver\Cursor;
+use MongoDB\Driver\ReadPreference;
 use MongoDB\Operation\Find;
 
 /**
@@ -25,21 +26,12 @@ use MongoDB\Operation\Find;
 class MongoCursor implements Iterator
 {
     /**
-     * @link http://php.net/manual/en/class.mongocursor.php#mongocursor.props.slaveokay
-     * @static
-     * @var bool $slaveOkay
+     * @var bool
      */
-    public static $slaveOkay = FALSE;
+    public static $slaveOkay = false;
 
     /**
-     * @var int <p>
-     * Set timeout in milliseconds for all database responses. Use
-     * <em>-1</em> to wait forever. Can be overridden with
-     * {link http://php.net/manual/en/mongocursor.timeout.php MongoCursor::timeout()}. This does not cause the
-     * MongoDB server to cancel the operation; it only instructs the driver to
-     * stop waiting for a response and throw a
-     * {@link http://php.net/manual/en/class.mongocursortimeoutexception.php MongoCursorTimeoutException} after a set time.
-     * </p>
+     * @var int
      */
     static $timeout = 30000;
 
@@ -78,14 +70,20 @@ class MongoCursor implements Iterator
      */
     private $iterator;
 
+    private $allowPartialResults;
     private $awaitData;
     private $batchSize;
+    private $flags;
+    private $hint;
     private $limit;
     private $maxTimeMS;
     private $noCursorTimeout;
+    private $oplogReplay;
     private $options = [];
     private $projection;
+    private $readPreference = [];
     private $skip;
+    private $snapshot;
     private $sort;
     private $tailable;
 
@@ -165,10 +163,11 @@ class MongoCursor implements Iterator
     public function count($foundOnly = false)
     {
         if ($foundOnly && $this->cursor !== null) {
-            return iterator_count($this->cursor);
+            return iterator_count($this->ensureIterator());
         }
 
-        $options = $foundOnly ? $this->applyOptions($this->options, ['skip', 'limit']) : $this->options;
+        $optionNames = ['hint', 'limit', 'maxTimeMS', 'skip'];
+        $options = $foundOnly ? $this->applyOptions($this->options, $optionNames) : $this->options;
 
         return $this->collection->count($this->query, $options);
     }
@@ -206,7 +205,9 @@ class MongoCursor implements Iterator
      */
     protected function doQuery()
     {
-        $this->notImplemented();
+        $options = $this->applyOptions($this->options);
+
+        $this->cursor = $this->collection->find($this->query, $options);
     }
 
     /**
@@ -249,14 +250,13 @@ class MongoCursor implements Iterator
     }
 
     /**
-     * (PECL mongo &gt;= 1.3.3)<br/>
+     * Get the read preference for this query
      * @link http://www.php.net/manual/en/mongocursor.getreadpreference.php
-     * @return array This function returns an array describing the read preference. The array contains the values <em>type</em> for the string
-     * read preference mode (corresponding to the {@link http://www.php.net/manual/en/class.mongoclient.php MongoClient} constants), and <em>tagsets</em> containing a list of all tag set criteria. If no tag sets were specified, <em>tagsets</em> will not be present in the array.
+     * @return array
      */
     public function getReadPreference()
     {
-        $this->notImplemented();
+        return $this->readPreference;
     }
 
     /**
@@ -268,19 +268,23 @@ class MongoCursor implements Iterator
      */
     public function hasNext()
     {
+        $this->errorIfOpened();
         $this->notImplemented();
     }
 
     /**
      * Gives the database a hint about the query
      * @link http://www.php.net/manual/en/mongocursor.hint.php
-     * @param array $key_pattern Indexes to use for the query.
+     * @param array|string $keyPattern Indexes to use for the query.
      * @throws MongoCursorException
      * @return MongoCursor Returns this cursor
      */
-    public function hint(array $key_pattern)
+    public function hint($keyPattern)
     {
-        $this->notImplemented();
+        $this->errorIfOpened();
+        $this->hint = $keyPattern;
+
+        return $this;
     }
 
     /**
@@ -305,7 +309,47 @@ class MongoCursor implements Iterator
      */
     public function info()
     {
-        $this->notImplemented();
+        $info = [
+            'ns' => $this->ns,
+            'limit' => $this->limit,
+            'batchSize' => $this->batchSize,
+            'skip' => $this->skip,
+            'flags' => $this->flags,
+            'query' => $this->query,
+            'fields' => $this->projection,
+            'started_iterating' => $this->cursor !== null,
+        ];
+
+        if ($info['started_iterating']) {
+            switch ($this->cursor->getServer()->getType()) {
+                case \MongoDB\Driver\Server::TYPE_ARBITER:
+                    $typeString = 'ARBITER';
+                    break;
+                case \MongoDB\Driver\Server::TYPE_MONGOS:
+                    $typeString = 'MONGOS';
+                    break;
+                case \MongoDB\Driver\Server::TYPE_PRIMARY:
+                    $typeString = 'PRIMARY';
+                    break;
+                case \MongoDB\Driver\Server::TYPE_SECONDARY:
+                    $typeString = 'SECONDARY';
+                    break;
+                default:
+                    $typeString = 'STANDALONE';
+            }
+
+            $info = array_merge($info, [
+                'id' => (string) $this->cursor->getId(),
+                'at' => null, // @todo Complete info for cursor that is iterating
+                'numReturned' => null, // @todo Complete info for cursor that is iterating
+                'server' => null, // @todo Complete info for cursor that is iterating
+                'host' => $this->cursor->getServer()->getHost(),
+                'port' => $this->cursor->getServer()->getPort(),
+                'connection_type_desc' => $typeString,
+            ]);
+        }
+
+        return $info;
     }
 
     /**
@@ -341,7 +385,7 @@ class MongoCursor implements Iterator
     public function maxTimeMS($ms)
     {
         $this->errorIfOpened();
-        $this->maxTimeMs = $ms;
+        $this->maxTimeMS = $ms;
 
         return $this;
     }
@@ -359,14 +403,15 @@ class MongoCursor implements Iterator
     }
 
     /**
-     * (PECL mongo &gt;= 1.2.0)<br/>
      * @link http://www.php.net/manual/en/mongocursor.partial.php
      * @param bool $okay [optional] <p>If receiving partial results is okay.</p>
      * @return MongoCursor Returns this cursor.
      */
     public function partial($okay = true)
     {
-        $this->notImplemented();
+        $this->allowPartialResults = $okay;
+
+        return $this;
     }
 
     /**
@@ -394,32 +439,47 @@ class MongoCursor implements Iterator
     }
 
     /**
-     * (PECL mongo &gt;= 1.2.1)<br/>
      * @link http://www.php.net/manual/en/mongocursor.setflag.php
-     * @param int $flag <p>
-     * Which flag to set. You can not set flag 6 (EXHAUST) as the driver does
-     * not know how to handle them. You will get a warning if you try to use
-     * this flag. For available flags, please refer to the wire protocol
-     * {@link http://www.mongodb.org/display/DOCS/Mongo+Wire+Protocol#MongoWireProtocol-OPQUERY documentation}.
-     * </p>
-     * @param bool $set [optional] <p>Whether the flag should be set (<b>TRUE</b>) or unset (<b>FALSE</b>).</p>
+     * @param int $flag
+     * @param bool $set
      * @return MongoCursor
      */
-    public function setFlag($flag, $set = true )
+    public function setFlag($flag, $set = true)
     {
         $this->notImplemented();
     }
 
     /**
-     * (PECL mongo &gt;= 1.3.3)<br/>
      * @link http://www.php.net/manual/en/mongocursor.setreadpreference.php
-     * @param string $read_preference <p>The read preference mode: MongoClient::RP_PRIMARY, MongoClient::RP_PRIMARY_PREFERRED, MongoClient::RP_SECONDARY, MongoClient::RP_SECONDARY_PREFERRED, or MongoClient::RP_NEAREST.</p>
-     * @param array $tags [optional] <p>The read preference mode: MongoClient::RP_PRIMARY, MongoClient::RP_PRIMARY_PREFERRED, MongoClient::RP_SECONDARY, MongoClient::RP_SECONDARY_PREFERRED, or MongoClient::RP_NEAREST.</p>
+     * @param string $readPreference
+     * @param array $tags
      * @return MongoCursor Returns this cursor.
      */
-    public function setReadPreference($read_preference, array $tags)
+    public function setReadPreference($readPreference, array $tags = [])
     {
-        $this->notImplemented();
+        $availableReadPreferences = [
+            MongoClient::RP_PRIMARY,
+            MongoClient::RP_PRIMARY_PREFERRED,
+            MongoClient::RP_SECONDARY,
+            MongoClient::RP_SECONDARY_PREFERRED,
+            MongoClient::RP_NEAREST
+        ];
+        if (! in_array($readPreference, $availableReadPreferences)) {
+            trigger_error("The value '$readPreference' is not valid as read preference type", E_WARNING);
+            return $this;
+        }
+
+        if ($readPreference == MongoClient::RP_PRIMARY && count($tags)) {
+            trigger_error("You can't use read preference tags with a read preference of PRIMARY", E_WARNING);
+            return $this;
+        }
+
+        $this->readPreference = [
+            'type' => $readPreference,
+            'tagsets' => $tags
+        ];
+
+        return $this;
     }
 
     /**
@@ -447,7 +507,8 @@ class MongoCursor implements Iterator
      */
     public function slaveOkay($okay = true)
     {
-        $this->notImplemented();
+        $this->errorIfOpened();
+        static::$slaveOkay = $okay;
     }
 
     /**
@@ -458,7 +519,10 @@ class MongoCursor implements Iterator
      */
     public function snapshot()
     {
-        $this->notImplemented();
+        $this->errorIfOpened();
+        $this->snapshot = true;
+
+        return $this;
     }
 
     /**
@@ -512,17 +576,103 @@ class MongoCursor implements Iterator
         return $this->ensureIterator()->valid();
     }
 
-    private function applyOptions($options, $optionNames)
+    /**
+     * Applies all options set on the cursor, overwriting any options that have already been set
+     *
+     * @param array $options Existing options array
+     * @param array $optionNames Array of option names to be applied (will be read from properties)
+     * @return array
+     */
+    private function applyOptions($options, $optionNames = null)
     {
+        if ($optionNames === null) {
+            $optionNames = [
+                'allowPartialResults',
+                'batchSize',
+                'cursorType',
+                'limit',
+                'maxTimeMS',
+                'modifiers',
+                'noCursorTimeout',
+                'oplogReplay',
+                'projection',
+                'readPreference',
+                'skip',
+                'sort',
+            ];
+        }
+
         foreach ($optionNames as $option) {
-            if ($this->$option === null) {
+            $converter = 'convert' . ucfirst($option);
+            $value = method_exists($this, $converter) ? $this->$converter() : $this->$option;
+
+            if ($value === null) {
                 continue;
             }
 
-            $options[$option] = $this->$option;
+            $options[$option] = $value;
         }
 
         return $options;
+    }
+
+    /**
+     * @return int|null
+     */
+    private function convertCursorType()
+    {
+        if (! $this->tailable) {
+            return null;
+        }
+
+        return $this->awaitData ? Find::TAILABLE_AWAIT : Find::TAILABLE;
+    }
+
+    private function convertModifiers()
+    {
+        $modifiers = array_key_exists('modifiers', $this->options) ? $this->options['modifiers'] : [];
+
+        foreach (['hint', 'snapshot'] as $modifier) {
+            if ($this->$modifier === null) {
+                continue;
+            }
+
+            $modifiers['$' . $modifier] = $this->$modifier;
+        }
+
+        return $modifiers;
+    }
+
+    /**
+     * @return ReadPreference|null
+     */
+    private function convertReadPreference()
+    {
+        $type = array_key_exists('type', $this->readPreference) ? $this->readPreference['type'] : null;
+        if ($type === null) {
+            return static::$slaveOkay ? new ReadPreference(ReadPreference::RP_SECONDARY_PREFERRED) : null;
+        }
+
+        switch ($type) {
+            case MongoClient::RP_PRIMARY_PREFERRED:
+                $mode = ReadPreference::RP_PRIMARY_PREFERRED;
+                break;
+            case MongoClient::RP_SECONDARY:
+                $mode = ReadPreference::RP_SECONDARY;
+                break;
+            case MongoClient::RP_SECONDARY_PREFERRED:
+                $mode = ReadPreference::RP_SECONDARY_PREFERRED;
+                break;
+            case MongoClient::RP_NEAREST:
+                $mode = ReadPreference::RP_NEAREST;
+                break;
+            default:
+                $mode = ReadPreference::RP_PRIMARY;
+        }
+
+        $tagSets = array_key_exists('tagsets', $this->readPreference) ? $this->readPreference['tagsets'] : [];
+
+        return new ReadPreference($mode, $tagSets);
     }
 
     /**
@@ -531,13 +681,7 @@ class MongoCursor implements Iterator
     private function ensureCursor()
     {
         if ($this->cursor === null) {
-            $options = $this->applyOptions($this->options, ['skip', 'limit', 'sort', 'batchSize', 'projection']);
-
-            if ($this->tailable) {
-                $options['cursorType'] = $this->awaitData ? Find::TAILABLE : Find::TAILABLE_AWAIT;
-            }
-
-            $this->cursor = $this->collection->find($this->query, $options);
+            $this->doQuery();
         }
 
         return $this->cursor;

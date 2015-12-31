@@ -1,6 +1,8 @@
 <?php
 
 namespace Alcaeus\MongoDbAdapter\Tests;
+use MongoDB\Driver\ReadPreference;
+use MongoDB\Operation\Find;
 
 /**
  * @author alcaeus <alcaeus@alcaeus.org>
@@ -37,6 +39,170 @@ class MongoCursorTest extends TestCase
     }
 
     /**
+     * @dataProvider getCursorOptions
+     */
+    public function testCursorAppliesOptions($checkOptionCallback, \Closure $applyOptionCallback = null)
+    {
+        $query = ['foo' => 'bar'];
+        $projection = ['_id' => false, 'foo' => true];
+
+        $collectionMock = $this->getCollectionMock();
+        $collectionMock
+            ->expects($this->once())
+            ->method('find')
+            ->with($this->equalTo($query), $this->callback($checkOptionCallback))
+            ->will($this->returnValue(new \ArrayIterator([])));
+
+        $collection = $this->getCollection('test');
+        $cursor = $collection->find($query, $projection);
+
+        // Replace the original MongoDB collection with our mock
+        $reflectionProperty = new \ReflectionProperty($cursor, 'collection');
+        $reflectionProperty->setAccessible(true);
+        $reflectionProperty->setValue($cursor, $collectionMock);
+
+        if ($applyOptionCallback !== null) {
+            $applyOptionCallback($cursor);
+        }
+
+        // Force query by converting to array
+        iterator_to_array($cursor);
+    }
+
+    public static function getCursorOptions()
+    {
+        function getMissingOptionCallback($optionName) {
+            return function ($value) use ($optionName) {
+                return
+                    is_array($value) &&
+                    ! array_key_exists($optionName, $value);
+            };
+        }
+
+        function getBasicCheckCallback($expected, $optionName) {
+            return function ($value) use ($expected, $optionName) {
+                return
+                    is_array($value) &&
+                    array_key_exists($optionName, $value) &&
+                    $value[$optionName] == $expected;
+            };
+        }
+
+        function getModifierCheckCallback($expected, $modifierName) {
+            return function ($value) use ($expected, $modifierName) {
+                return
+                    is_array($value) &&
+                    is_array($value['modifiers']) &&
+                    array_key_exists($modifierName, $value['modifiers']) &&
+                    $value['modifiers'][$modifierName] == $expected;
+            };
+        }
+
+        $tests = [
+            'allowPartialResults' => [
+                getBasicCheckCallback(true, 'allowPartialResults'),
+                function (\MongoCursor $cursor) {
+                    $cursor->partial(true);
+                },
+            ],
+            'batchSize' => [
+                getBasicCheckCallback(10, 'batchSize'),
+                function (\MongoCursor $cursor) {
+                    $cursor->batchSize(10);
+                },
+            ],
+            'cursorTypeNonTailable' => [
+                getMissingOptionCallback('cursorType'),
+                function (\MongoCursor $cursor) {
+                    $cursor
+                        ->tailable(false)
+                        ->awaitData(true);
+                },
+            ],
+            'cursorTypeTailable' => [
+                getBasicCheckCallback(Find::TAILABLE, 'cursorType'),
+                function (\MongoCursor $cursor) {
+                    $cursor->tailable(true);
+                },
+            ],
+            'cursorTypeTailableAwait' => [
+                getBasicCheckCallback(Find::TAILABLE_AWAIT, 'cursorType'),
+                function (\MongoCursor $cursor) {
+                    $cursor->tailable(true)->awaitData(true);
+                },
+            ],
+            'hint' => [
+                getModifierCheckCallback('index_name', '$hint'),
+                function (\MongoCursor $cursor) {
+                    $cursor->hint('index_name');
+                },
+            ],
+            'limit' => [
+                getBasicCheckCallback(5, 'limit'),
+                function (\MongoCursor $cursor) {
+                    $cursor->limit(5);
+                }
+            ],
+            'maxTimeMS' => [
+                getBasicCheckCallback(100, 'maxTimeMS'),
+                function (\MongoCursor $cursor) {
+                    $cursor->maxTimeMS(100);
+                },
+            ],
+            'noCursorTimeout' => [
+                getBasicCheckCallback(true, 'noCursorTimeout'),
+                function (\MongoCursor $cursor) {
+                    $cursor->immortal(true);
+                },
+            ],
+            'slaveOkay' => [
+                getBasicCheckCallback(new ReadPreference(ReadPreference::RP_SECONDARY_PREFERRED), 'readPreference'),
+                function (\MongoCursor $cursor) {
+                    $cursor->slaveOkay(true);
+                },
+            ],
+            'slaveOkayWithReadPreferenceSet' => [
+                getBasicCheckCallback(new ReadPreference(ReadPreference::RP_SECONDARY), 'readPreference'),
+                function (\MongoCursor $cursor) {
+                    $cursor
+                        ->setReadPreference(\MongoClient::RP_SECONDARY)
+                        ->slaveOkay(true);
+                },
+            ],
+            'projectionDefaultFields' => [
+                getBasicCheckCallback(['_id' => false, 'foo' => true], 'projection'),
+            ],
+            'projectionDifferentFields' => [
+                getBasicCheckCallback(['_id' => false, 'foo' => true, 'bar' => true], 'projection'),
+                function (\MongoCursor $cursor) {
+                    $cursor->fields(['_id' => false, 'foo' => true, 'bar' => true]);
+                },
+            ],
+            'readPreferencePrimary' => [
+                getBasicCheckCallback(new ReadPreference(ReadPreference::RP_PRIMARY), 'readPreference'),
+                function (\MongoCursor $cursor) {
+                    $cursor->setReadPreference(\MongoClient::RP_PRIMARY);
+                },
+            ],
+            'skip' => [
+                getBasicCheckCallback(5, 'skip'),
+                function (\MongoCursor $cursor) {
+                    $cursor->skip(5);
+                },
+            ],
+            'sort' => [
+                getBasicCheckCallback(['foo' => -1], 'sort'),
+                function (\MongoCursor $cursor) {
+                    $cursor->sort(['foo' => -1]);
+                },
+            ],
+        ];
+
+        return $tests;
+    }
+
+    /**
+     * @param string $name
      * @return \MongoCollection
      */
     protected function getCollection($name = 'test')
@@ -44,6 +210,14 @@ class MongoCursorTest extends TestCase
         $client = new \MongoClient();
 
         return $client->selectCollection('mongo-php-adapter', $name);
+    }
+
+    /**
+     * @return \PHPUnit_Framework_MockObject_MockObject
+     */
+    protected function getCollectionMock()
+    {
+        return $this->getMock('MongoDB\Collection', [], [], '', false);
     }
 
     /**
