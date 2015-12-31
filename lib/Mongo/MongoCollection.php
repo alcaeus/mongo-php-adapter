@@ -116,7 +116,7 @@ class MongoCollection
      */
     public function aggregateCursor(array $pipeline, array $options)
     {
-        return $this->collection->aggregate($pipeline, $options);
+        $this->notImplemented();
     }
 
     /**
