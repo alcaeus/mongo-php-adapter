@@ -195,6 +195,7 @@ class MongoCollection
     {
         $result = $this->setSlaveOkayFromParameter($ok);
         $this->createCollectionObject();
+
         return $result;
     }
 
