@@ -67,7 +67,7 @@ class MongoCommandCursor extends AbstractCursor implements MongoCursorInterface
         return [
             'ns' => $this->ns,
             'limit' => 0,
-            'batchSize' => 0,
+            'batchSize' => $this->batchSize,
             'skip' => 0,
             'flags' => 0,
             'query' => $this->command,
