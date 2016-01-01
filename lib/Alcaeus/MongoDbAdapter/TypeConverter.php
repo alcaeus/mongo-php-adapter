@@ -23,13 +23,13 @@ class TypeConverter
     public static function convertLegacyArrayToObject($array)
     {
         // TODO: provide actual class
-        $result = new \stdClass();
+        $result = [];
 
         foreach ($array as $key => $value) {
-            $result->$key = (is_array($value)) ? static::convertLegacyArrayToObject($value) : static::convertToBSONType($value);
+            $result[$key] = (is_array($value)) ? static::convertLegacyArrayToObject($value) : static::convertToBSONType($value);
         }
 
-        return $result;
+        return static::ensureCorrectType($result);
     }
 
     public static function convertObjectToLegacyArray($object)
@@ -64,5 +64,26 @@ class TypeConverter
             default:
                 return $value;
         }
+    }
+
+    /**
+     * Converts all arrays with non-numeric keys to stdClass
+     *
+     * @param array $array
+     * @return array|\stdClass
+     */
+    private static function ensureCorrectType(array $array)
+    {
+        if ($array === [] || is_numeric(array_keys($array)[0])) {
+            return $array;
+        }
+
+        // Can convert array to stdClass
+        $object = new \stdClass();
+        foreach ($array as $key => $value) {
+            $object->$key = is_array($value) ? static::ensureCorrectType($value) : $value;
+        }
+
+        return $object;
     }
 }
