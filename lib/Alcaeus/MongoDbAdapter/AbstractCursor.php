@@ -93,10 +93,14 @@ abstract class AbstractCursor
         $this->ns = $ns;
 
         $nsParts = explode('.', $ns);
-        $db = array_shift($nsParts);
+        $dbName = array_shift($nsParts);
+        $collectionName = implode('.', $nsParts);
 
-        $this->db = $connection->selectDB($db)->getDb();
-        $this->collection = $connection->selectCollection($db, implode('.', $nsParts))->getCollection();
+        $this->db = $connection->selectDB($dbName)->getDb();
+
+        if ($collectionName) {
+            $this->collection = $connection->selectCollection($dbName, $collectionName)->getCollection();
+        }
     }
 
     /**
