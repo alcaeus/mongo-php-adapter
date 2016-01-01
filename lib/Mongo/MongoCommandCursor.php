@@ -13,57 +13,65 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-class MongoCommandCursor implements MongoCursorInterface, Iterator{
-    /**
-     * Return the current element
-     * @link http://php.net/manual/en/iterator.current.php
-     * @return mixed Can return any type.
-     * @since 5.0.0
-     */
-    public function current(){}
+use Alcaeus\MongoDbAdapter\AbstractCursor;
+use Alcaeus\MongoDbAdapter\TypeConverter;
 
+class MongoCommandCursor extends AbstractCursor implements MongoCursorInterface
+{
     /**
-     * Move forward to next element
-     * @link http://php.net/manual/en/iterator.next.php
-     * @return void Any returned value is ignored.
-     * @since 5.0.0
+     * @var array
      */
-    public function next(){}
+    private $command;
 
     /**
-     * Return the key of the current element
-     * @link http://php.net/manual/en/iterator.key.php
-     * @return mixed scalar on success, or null on failure.
-     * @since 5.0.0
+     * MongoCommandCursor constructor.
+     * @param MongoClient $connection
+     * @param string $ns
+     * @param array $command
      */
-    public function key(){}
+    public function __construct(MongoClient $connection, $ns, array $command = [])
+    {
+        parent::__construct($connection, $ns);
+
+        $this->command = $command;
+    }
 
     /**
-     * Checks if current position is valid
-     * @link http://php.net/manual/en/iterator.valid.php
-     * @return boolean The return value will be casted to boolean and then evaluated.
-     * Returns true on success or false on failure.
-     * @since 5.0.0
+     * @param MongoClient $connection
+     * @param string $hash
+     * @param array $document
+     * @return MongoCommandCursor
      */
-    public function valid(){}
+    public static function createFromDocument(MongoClient $connection, $hash, array $document)
+    {
+        throw new \Exception('Not implemented');
+    }
 
     /**
-     * Rewind the Iterator to the first element
-     * @link http://php.net/manual/en/iterator.rewind.php
-     * @return void Any returned value is ignored.
-     * @since 5.0.0
+     * @return \MongoDB\Driver\Cursor
      */
-    public function rewind(){}
+    protected function ensureCursor()
+    {
+        if ($this->cursor === null) {
+            $this->cursor = $this->db->command(TypeConverter::convertLegacyArrayToObject($this->command), $this->getOptions());
+        }
 
-    function batchSize(int $batchSize):MongoCursorInterface{}
+        return $this->cursor;
+    }
 
-    function dead():bool{}
-
-    function info():array{}
-
-    function getReadPreference():array{}
-
-    function setReadPreference(string $read_preference, array $tags = null):MongoCursorInterface{}
-
-    function timeout(int $ms):MongoCursorInterface{}
+    /**
+     * @return array
+     */
+    protected function getCursorInfo()
+    {
+        return [
+            'ns' => $this->ns,
+            'limit' => 0,
+            'batchSize' => 0,
+            'skip' => 0,
+            'flags' => 0,
+            'query' => $this->command,
+            'fields' => null,
+        ];
+    }
 }

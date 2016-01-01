@@ -19,33 +19,33 @@ interface MongoCursorInterface extends Iterator
      * @param int $batchSize
      * @return MongoCursorInterface
      */
-    function batchSize($batchSize);
+    public function batchSize($batchSize);
 
     /**
      * @return bool
      */
-    function dead();
+    public function dead();
 
     /**
      * @return array
      */
-    function info();
+    public function info();
 
     /**
      * @return array
      */
-    function getReadPreference();
+    public function getReadPreference();
 
     /**
      * @param string $read_preference
      * @param array|null $tags
      * @return MongoCursorInterface
      */
-    function setReadPreference($read_preference, $tags = null);
+    public function setReadPreference($read_preference, $tags = null);
 
     /**
      * @param int $ms
      * @return MongoCursorInterface
      */
-    function timeout($ms);
+    public function timeout($ms);
 }
