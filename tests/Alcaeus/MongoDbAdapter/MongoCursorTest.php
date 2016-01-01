@@ -201,6 +201,43 @@ class MongoCursorTest extends TestCase
         return $tests;
     }
 
+    public function testCursorInfo()
+    {
+        $this->prepareData();
+
+        $collection = $this->getCollection();
+        $cursor = $collection->find(['foo' => 'bar'], ['_id' => false])->skip(1)->limit(3);
+
+        $expected = [
+            'ns' => 'mongo-php-adapter.test',
+            'limit' => 3,
+            'batchSize' => null,
+            'skip' => 1,
+            'flags' => 0,
+            'query' => ['foo' => 'bar'],
+            'fields' => ['_id' => false],
+            'started_iterating' => false,
+        ];
+
+        $this->assertSame($expected, $cursor->info());
+
+        // Ensure cursor started iterating
+        iterator_to_array($cursor);
+
+        $expected['started_iterating'] = true;
+        $expected += [
+            'id' => '0',
+            'at' => null,
+            'numReturned' => null,
+            'server' => null,
+            'host' => 'localhost',
+            'port' => 27017,
+            'connection_type_desc' => 'STANDALONE'
+        ];
+
+        $this->assertSame($expected, $cursor->info());
+    }
+
     /**
      * @param string $name
      * @return \MongoCollection

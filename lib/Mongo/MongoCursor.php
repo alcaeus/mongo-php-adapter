@@ -63,7 +63,7 @@ class MongoCursor extends AbstractCursor implements Iterator
 
     protected $allowPartialResults;
     protected $awaitData;
-    protected $flags;
+    protected $flags = 0;
     protected $hint;
     protected $limit;
     protected $maxTimeMS;
@@ -143,7 +143,6 @@ class MongoCursor extends AbstractCursor implements Iterator
         $count = $this->collection->count($this->query, $options);
         return $count;
     }
-
 
     /**
      * Execute the query

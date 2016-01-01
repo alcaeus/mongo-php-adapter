@@ -344,16 +344,16 @@ abstract class AbstractCursor
 
         if ($this->cursor !== null) {
             switch ($this->cursor->getServer()->getType()) {
-                case \MongoDB\Driver\Server::TYPE_ARBITER:
+                case \MongoDB\Driver\Server::TYPE_RS_ARBITER:
                     $typeString = 'ARBITER';
                     break;
                 case \MongoDB\Driver\Server::TYPE_MONGOS:
                     $typeString = 'MONGOS';
                     break;
-                case \MongoDB\Driver\Server::TYPE_PRIMARY:
+                case \MongoDB\Driver\Server::TYPE_RS_PRIMARY:
                     $typeString = 'PRIMARY';
                     break;
-                case \MongoDB\Driver\Server::TYPE_SECONDARY:
+                case \MongoDB\Driver\Server::TYPE_RS_SECONDARY:
                     $typeString = 'SECONDARY';
                     break;
                 default:
@@ -361,7 +361,7 @@ abstract class AbstractCursor
             }
 
             $iterationInfo += [
-                'id' => (string)$this->cursor->getId(),
+                'id' => (string) $this->cursor->getId(),
                 'at' => null, // @todo Complete info for cursor that is iterating
                 'numReturned' => null, // @todo Complete info for cursor that is iterating
                 'server' => null, // @todo Complete info for cursor that is iterating
