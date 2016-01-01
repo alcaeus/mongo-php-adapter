@@ -33,22 +33,48 @@ class MongoCollectionTest extends TestCase
 
     public function testFindReturnsCursor()
     {
+        $this->prepareData();
         $collection = $this->getCollection();
-
-        $collection->insert(['sorter' => 1]);
 
         $this->assertInstanceOf('MongoCursor', $collection->find());
     }
 
     public function testCount()
     {
+        $this->prepareData();
+
         $collection = $this->getCollection();
 
-        $collection->insert(['foo' => 'bar']);
-        $collection->insert(['foo' => 'foo']);
+        $this->assertSame(3, $collection->count());
+        $this->assertSame(2, $collection->count(['foo' => 'bar']));
+    }
 
-        $this->assertSame(2, $collection->count());
-        $this->assertSame(1, $collection->count(['foo' => 'bar']));
+    public function testFindOne()
+    {
+        $this->prepareData();
+
+        $document = $this->getCollection()->findOne(['foo' => 'foo'], ['_id' => false]);
+        $this->assertEquals(['foo' => 'foo'], $document);
+    }
+
+    public function testDistinct()
+    {
+        $this->prepareData();
+
+        $values = $this->getCollection()->distinct('foo');
+        $this->assertInternalType('array', $values);
+
+        sort($values);
+        $this->assertEquals(['bar', 'foo'], $values);
+    }
+
+    public function testDistinctWithQuery()
+    {
+        $this->prepareData();
+
+        $values = $this->getCollection()->distinct('foo', ['foo' => 'bar']);
+        $this->assertInternalType('array', $values);
+        $this->assertEquals(['bar'], $values);
     }
 
     public function testAggregate()
@@ -118,5 +144,18 @@ class MongoCollectionTest extends TestCase
         $client = new \MongoClient();
 
         return $client->selectCollection('mongo-php-adapter', $name);
+    }
+
+    /**
+     * @return \MongoCollection
+     */
+    protected function prepareData()
+    {
+        $collection = $this->getCollection();
+
+        $collection->insert(['foo' => 'bar']);
+        $collection->insert(['foo' => 'bar']);
+        $collection->insert(['foo' => 'foo']);
+        return $collection;
     }
 }

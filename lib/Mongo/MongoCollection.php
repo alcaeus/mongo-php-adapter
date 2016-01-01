@@ -100,10 +100,9 @@ class MongoCollection
      * @link http://www.php.net/manual/en/mongocollection.aggregate.php
      * @param array $pipeline
      * @param array $op
-     * @param array $pipelineOperators
      * @return array
      */
-    public function aggregate(array $pipeline, array $op = [] /* , array $pipelineOperators, ... */)
+    public function aggregate(array $pipeline, array $op = [])
     {
         if (! TypeConverter::isNumericArray($pipeline)) {
             $pipeline = [];
@@ -362,7 +361,7 @@ class MongoCollection
      * @param array $query An optional query parameters
      * @return array|bool Returns an array of distinct values, or <b>FALSE</b> on failure
      */
-    public function distinct($key, array $query = NULL)
+    public function distinct($key, array $query = [])
     {
         return array_map([TypeConverter::class, 'convertToLegacyType'], $this->collection->distinct($key, $query));
     }
@@ -390,7 +389,7 @@ class MongoCollection
      */
     public function findOne(array $query = array(), array $fields = array())
     {
-        $document = $this->collection->findOne(TypeConverter::convertLegacyArrayToObject($query));
+        $document = $this->collection->findOne(TypeConverter::convertLegacyArrayToObject($query), ['projection' => $fields]);
         if ($document !== null) {
             $document = TypeConverter::convertObjectToLegacyArray($document);
         }
