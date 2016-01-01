@@ -22,14 +22,14 @@ class TypeConverter
 {
     public static function convertLegacyArrayToObject($array)
     {
-        // TODO: provide actual class
+        // TODO: provide actual class once mongodb/mongo-php-library#78 has been merged
         $result = [];
 
         foreach ($array as $key => $value) {
             $result[$key] = (is_array($value)) ? static::convertLegacyArrayToObject($value) : static::convertToBSONType($value);
         }
 
-        return static::ensureCorrectType($result);
+        return self::ensureCorrectType($result);
     }
 
     public static function convertObjectToLegacyArray($object)
@@ -37,6 +37,7 @@ class TypeConverter
         $result = [];
 
         foreach ($object as $key => $value) {
+            // TODO: use actual class instead of \stdClass once mongodb/mongo-php-library#78 has been merged
             $result[$key] = ($value instanceof \stdClass || is_array($value)) ? static::convertObjectToLegacyArray($value) : static::convertToLegacyType($value);
         }
 
@@ -90,7 +91,7 @@ class TypeConverter
         // Can convert array to stdClass
         $object = new \stdClass();
         foreach ($array as $key => $value) {
-            $object->$key = is_array($value) ? static::ensureCorrectType($value) : $value;
+            $object->$key = $value;
         }
 
         return $object;
