@@ -103,9 +103,34 @@ class MongoCollection
      * @param array $pipelineOperators
      * @return array
      */
-    public function aggregate(array $pipeline, array $op, array $pipelineOperators)
+    public function aggregate(array $pipeline, array $op = [] /* , array $pipelineOperators, ... */)
     {
-        $this->notImplemented();
+        if (! TypeConverter::isNumericArray($pipeline)) {
+            $pipeline = [];
+            $options = [];
+
+            $i = 0;
+            foreach (func_get_args() as $operator) {
+                $i++;
+                if (! is_array($operator)) {
+                    trigger_error("Argument $i is not an array", E_WARNING);
+                    return;
+                }
+
+                $pipeline[] = $operator;
+            }
+        } else {
+            $options = $op;
+        }
+
+        $command = [
+            'aggregate' => $this->name,
+            'pipeline' => $pipeline
+        ];
+
+        $command += $options;
+
+        return $this->db->command($command, [], $hash);
     }
 
     /**
@@ -114,9 +139,23 @@ class MongoCollection
      * @param array $options
      * @return MongoCommandCursor
      */
-    public function aggregateCursor(array $pipeline, array $options)
+    public function aggregateCursor(array $pipeline, array $options = [])
     {
-        $this->notImplemented();
+        // Build command manually, can't use mongo-php-library here
+        $command = [
+            'aggregate' => $this->name,
+            'pipeline' => $pipeline
+        ];
+
+        // Convert cursor option
+        if (! isset($options['cursor']) || $options['cursor'] === true || $options['cursor'] === []) {
+            // Cursor option needs to be an object convert bools and empty arrays since those won't be handled by TypeConverter
+            $options['cursor'] = new \stdClass;
+        }
+
+        $command += $options;
+
+        return new MongoCommandCursor($this->db->getConnection(), (string) $this, $command);
     }
 
     /**

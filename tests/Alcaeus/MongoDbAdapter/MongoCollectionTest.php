@@ -51,6 +51,65 @@ class MongoCollectionTest extends TestCase
         $this->assertSame(1, $collection->count(['foo' => 'bar']));
     }
 
+    public function testAggregate()
+    {
+        $collection = $this->getCollection();
+
+        $collection->insert(['foo' => 'bar']);
+        $collection->insert(['foo' => 'bar']);
+        $collection->insert(['foo' => 'foo']);
+
+        $pipeline = [
+            [
+                '$group' => [
+                    '_id' => '$foo',
+                    'count' => [ '$sum' => 1 ],
+                ],
+            ],
+            [
+                '$sort' => ['_id' => 1]
+            ]
+        ];
+
+        $result = $collection->aggregate($pipeline);
+        $this->assertInternalType('array', $result);
+        $this->assertArrayHasKey('result', $result);
+
+        $this->assertEquals([
+            ['_id' => 'bar', 'count' => 2],
+            ['_id' => 'foo', 'count' => 1],
+        ], $result['result']);
+    }
+
+    public function testAggregateCursor()
+    {
+        $collection = $this->getCollection();
+
+        $collection->insert(['foo' => 'bar']);
+        $collection->insert(['foo' => 'bar']);
+        $collection->insert(['foo' => 'foo']);
+
+        $pipeline = [
+            [
+                '$group' => [
+                    '_id' => '$foo',
+                    'count' => [ '$sum' => 1 ],
+                ],
+            ],
+            [
+                '$sort' => ['_id' => 1]
+            ]
+        ];
+
+        $cursor = $collection->aggregateCursor($pipeline);
+        $this->assertInstanceOf('MongoCommandCursor', $cursor);
+
+        $this->assertEquals([
+            ['_id' => 'bar', 'count' => 2],
+            ['_id' => 'foo', 'count' => 1],
+        ], iterator_to_array($cursor));
+    }
+
     /**
      * @return \MongoCollection
      */

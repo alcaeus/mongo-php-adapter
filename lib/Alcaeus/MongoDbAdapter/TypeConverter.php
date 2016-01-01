@@ -37,8 +37,7 @@ class TypeConverter
         $result = [];
 
         foreach ($object as $key => $value) {
-            // TODO: maybe add a more meaningful check instead of stdClass?
-            $result[$key] = ($value instanceof \stdClass) ? static::convertObjectToLegacyArray($value) : static::convertToLegacyType($value);
+            $result[$key] = ($value instanceof \stdClass || is_array($value)) ? static::convertObjectToLegacyArray($value) : static::convertToLegacyType($value);
         }
 
         return $result;
@@ -67,6 +66,15 @@ class TypeConverter
     }
 
     /**
+     * @param array $array
+     * @return bool
+     */
+    public static function isNumericArray(array $array)
+    {
+        return $array === [] || is_numeric(array_keys($array)[0]);
+    }
+
+    /**
      * Converts all arrays with non-numeric keys to stdClass
      *
      * @param array $array
@@ -74,7 +82,8 @@ class TypeConverter
      */
     private static function ensureCorrectType(array $array)
     {
-        if ($array === [] || is_numeric(array_keys($array)[0])) {
+        // Empty arrays are left untouched since they may be an empty list or empty document
+        if (static::isNumericArray($array)) {
             return $array;
         }
 
