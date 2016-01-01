@@ -377,9 +377,19 @@ class MongoDB
      * The resulting document's structure depends on the command,
      * but most results will have the ok field to indicate success or failure and results containing an array of each of the resulting documents.
      */
-    public function command(array $data, $options)
+    public function command(array $data, $options, &$hash)
     {
-        $this->notImplemented();
+        try {
+            $cursor = new \MongoCommandCursor($this->connection, $this->name, $data);
+
+            return iterator_to_array($cursor)[0];
+        } catch (\MongoDB\Driver\Exception\RuntimeException $e) {
+            return [
+                'ok' => 0,
+                'errmsg' => $e->getMessage(),
+                'code' => $e->getCode(),
+            ];
+        }
     }
 
     /**

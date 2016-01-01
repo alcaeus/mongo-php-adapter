@@ -22,14 +22,14 @@ class TypeConverter
 {
     public static function convertLegacyArrayToObject($array)
     {
-        // TODO: provide actual class
-        $result = new \stdClass();
+        // TODO: provide actual class once mongodb/mongo-php-library#78 has been merged
+        $result = [];
 
         foreach ($array as $key => $value) {
-            $result->$key = (is_array($value)) ? static::convertLegacyArrayToObject($value) : static::convertToBSONType($value);
+            $result[$key] = (is_array($value)) ? static::convertLegacyArrayToObject($value) : static::convertToBSONType($value);
         }
 
-        return $result;
+        return self::ensureCorrectType($result);
     }
 
     public static function convertObjectToLegacyArray($object)
@@ -37,8 +37,8 @@ class TypeConverter
         $result = [];
 
         foreach ($object as $key => $value) {
-            // TODO: maybe add a more meaningful check instead of stdClass?
-            $result[$key] = ($value instanceof \stdClass) ? static::convertObjectToLegacyArray($value) : static::convertToLegacyType($value);
+            // TODO: use actual class instead of \stdClass once mongodb/mongo-php-library#78 has been merged
+            $result[$key] = ($value instanceof \stdClass || is_array($value)) ? static::convertObjectToLegacyArray($value) : static::convertToLegacyType($value);
         }
 
         return $result;
@@ -64,5 +64,36 @@ class TypeConverter
             default:
                 return $value;
         }
+    }
+
+    /**
+     * @param array $array
+     * @return bool
+     */
+    public static function isNumericArray(array $array)
+    {
+        return $array === [] || is_numeric(array_keys($array)[0]);
+    }
+
+    /**
+     * Converts all arrays with non-numeric keys to stdClass
+     *
+     * @param array $array
+     * @return array|\stdClass
+     */
+    private static function ensureCorrectType(array $array)
+    {
+        // Empty arrays are left untouched since they may be an empty list or empty document
+        if (static::isNumericArray($array)) {
+            return $array;
+        }
+
+        // Can convert array to stdClass
+        $object = new \stdClass();
+        foreach ($array as $key => $value) {
+            $object->$key = $value;
+        }
+
+        return $object;
     }
 }

@@ -33,22 +33,107 @@ class MongoCollectionTest extends TestCase
 
     public function testFindReturnsCursor()
     {
+        $this->prepareData();
         $collection = $this->getCollection();
-
-        $collection->insert(['sorter' => 1]);
 
         $this->assertInstanceOf('MongoCursor', $collection->find());
     }
 
     public function testCount()
     {
+        $this->prepareData();
+
+        $collection = $this->getCollection();
+
+        $this->assertSame(3, $collection->count());
+        $this->assertSame(2, $collection->count(['foo' => 'bar']));
+    }
+
+    public function testFindOne()
+    {
+        $this->prepareData();
+
+        $document = $this->getCollection()->findOne(['foo' => 'foo'], ['_id' => false]);
+        $this->assertEquals(['foo' => 'foo'], $document);
+    }
+
+    public function testDistinct()
+    {
+        $this->prepareData();
+
+        $values = $this->getCollection()->distinct('foo');
+        $this->assertInternalType('array', $values);
+
+        sort($values);
+        $this->assertEquals(['bar', 'foo'], $values);
+    }
+
+    public function testDistinctWithQuery()
+    {
+        $this->prepareData();
+
+        $values = $this->getCollection()->distinct('foo', ['foo' => 'bar']);
+        $this->assertInternalType('array', $values);
+        $this->assertEquals(['bar'], $values);
+    }
+
+    public function testAggregate()
+    {
         $collection = $this->getCollection();
 
         $collection->insert(['foo' => 'bar']);
+        $collection->insert(['foo' => 'bar']);
         $collection->insert(['foo' => 'foo']);
 
-        $this->assertSame(2, $collection->count());
-        $this->assertSame(1, $collection->count(['foo' => 'bar']));
+        $pipeline = [
+            [
+                '$group' => [
+                    '_id' => '$foo',
+                    'count' => [ '$sum' => 1 ],
+                ],
+            ],
+            [
+                '$sort' => ['_id' => 1]
+            ]
+        ];
+
+        $result = $collection->aggregate($pipeline);
+        $this->assertInternalType('array', $result);
+        $this->assertArrayHasKey('result', $result);
+
+        $this->assertEquals([
+            ['_id' => 'bar', 'count' => 2],
+            ['_id' => 'foo', 'count' => 1],
+        ], $result['result']);
+    }
+
+    public function testAggregateCursor()
+    {
+        $collection = $this->getCollection();
+
+        $collection->insert(['foo' => 'bar']);
+        $collection->insert(['foo' => 'bar']);
+        $collection->insert(['foo' => 'foo']);
+
+        $pipeline = [
+            [
+                '$group' => [
+                    '_id' => '$foo',
+                    'count' => [ '$sum' => 1 ],
+                ],
+            ],
+            [
+                '$sort' => ['_id' => 1]
+            ]
+        ];
+
+        $cursor = $collection->aggregateCursor($pipeline);
+        $this->assertInstanceOf('MongoCommandCursor', $cursor);
+
+        $this->assertEquals([
+            ['_id' => 'bar', 'count' => 2],
+            ['_id' => 'foo', 'count' => 1],
+        ], iterator_to_array($cursor));
     }
 
     /**
@@ -59,5 +144,18 @@ class MongoCollectionTest extends TestCase
         $client = new \MongoClient();
 
         return $client->selectCollection('mongo-php-adapter', $name);
+    }
+
+    /**
+     * @return \MongoCollection
+     */
+    protected function prepareData()
+    {
+        $collection = $this->getCollection();
+
+        $collection->insert(['foo' => 'bar']);
+        $collection->insert(['foo' => 'bar']);
+        $collection->insert(['foo' => 'foo']);
+        return $collection;
     }
 }
