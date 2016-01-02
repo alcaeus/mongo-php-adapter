@@ -385,6 +385,7 @@ class MongoDB
     {
         try {
             $cursor = new \MongoCommandCursor($this->connection, $this->name, $data);
+            $cursor->setReadPreference($this->getReadPreference());
 
             return iterator_to_array($cursor)[0];
         } catch (\MongoDB\Driver\Exception\RuntimeException $e) {

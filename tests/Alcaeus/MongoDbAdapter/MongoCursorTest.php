@@ -238,6 +238,15 @@ class MongoCursorTest extends TestCase
         $this->assertSame($expected, $cursor->info());
     }
 
+    public function testReadPreferenceIsInherited()
+    {
+        $collection = $this->getCollection();
+        $collection->setReadPreference(\MongoClient::RP_SECONDARY, ['a' => 'b']);
+
+        $cursor = $collection->find(['foo' => 'bar']);
+        $this->assertSame(['type' => \MongoClient::RP_SECONDARY, 'tagsets' => ['a' => 'b']], $cursor->getReadPreference());
+    }
+
     /**
      * @param string $name
      * @return \MongoCollection

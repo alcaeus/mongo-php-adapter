@@ -171,7 +171,10 @@ class MongoCollection
 
         $command += $options;
 
-        return new MongoCommandCursor($this->db->getConnection(), (string) $this, $command);
+        $cursor = new MongoCommandCursor($this->db->getConnection(), (string)$this, $command);
+        $cursor->setReadPreference($this->getReadPreference());
+
+        return $cursor;
     }
 
     /**
@@ -371,7 +374,10 @@ class MongoCollection
      */
     public function find(array $query = array(), array $fields = array())
     {
-        return new MongoCursor($this->db->getConnection(), (string) $this, $query, $fields);
+        $cursor = new MongoCursor($this->db->getConnection(), (string)$this, $query, $fields);
+        $cursor->setReadPreference($this->getReadPreference());
+
+        return $cursor;
     }
 
     /**

@@ -75,6 +75,12 @@ trait ReadPreference
      */
     protected function setReadPreferenceFromParameters($readPreference, $tags = null)
     {
+        // @internal Passing an array for $readPreference is necessary to avoid conversion voodoo
+        // It should not be used externally!
+        if (is_array($readPreference)) {
+            return $this->setReadPreferenceFromArray($readPreference);
+        }
+
         switch ($readPreference) {
             case \MongoClient::RP_PRIMARY:
                 $mode = \MongoDB\Driver\ReadPreference::RP_PRIMARY;
