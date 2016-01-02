@@ -13,6 +13,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+use Alcaeus\MongoDbAdapter\Helper;
 use MongoDB\Client;
 
 /**
@@ -22,6 +23,9 @@ use MongoDB\Client;
  */
 class MongoClient
 {
+    use Helper\ReadPreference;
+    use Helper\WriteConcern;
+
     const VERSION = '1.6.12';
     const DEFAULT_HOST = "localhost" ;
     const DEFAULT_PORT = 27017 ;
@@ -172,26 +176,6 @@ class MongoClient
     }
 
     /**
-     * Get the read preference for this connection
-     *
-     * @return array
-     */
-    public function getReadPreference()
-    {
-        return [];
-    }
-
-    /**
-     * Get the write concern for this connection
-     *
-     * @return array Returns an array describing the write concern.
-     */
-    public function getWriteConcern()
-    {
-        return [];
-    }
-
-    /**
      * Kills a specific cursor on the server
      *
      * @link http://www.php.net/manual/en/mongoclient.killcursor.php
@@ -246,15 +230,19 @@ class MongoClient
     }
 
     /**
-     * Set read preference
-     *
-     * @param string $readPreference
-     * @param array $tags
-     * @return bool
+     * {@inheritdoc}
      */
     public function setReadPreference($readPreference, $tags = null)
     {
-        return false;
+        return $this->setReadPreferenceFromParameters($readPreference, $tags);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setWriteConcern($wstring, $wtimeout = 0)
+    {
+        return $this->setWriteConcernFromParameters($wstring, $wtimeout);
     }
 
     /**
