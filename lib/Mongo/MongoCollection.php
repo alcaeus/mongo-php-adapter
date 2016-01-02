@@ -13,6 +13,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+use Alcaeus\MongoDbAdapter\Helper;
 use Alcaeus\MongoDbAdapter\TypeConverter;
 
 /**
@@ -21,6 +22,9 @@ use Alcaeus\MongoDbAdapter\TypeConverter;
  */
 class MongoCollection
 {
+    use Helper\ReadPreference;
+    use Helper\WriteConcern;
+
     const ASCENDING = 1;
     const DESCENDING = -1;
 
@@ -40,16 +44,6 @@ class MongoCollection
     protected $collection;
 
     /**
-     * @var int<p>
-     */
-    public $w;
-
-    /**
-     * @var int <p>
-     */
-    public $wtimeout;
-
-    /**
      * Creates a new collection
      * @link http://www.php.net/manual/en/mongocollection.construct.php
      * @param MongoDB $db Parent database.
@@ -61,7 +55,11 @@ class MongoCollection
     {
         $this->db = $db;
         $this->name = $name;
-        $this->collection = $this->db->getDb()->selectCollection($name);
+
+        $this->setReadPreferenceFromArray($db->getReadPreference());
+        $this->setWriteConcernFromArray($db->getWriteConcern());
+
+        $this->createCollectionObject();
     }
 
     /**
@@ -93,7 +91,26 @@ class MongoCollection
      */
     public function __get($name)
     {
+        // Handle w and wtimeout properties that replicate data stored in $readPreference
+        if ($name === 'w' || $name === 'wtimeout') {
+            return $this->getWriteConcern()[$name];
+        }
+
         return $this->db->selectCollection($this->name . '.' . $name);
+    }
+
+    /**
+     * @param string $name
+     * @param mixed $value
+     */
+    public function __set($name, $value)
+    {
+        if ($name === 'w' || $name === 'wtimeout') {
+            $this->setWriteConcernFromArray([$name => $value] + $this->getWriteConcern());
+            $this->createCollectionObject();
+        } else {
+            $this->$name = $value;
+        }
     }
 
     /**
@@ -187,22 +204,25 @@ class MongoCollection
     }
 
     /**
-     * @link http://www.php.net/manual/en/mongocollection.getreadpreference.php
-     * @return array
+     * {@inheritdoc}
      */
-    public function getReadPreference()
+    public function setReadPreference($readPreference, $tags = null)
     {
-        $this->notImplemented();
+        $result = $this->setReadPreferenceFromParameters($readPreference, $tags);
+        $this->createCollectionObject();
+
+        return $result;
     }
 
     /**
-     * @param string $read_preference
-     * @param array $tags
-     * @return bool
+     * {@inheritdoc}
      */
-    public function setReadPreference($read_preference, array $tags)
+    public function setWriteConcern($wstring, $wtimeout = 0)
     {
-        $this->notImplemented();
+        $result = $this->setWriteConcernFromParameters($wstring, $wtimeout);
+        $this->createCollectionObject();
+
+        return $result;
     }
 
     /**
@@ -511,6 +531,23 @@ class MongoCollection
     protected function notImplemented()
     {
         throw new \Exception('Not implemented');
+    }
+
+    /**
+     * @return \MongoDB\Collection
+     */
+    private function createCollectionObject()
+    {
+        $options = [
+            'readPreference' => $this->readPreference,
+            'writeConcern' => $this->writeConcern,
+        ];
+
+        if ($this->collection === null) {
+            $this->collection = $this->db->getDb()->selectCollection($this->name, $options);
+        } else {
+            $this->collection = $this->collection->withOptions($options);
+        }
     }
 }
 

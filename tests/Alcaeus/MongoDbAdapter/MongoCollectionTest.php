@@ -1,6 +1,7 @@
 <?php
 
 namespace Alcaeus\MongoDbAdapter\Tests;
+use MongoDB\Driver\ReadPreference;
 
 /**
  * @author alcaeus <alcaeus@alcaeus.org>
@@ -136,14 +137,78 @@ class MongoCollectionTest extends TestCase
         ], iterator_to_array($cursor));
     }
 
+    public function testReadPreference()
+    {
+        $collection = $this->getCollection();
+        $this->assertSame(['type' => \MongoClient::RP_PRIMARY], $collection->getReadPreference());
+
+        $this->assertTrue($collection->setReadPreference(\MongoClient::RP_SECONDARY, ['a' => 'b']));
+        $this->assertSame(['type' => \MongoClient::RP_SECONDARY, 'tagsets' => ['a' => 'b']], $collection->getReadPreference());
+
+        // Only way to check whether options are passed down is through debugInfo
+        $writeConcern = $collection->getCollection()->__debugInfo()['readPreference'];
+
+        $this->assertSame(ReadPreference::RP_SECONDARY, $writeConcern->getMode());
+        $this->assertSame(['a' => 'b'], $writeConcern->getTagSets());
+    }
+
+    public function testReadPreferenceIsInherited()
+    {
+        $database = $this->getDatabase();
+        $database->setReadPreference(\MongoClient::RP_SECONDARY, ['a' => 'b']);
+
+        $collection = $database->selectCollection('test');
+        $this->assertSame(['type' => \MongoClient::RP_SECONDARY, 'tagsets' => ['a' => 'b']], $collection->getReadPreference());
+    }
+
+    public function testWriteConcern()
+    {
+        $collection = $this->getCollection();
+        $this->assertSame(['w' => 1, 'wtimeout' => 0], $collection->getWriteConcern());
+        $this->assertSame(1, $collection->w);
+        $this->assertSame(0, $collection->wtimeout);
+
+        $this->assertTrue($collection->setWriteConcern('majority', 100));
+        $this->assertSame(['w' => 'majority', 'wtimeout' => 100], $collection->getWriteConcern());
+
+        $collection->w = 2;
+        $this->assertSame(['w' => 2, 'wtimeout' => 100], $collection->getWriteConcern());
+
+        $collection->wtimeout = -1;
+        $this->assertSame(['w' => 2, 'wtimeout' => 0], $collection->getWriteConcern());
+
+        // Only way to check whether options are passed down is through debugInfo
+        $writeConcern = $collection->getCollection()->__debugInfo()['writeConcern'];
+
+        $this->assertSame(2, $writeConcern->getW());
+        $this->assertSame(0, $writeConcern->getWtimeout());
+    }
+
+    public function testWriteConcernIsInherited()
+    {
+        $database = $this->getDatabase();
+        $database->setWriteConcern('majority', 100);
+
+        $collection = $database->selectCollection('test');
+        $this->assertSame(['w' => 'majority', 'wtimeout' => 100], $collection->getWriteConcern());
+    }
+
     /**
      * @return \MongoCollection
      */
     protected function getCollection($name = 'test')
     {
+        return $this->getDatabase()->selectCollection($name);
+    }
+
+    /**
+     * @return \MongoDB
+     */
+    protected function getDatabase()
+    {
         $client = new \MongoClient();
 
-        return $client->selectCollection('mongo-php-adapter', $name);
+        return $client->selectDB('mongo-php-adapter');
     }
 
     /**
