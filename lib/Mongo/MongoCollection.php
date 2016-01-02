@@ -108,8 +108,6 @@ class MongoCollection
         if ($name === 'w' || $name === 'wtimeout') {
             $this->setWriteConcernFromArray([$name => $value] + $this->getWriteConcern());
             $this->createCollectionObject();
-        } else {
-            $this->$name = $value;
         }
     }
 

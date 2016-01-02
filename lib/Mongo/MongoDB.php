@@ -100,8 +100,6 @@ class MongoDB
         if ($name === 'w' || $name === 'wtimeout') {
             $this->setWriteConcernFromArray([$name => $value] + $this->getWriteConcern());
             $this->createDatabaseObject();
-        } else {
-            $this->$name = $value;
         }
     }
 
