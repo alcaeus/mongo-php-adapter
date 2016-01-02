@@ -46,13 +46,48 @@ class MongoClientTest extends TestCase
         $this->assertSame('mongo-php-adapter.test', (string) $collection);
     }
 
+    public function testReadPreferenceAndWriteConcernArePassedOnToCollection()
+    {
+        $client = $this->getClient();
+        $client->setReadPreference(\MongoClient::RP_SECONDARY, ['foo']);
+        $client->setWriteConcern(2, 500);
+        $collection = $client->selectCollection('mongo-php-adapter', 'test');
+        $this->assertInstanceOf('MongoCollection', $collection);
+        $this->assertEquals(
+            ['type' => \MongoClient::RP_SECONDARY, 'tagsets' => ['foo']],
+            $collection->getReadPreference()
+        );
+        $this->assertEquals(
+            ['w' => 2, 'wtimeout' => 500],
+            $collection->getWriteConcern()
+        );
+    }
+
+    public function testGetHosts()
+    {
+        $client = $this->getClient();
+        $this->assertArraySubset(
+            [
+                'localhost:27017' => [
+                    'host' => 'localhost',
+                    'port' => 27017,
+                    'health' => 1,
+                    'state' => 1,
+                ],
+            ],
+            $client->getHosts()
+        );
+    }
+
     public function testReadPreference()
     {
         $client = $this->getClient();
-        $this->assertSame(['type' => \MongoClient::RP_PRIMARY], $client->getReadPreference());
 
-        $this->assertTrue($client->setReadPreference(\MongoClient::RP_SECONDARY, ['a' => 'b']));
-        $this->assertSame(['type' => \MongoClient::RP_SECONDARY, 'tagsets' => ['a' => 'b']], $client->getReadPreference());
+        $this->assertTrue($client->setReadPreference(\MongoClient::RP_SECONDARY, ['foo']));
+        $this->assertEquals(
+            ['type' => \MongoClient::RP_SECONDARY, 'tagsets' => ['foo']],
+            $client->getReadPreference()
+        );
     }
 
     public function testWriteConcern()
