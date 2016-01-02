@@ -30,9 +30,19 @@ class MongoDB
     const PROFILING_ON = 2;
 
     /**
+     * @var MongoClient
+     */
+    protected $connection;
+
+    /**
      * @var \MongoDB\Database
      */
     protected $db;
+
+    /**
+     * @var string
+     */
+    protected $name;
 
     /**
      * Creates a new database
@@ -44,7 +54,7 @@ class MongoDB
      * @throws Exception
      * @return MongoDB Returns the database.
      */
-    public function __construct($conn, $name)
+    public function __construct(MongoClient $conn, $name)
     {
         $this->connection = $conn;
         $this->name = $name;
