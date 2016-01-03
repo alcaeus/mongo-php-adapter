@@ -46,6 +46,7 @@ class MongoCollection
 
     /**
      * Creates a new collection
+     *
      * @link http://www.php.net/manual/en/mongocollection.construct.php
      * @param MongoDB $db Parent database.
      * @param string $name Name for this collection.
@@ -76,6 +77,7 @@ class MongoCollection
 
     /**
      * String representation of this collection
+     *
      * @link http://www.php.net/manual/en/mongocollection.--tostring.php
      * @return string Returns the full name of this collection.
      */
@@ -86,6 +88,7 @@ class MongoCollection
 
     /**
      * Gets a collection
+     *
      * @link http://www.php.net/manual/en/mongocollection.get.php
      * @param string $name The next string in the collection name.
      * @return MongoCollection
@@ -113,6 +116,8 @@ class MongoCollection
     }
 
     /**
+     * Perform an aggregation using the aggregation framework
+     *
      * @link http://www.php.net/manual/en/mongocollection.aggregate.php
      * @param array $pipeline
      * @param array $op
@@ -149,6 +154,8 @@ class MongoCollection
     }
 
     /**
+     * Execute an aggregation pipeline command and retrieve results through a cursor
+     *
      * @link http://php.net/manual/en/mongocollection.aggregatecursor.php
      * @param array $pipeline
      * @param array $options
@@ -178,6 +185,7 @@ class MongoCollection
 
     /**
      * Returns this collection's name
+     *
      * @link http://www.php.net/manual/en/mongocollection.getname.php
      * @return string
      */
@@ -210,6 +218,7 @@ class MongoCollection
 
     /**
      * Drops this collection
+     *
      * @link http://www.php.net/manual/en/mongocollection.drop.php
      * @return array Returns the database response.
      */
@@ -220,6 +229,7 @@ class MongoCollection
 
     /**
      * Validates this collection
+     *
      * @link http://www.php.net/manual/en/mongocollection.validate.php
      * @param bool $scan_data Only validate indices, not the base collection.
      * @return array Returns the database's evaluation of this object.
@@ -236,6 +246,7 @@ class MongoCollection
 
     /**
      * Inserts an array into the collection
+     *
      * @link http://www.php.net/manual/en/mongocollection.insert.php
      * @param array|object $a
      * @param array $options
@@ -244,107 +255,57 @@ class MongoCollection
      * @throws MongoCursorTimeoutException if the "w" option is set to a value greater than one and the operation takes longer than MongoCursor::$timeout milliseconds to complete. This does not kill the operation on the server, it is a client-side timeout. The operation in MongoCollection::$wtimeout is milliseconds.
      * @return bool|array Returns an array containing the status of the insertion if the "w" option is set.
      */
-    public function insert($a, array $options = array())
+    public function insert($a, array $options = [])
     {
         return $this->collection->insertOne(TypeConverter::convertLegacyArrayToObject($a), $options);
     }
 
     /**
      * Inserts multiple documents into this collection
+     *
      * @link http://www.php.net/manual/en/mongocollection.batchinsert.php
      * @param array $a An array of arrays.
      * @param array $options Options for the inserts.
      * @throws MongoCursorException
      * @return mixed f "safe" is set, returns an associative array with the status of the inserts ("ok") and any error that may have occured ("err"). Otherwise, returns TRUE if the batch insert was successfully sent, FALSE otherwise.
      */
-    public function batchInsert(array $a, array $options = array())
+    public function batchInsert(array $a, array $options = [])
     {
         return $this->collection->insertMany($a, $options);
     }
 
     /**
      * Update records based on a given criteria
+     *
      * @link http://www.php.net/manual/en/mongocollection.update.php
      * @param array $criteria Description of the objects to update.
      * @param array $newobj The object with which to update the matching records.
-     * @param array $options This parameter is an associative array of the form
-     *        array("optionname" => boolean, ...).
-     *
-     *        Currently supported options are:
-     *          "upsert": If no document matches $$criteria, a new document will be created from $$criteria and $$new_object (see upsert example).
-     *
-     *          "multiple": All documents matching $criteria will be updated. MongoCollection::update has exactly the opposite behavior of MongoCollection::remove- it updates one document by
-     *          default, not all matching documents. It is recommended that you always specify whether you want to update multiple documents or a single document, as the
-     *          database may change its default behavior at some point in the future.
-     *
-     *          "safe" Can be a boolean or integer, defaults to false. If false, the program continues executing without waiting for a database response. If true, the program will wait for
-     *          the database response and throw a MongoCursorException if the update did not succeed. If you are using replication and the master has changed, using "safe" will make the driver
-     *          disconnect from the master, throw and exception, and attempt to find a new master on the next operation (your application must decide whether or not to retry the operation on the new master).
-     *          If you do not use "safe" with a replica set and the master changes, there will be no way for the driver to know about the change so it will continuously and silently fail to write.
-     *          If safe is an integer, will replicate the update to that many machines before returning success (or throw an exception if the replication times out, see wtimeout).
-     *          This overrides the w variable set on the collection.
-     *
-     *         "fsync": Boolean, defaults to false. Forces the update to be synced to disk before returning success. If true, a safe update is implied and will override setting safe to false.
-     *
-     *         "timeout" Integer, defaults to MongoCursor::$timeout. If "safe" is set, this sets how long (in milliseconds) for the client to wait for a database response. If the database does
-     *         not respond within the timeout period, a MongoCursorTimeoutException will be thrown
+     * @param array $options
      * @throws MongoCursorException
      * @return boolean
      */
-    public function update(array $criteria , array $newobj, array $options = array())
+    public function update(array $criteria , array $newobj, array $options = [])
     {
         $multiple = ($options['multiple']) ? $options['multiple'] : false;
-//        $multiple = $options['multiple'] ?? false;
         $method = $multiple ? 'updateMany' : 'updateOne';
 
         return $this->collection->$method($criteria, $newobj, $options);
     }
 
     /**
-     * (PECL mongo &gt;= 0.9.0)<br/>
      * Remove records from this collection
-     * @link http://www.php.net/manual/en/mongocollection.remove.php
-     * @param array $criteria [optional] <p>Query criteria for the documents to delete.</p>
-     * @param array $options [optional] <p>An array of options for the remove operation. Currently available options
-     * include:
-     * </p><ul>
-     * <li><p><em>"w"</em></p><p>See {@link http://www.php.net/manual/en/mongo.writeconcerns.php Write Concerns}. The default value for <b>MongoClient</b> is <em>1</em>.</p></li>
-     * <li>
-     * <p>
-     * <em>"justOne"</em>
-     * </p>
-     * <p>
-     * Specify <strong><code>TRUE</code></strong> to limit deletion to just one document. If <strong><code>FALSE</code></strong> or
-     * omitted, all documents matching the criteria will be deleted.
-     * </p>
-     * </li>
-     * <li><p><em>"fsync"</em></p><p>Boolean, defaults to <b>FALSE</b>. If journaling is enabled, it works exactly like <em>"j"</em>. If journaling is not enabled, the write operation blocks until it is synced to database files on disk. If <strong><code>TRUE</code></strong>, an acknowledged insert is implied and this option will override setting <em>"w"</em> to <em>0</em>.</p><blockquote class="note"><p><strong class="note">Note</strong>: <span class="simpara">If journaling is enabled, users are strongly encouraged to use the <em>"j"</em> option instead of <em>"fsync"</em>. Do not use <em>"fsync"</em> and <em>"j"</em> simultaneously, as that will result in an error.</p></blockquote></li>
-     * <li><p><em>"j"</em></p><p>Boolean, defaults to <b>FALSE</b>. Forces the write operation to block until it is synced to the journal on disk. If <strong><code>TRUE</code></strong>, an acknowledged write is implied and this option will override setting <em>"w"</em> to <em>0</em>.</p><blockquote class="note"><p><strong class="note">Note</strong>: <span class="simpara">If this option is used and journaling is disabled, MongoDB 2.6+ will raise an error and the write will fail; older server versions will simply ignore the option.</p></blockquote></li>
-     * <li><p><em>"socketTimeoutMS"</em></p><p>This option specifies the time limit, in milliseconds, for socket communication. If the server does not respond within the timeout period, a <b>MongoCursorTimeoutException</b> will be thrown and there will be no way to determine if the server actually handled the write or not. A value of <em>-1</em> may be specified to block indefinitely. The default value for <b>MongoClient</b> is <em>30000</em> (30 seconds).</p></li>
-     * <li><p><em>"w"</em></p><p>See {@link http://www.php.net/manual/en/mongo.writeconcerns.php Write Concerns }. The default value for <b>MongoClient</b> is <em>1</em>.</p></li>
-     * <li><p><em>"wTimeoutMS"</em></p><p>This option specifies the time limit, in milliseconds, for {@link http://www.php.net/manual/en/mongo.writeconcerns.php write concern} acknowledgement. It is only applicable when <em>"w"</em> is greater than <em>1</em>, as the timeout pertains to replication. If the write concern is not satisfied within the time limit, a <a href="class.mongocursorexception.php" class="classname">MongoCursorException</a> will be thrown. A value of <em>0</em> may be specified to block indefinitely. The default value for {@link http://www.php.net/manual/en/class.mongoclient.php MongoClient} is <em>10000</em> (ten seconds).</p></li>
-     * </ul>
      *
-     * <p>
-     * The following options are deprecated and should no longer be used:
-     * </p><ul>
-     * <li><p><em>"safe"</em></p><p>Deprecated. Please use the {@link http://www.php.net/manual/en/mongo.writeconcerns.php write concern} <em>"w"</em> option.</p></li>
-     * <li><p><em>"timeout"</em></p><p>Deprecated alias for <em>"socketTimeoutMS"</em>.</p></li>
-     * <li><p><b>"wtimeout"</b></p><p>Deprecated alias for <em>"wTimeoutMS"</em>.</p></p>
+     * @link http://www.php.net/manual/en/mongocollection.remove.php
+     * @param array $criteria Query criteria for the documents to delete.
+     * @param array $options An array of options for the remove operation.
      * @throws MongoCursorException
      * @throws MongoCursorTimeoutException
-     * @return bool|array <p>Returns an array containing the status of the removal if the
-     * <em>"w"</em> option is set. Otherwise, returns <b>TRUE</b>.
-     * </p>
-     * <p>
-     * Fields in the status array are described in the documentation for
-     * <b>MongoCollection::insert()</b>.
-     * </p>
+     * @return bool|array Returns an array containing the status of the removal
+     * if the "w" option is set. Otherwise, returns TRUE.
      */
-    public function remove(array $criteria = array(), array $options = array())
+    public function remove(array $criteria = [], array $options = [])
     {
         $multiple = isset($options['justOne']) ? !$options['justOne'] : false;
-//        $multiple = !$options['justOne'] ?? false;
         $method = $multiple ? 'deleteMany' : 'deleteOne';
 
         return $this->collection->$method($criteria, $options);
@@ -352,12 +313,13 @@ class MongoCollection
 
     /**
      * Querys this collection
+     *
      * @link http://www.php.net/manual/en/mongocollection.find.php
      * @param array $query The fields for which to search.
      * @param array $fields Fields of the results to return.
      * @return MongoCursor
      */
-    public function find(array $query = array(), array $fields = array())
+    public function find(array $query = [], array $fields = [])
     {
         $cursor = new MongoCursor($this->db->getConnection(), (string)$this, $query, $fields);
         $cursor->setReadPreference($this->getReadPreference());
@@ -367,10 +329,11 @@ class MongoCollection
 
     /**
      * Retrieve a list of distinct values for the given key across a collection
+     *
      * @link http://www.php.net/manual/ru/mongocollection.distinct.php
      * @param string $key The key to use.
      * @param array $query An optional query parameters
-     * @return array|bool Returns an array of distinct values, or <b>FALSE</b> on failure
+     * @return array|bool Returns an array of distinct values, or FALSE on failure
      */
     public function distinct($key, array $query = [])
     {
@@ -386,31 +349,30 @@ class MongoCollection
      * @param array $options An array of options to apply, such as remove the match document from the DB and return it.
      * @return array Returns the original document, or the modified document when new is set.
      */
-    public function findAndModify(array $query, array $update = NULL, array $fields = NULL, array $options = [])
+    public function findAndModify(array $query, array $update = null, array $fields = null, array $options = [])
     {
         $query = TypeConverter::convertLegacyArrayToObject($query);
+
         if (isset($options['remove'])) {
             unset($options['remove']);
             $document = $this->collection->findOneAndDelete($query, $options);
         } else {
-            if (is_array($update)) {
-                $update = TypeConverter::convertLegacyArrayToObject($update);
-            }
-            if (is_array($fields)) {
-                $fields = TypeConverter::convertLegacyArrayToObject($fields);
-            }
+            $update = is_array($update) ? TypeConverter::convertLegacyArrayToObject($update) : [];
+
             if (isset($options['new'])) {
                 $options['returnDocument'] = \MongoDB\Operation\FindOneAndUpdate::RETURN_DOCUMENT_AFTER;
                 unset($options['new']);
             }
-            if ($fields) {
-                $options['projection'] = $fields;
-            }
+
+            $options['projection'] = is_array($fields) ? TypeConverter::convertLegacyArrayToObject($fields) : [];
+
             $document = $this->collection->findOneAndUpdate($query, $update, $options);
         }
+
         if ($document) {
             $document = TypeConverter::convertObjectToLegacyArray($document);
         }
+
         return $document;
     }
 
@@ -421,7 +383,7 @@ class MongoCollection
      * @param array $fields Fields of the results to return.
      * @return array|null
      */
-    public function findOne(array $query = array(), array $fields = array())
+    public function findOne(array $query = [], array $fields = [])
     {
         $document = $this->collection->findOne(TypeConverter::convertLegacyArrayToObject($query), ['projection' => $fields]);
         if ($document !== null) {
@@ -461,9 +423,10 @@ class MongoCollection
      * @param array $options [optional] This parameter is an associative array of the form array("optionname" => <boolean>, ...).
      * @return boolean always true
      */
-    public function ensureIndex(array $keys, array $options = array())
+    public function ensureIndex(array $keys, array $options = [])
     {
         $this->createIndex($keys, $options);
+
         return true;
     }
 
@@ -521,35 +484,24 @@ class MongoCollection
      * @param array|stdClass $query
      * @return int Returns the number of documents matching the query.
      */
-    public function count($query = array())
+    public function count($query = [])
     {
         return $this->collection->count($query);
     }
 
     /**
      * Saves an object to this collection
+     *
      * @link http://www.php.net/manual/en/mongocollection.save.php
      * @param array|object $a Array to save. If an object is used, it may not have protected or private properties.
-     * Note: If the parameter does not have an _id key or property, a new MongoId instance will be created and assigned to it.
-     * See MongoCollection::insert() for additional information on this behavior.
      * @param array $options Options for the save.
-     * <dl>
-     * <dt>"w"
-     * <dd>See WriteConcerns. The default value for MongoClient is 1.
-     * <dt>"fsync"
-     * <dd>Boolean, defaults to FALSE. Forces the insert to be synced to disk before returning success. If TRUE, an acknowledged insert is implied and will override setting w to 0.
-     * <dt>"timeout"
-     * <dd>Integer, defaults to MongoCursor::$timeout. If "safe" is set, this sets how long (in milliseconds) for the client to wait for a database response. If the database does not respond within the timeout period, a MongoCursorTimeoutException will be thrown.
-     * <dt>"safe"
-     * <dd>Deprecated. Please use the WriteConcern w option.
-     * </dl>
      * @throws MongoException if the inserted document is empty or if it contains zero-length keys. Attempting to insert an object with protected and private properties will cause a zero-length key error.
      * @throws MongoCursorException if the "w" option is set and the write fails.
      * @throws MongoCursorTimeoutException if the "w" option is set to a value greater than one and the operation takes longer than MongoCursor::$timeout milliseconds to complete. This does not kill the operation on the server, it is a client-side timeout. The operation in MongoCollection::$wtimeout is milliseconds.
      * @return array|boolean If w was set, returns an array containing the status of the save.
      * Otherwise, returns a boolean representing if the array was not empty (an empty array will not be inserted).
      */
-    public function save($a, array $options = array())
+    public function save($a, array $options = [])
     {
         if (is_object($a)) {
             $a = (array)$a;
@@ -568,6 +520,7 @@ class MongoCollection
 
     /**
      * Creates a database reference
+     *
      * @link http://www.php.net/manual/en/mongocollection.createdbref.php
      * @param array $a Object to which to create a reference.
      * @return array Returns a database reference array.
@@ -579,6 +532,7 @@ class MongoCollection
 
     /**
      * Fetches the document pointed to by a database reference
+     *
      * @link http://www.php.net/manual/en/mongocollection.getdbref.php
      * @param array $ref A database reference.
      * @return array Returns the database document pointed to by the reference.
@@ -589,7 +543,7 @@ class MongoCollection
     }
 
     /**
-     * @param  mixed $keys
+     * @param mixed $keys
      * @static
      * @return string
      */
@@ -604,6 +558,7 @@ class MongoCollection
 
     /**
      * Performs an operation similar to SQL's GROUP BY command
+     *
      * @link http://www.php.net/manual/en/mongocollection.group.php
      * @param mixed $keys Fields to group by. If an array or non-code object is passed, it will be the key used to group results.
      * @param array $initial Initial value of the aggregation counter object.
@@ -621,10 +576,10 @@ class MongoCollection
         }
         $command = [
             'group' => [
-                'ns'      => $this->name,
+                'ns' => $this->name,
                 '$reduce' => (string)$reduce,
                 'initial' => $initial,
-                'cond'    => $condition,
+                'cond' => $condition,
             ],
         ];
 

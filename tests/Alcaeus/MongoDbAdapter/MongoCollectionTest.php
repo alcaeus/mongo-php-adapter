@@ -245,7 +245,7 @@ class MongoCollectionTest extends TestCase
 
         $document = $collection->getDBRef([
             '$ref' => 'test',
-            '$id'  => 1,
+            '$id' => 1,
         ]);
         $this->assertEquals(['_id' => 1, 'foo' => 'bar'], $document);
     }
@@ -257,7 +257,7 @@ class MongoCollectionTest extends TestCase
         $this->assertSame(
             [
                 '$ref' => 'test',
-                '$id'  => 'foo',
+                '$id' => 'foo',
             ],
             $reference
         );
@@ -432,9 +432,9 @@ class MongoCollectionTest extends TestCase
             [
                 'waitedMS' => 0,
                 'retval' => [['count' => 1.0]],
-                'count'  => 1,
-                'keys'   => 1,
-                'ok'     => 1.0,
+                'count' => 1,
+                'keys' => 1,
+                'ok' => 1.0,
             ],
             $result
         );
