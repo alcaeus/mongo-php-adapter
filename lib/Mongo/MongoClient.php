@@ -231,7 +231,20 @@ class MongoClient
      */
     public function listDBs()
     {
-        return $this->client->listDatabases();
+        $databaseInfoIterator = $this->client->listDatabases();
+
+        $databases = [
+            'databases' => [],
+            'totalSize' => 0,
+            'ok' => 1.0,
+        ];
+
+        foreach ($databaseInfoIterator as $databaseInfo) {
+            $databases['databases'][] = $databaseInfo->getName();
+            $databases['totalSize'] += $databaseInfo->getSizeOnDisk();
+        }
+
+        return $databases;
     }
 
     /**

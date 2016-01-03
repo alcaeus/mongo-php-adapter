@@ -79,4 +79,15 @@ class MongoClientTest extends TestCase
         $this->assertTrue($client->setWriteConcern('majority', 100));
         $this->assertSame(['w' => 'majority', 'wtimeout' => 100], $client->getWriteConcern());
     }
+
+    public function testListDBs()
+    {
+        $this->getCollection()->insert(['foo' => 'bar']);
+        $databases = $this->getClient()->listDBs();
+
+        $this->assertSame(1.0, $databases['ok']);
+        $this->assertArrayHasKey('totalSize', $databases);
+        $this->assertArrayHasKey('databases', $databases);
+        $this->assertContains('mongo-php-adapter', $databases['databases']);
+    }
 }
