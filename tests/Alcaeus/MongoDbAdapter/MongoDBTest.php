@@ -121,4 +121,11 @@ class MongoDBTest extends TestCase
         $result = $this->getDatabase()->forceError();
         $this->assertSame(0, $result['ok']);
     }
+
+    public function testExecute()
+    {
+        $db = $this->getDatabase();
+        $this->getCollection()->insert(['foo' => 'bar']);
+        $this->assertEquals(['ok' => 1, 'retval' => 1], $db->execute("return db.test.count();"));
+    }
 }

@@ -341,16 +341,16 @@ class MongoDB
     }
 
     /**
-     * (PECL mongo &gt;= 0.9.3)<br/>
      * Runs JavaScript code on the database server.
+     *
      * @link http://www.php.net/manual/en/mongodb.execute.php
      * @param MongoCode|string $code Code to execute.
      * @param array $args [optional] Arguments to be passed to code.
      * @return array Returns the result of the evaluation.
      */
-    public function execute($code, array $args = array())
+    public function execute($code, array $args = [])
     {
-        $this->notImplemented();
+        return $this->command(['eval' => $code, 'args' => $args]);
     }
 
     /**
