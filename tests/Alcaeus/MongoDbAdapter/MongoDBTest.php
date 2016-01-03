@@ -115,4 +115,10 @@ class MongoDBTest extends TestCase
         $this->assertSame(\MongoDB::PROFILING_SLOW, $this->getDatabase()->setProfilingLevel(\MongoDB::PROFILING_ON));
         $this->assertSame(\MongoDB::PROFILING_ON, $this->getDatabase()->getProfilingLevel());
     }
+
+    public function testForceError()
+    {
+        $result = $this->getDatabase()->forceError();
+        $this->assertSame(0, $result['ok']);
+    }
 }

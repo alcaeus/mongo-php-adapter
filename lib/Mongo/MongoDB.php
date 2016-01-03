@@ -387,47 +387,47 @@ class MongoDB
     }
 
     /**
-     * (PECL mongo &gt;= 0.9.5)<br/>
      * Check if there was an error on the most recent db operation performed
+     *
      * @link http://www.php.net/manual/en/mongodb.lasterror.php
      * @return array Returns the error, if there was one.
      */
     public function lastError()
     {
-        $this->notImplemented();
+        return $this->command(array('getLastError' => 1));
     }
 
     /**
-     * (PECL mongo &gt;= 0.9.5)<br/>
      * Checks for the last error thrown during a database operation
+     *
      * @link http://www.php.net/manual/en/mongodb.preverror.php
      * @return array Returns the error and the number of operations ago it occurred.
      */
     public function prevError()
     {
-        $this->notImplemented();
+        return $this->command(array('getPrevError' => 1));
     }
 
     /**
-     * (PECL mongo &gt;= 0.9.5)<br/>
      * Clears any flagged errors on the database
+     *
      * @link http://www.php.net/manual/en/mongodb.reseterror.php
      * @return array Returns the database response.
      */
     public function resetError()
     {
-        $this->notImplemented();
+        return $this->command(array('resetError' => 1));
     }
 
     /**
-     * (PECL mongo &gt;= 0.9.5)<br/>
      * Creates a database error
+     *
      * @link http://www.php.net/manual/en/mongodb.forceerror.php
      * @return boolean Returns the database response.
      */
     public function forceError()
     {
-        $this->notImplemented();
+        return $this->command(array('forceerror' => 1));
     }
 
     /**
