@@ -458,7 +458,7 @@ class MongoCollectionTest extends TestCase
         $collection = $this->getCollection();
         $collection->insert(['foo' => 'bar']);
         $result = $collection->validate();
-        $this->assertEquals(
+        $this->assertArraySubset(
             [
                 'ns'           => 'mongo-php-adapter.test',
                 'nrecords'     => 1,
