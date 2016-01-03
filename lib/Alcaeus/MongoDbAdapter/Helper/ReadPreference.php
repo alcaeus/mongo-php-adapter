@@ -69,6 +69,14 @@ trait ReadPreference
     }
 
     /**
+     * @return bool
+     */
+    protected function getSlaveOkayFromReadPreference()
+    {
+        return $this->readPreference->getMode() != \MongoDB\Driver\ReadPreference::RP_PRIMARY;
+    }
+
+    /**
      * @param string $readPreference
      * @param array $tags
      * @return bool
@@ -122,5 +130,22 @@ trait ReadPreference
         $tags = isset($readPreferenceArray['tagsets']) ? $readPreferenceArray['tagsets'] : [];
 
         return $this->setReadPreferenceFromParameters($readPreference, $tags);
+    }
+
+    /**
+     * @param bool $ok
+     * @return bool
+     */
+    protected function setReadPreferenceFromSlaveOkay($ok = true)
+    {
+        $result = $this->getSlaveOkayFromReadPreference();
+        $readPreference = new \MongoDB\Driver\ReadPreference(
+            $ok ? \MongoDB\Driver\ReadPreference::RP_SECONDARY_PREFERRED : \MongoDB\Driver\ReadPreference::RP_PRIMARY,
+            $ok ? $this->readPreference->getTagSets() : []
+        );
+
+        $this->readPreference = $readPreference;
+
+        return $result;
     }
 }
