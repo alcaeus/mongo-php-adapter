@@ -293,51 +293,70 @@ class MongoCollectionTest extends TestCase
 
     public function testDeleteIndexUsingIndexName()
     {
-        $collection = $this->getCollection();
         $newCollection = $this->getCheckDatabase()->selectCollection('test');
-
         $newCollection->createIndex(['bar' => 1], ['name' => 'bar']);
-        $collection->deleteIndex('bar');
+
+        $expected = [
+            'nIndexesWas' => 2,
+            'ok' => 1.0,
+        ];
+        $this->assertSame($expected, $this->getCollection()->deleteIndex('bar'));
 
         $this->assertCount(1, iterator_to_array($newCollection->listIndexes()));
     }
 
-    public function testdeleteindexusingkeys()
+    public function testDeleteIndexUsingKeys()
     {
-        $collection = $this->getcollection();
         $newCollection = $this->getCheckDatabase()->selectCollection('test');
-
         $newCollection->createIndex(['bar' => 1]);
-        $collection->deleteIndex(['bar' => 1]);
+
+        $expected = [
+            'nIndexesWas' => 2,
+            'ok' => 1.0,
+        ];
+        $this->assertSame($expected, $this->getcollection()->deleteIndex(['bar' => 1]));
 
         $this->assertCount(1, iterator_to_array($newCollection->listIndexes()));
     }
 
     public function testDeleteIndexes()
     {
-        $collection = $this->getcollection();
         $newCollection = $this->getCheckDatabase()->selectCollection('test');
-
         $newCollection->createIndex(['bar' => 1]);
-        $collection->deleteIndexes();
+
+        $expected = [
+            'nIndexesWas' => 2,
+            'msg' => 'non-_id indexes dropped for collection',
+            'ok' => 1.0,
+        ];
+        $this->assertSame($expected, $this->getcollection()->deleteIndexes());
 
         $this->assertCount(1, iterator_to_array($newCollection->listIndexes())); // ID index is present by default
     }
 
     public function testGetIndexInfo()
     {
-        $this->prepareData();
+        $collection = $this->getCollection();
+        $collection->createIndex(['foo' => 1]);
+
+        $expected = [
+            [
+                'v' => 1,
+                'key' => ['_id' => 1],
+                'name' => '_id_',
+                'ns' => 'mongo-php-adapter.test',
+            ],
+            [
+                'v' => 1,
+                'key' => ['foo' => 1],
+                'name' => 'foo_1',
+                'ns' => 'mongo-php-adapter.test',
+            ],
+        ];
 
         $this->assertSame(
-            [
-                [
-                    'v'    => 1,
-                    'key'  => ['_id' => 1],
-                    'name' => '_id_',
-                    'ns'   => 'mongo-php-adapter.test',
-                ],
-            ],
-            $this->getcollection()->getIndexInfo()
+            $expected,
+            $collection->getIndexInfo()
         );
     }
 
@@ -411,10 +430,11 @@ class MongoCollectionTest extends TestCase
 
         $this->assertEquals(
             [
-                'retval' => ['count' => 1],
+                'waitedMS' => 0,
+                'retval' => [['count' => 1.0]],
                 'count'  => 1,
                 'keys'   => 1,
-                'ok'     => 1,
+                'ok'     => 1.0,
             ],
             $result
         );
@@ -432,6 +452,8 @@ class MongoCollectionTest extends TestCase
             null,
             ['remove' => true]
         );
+
+        $this->assertEquals('bar', $document['foo']);
 
         $newCollection = $this->getCheckDatabase()->selectCollection('test');
         $this->assertSame(0, $newCollection->count());

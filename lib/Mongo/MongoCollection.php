@@ -437,9 +437,19 @@ class MongoCollection
      * @param array $keys Field or fields to use as index.
      * @param array $options [optional] This parameter is an associative array of the form array("optionname" => <boolean>, ...).
      * @return array Returns the database response.
+     *
+     * @todo This method does not yet return the correct result
      */
-    public function createIndex(array $keys, array $options = array())
+    public function createIndex(array $keys, array $options = [])
     {
+        // Note: this is what the result array should look like
+//        $expected = [
+//            'createdCollectionAutomatically' => true,
+//            'numIndexesBefore' => 1,
+//            'numIndexesAfter' => 2,
+//            'ok' => 1.0
+//        ];
+
         return $this->collection->createIndex($keys, $options);
     }
 
@@ -472,7 +482,8 @@ class MongoCollection
         } else {
             throw new \InvalidArgumentException();
         }
-        return $this->collection->dropIndex($indexName);
+
+        return TypeConverter::convertObjectToLegacyArray($this->collection->dropIndex($indexName));
     }
 
     /**
@@ -482,7 +493,7 @@ class MongoCollection
      */
     public function deleteIndexes()
     {
-        return $this->collection->dropIndexes();
+        return TypeConverter::convertObjectToLegacyArray($this->collection->dropIndexes());
     }
 
     /**
@@ -626,13 +637,7 @@ class MongoCollection
             $command['group']['finalize'] = $condition['finalize'];
         }
 
-        $result = $this->db->command($command, [], $hash);
-        unset($result['waitedMS']);
-        $result['ok'] = (int)$result['ok'];
-        if (count($result['retval'])) {
-            $result['retval'] = current($result['retval']);
-        }
-        return $result;
+        return $this->db->command($command, [], $hash);
     }
 
     /**
