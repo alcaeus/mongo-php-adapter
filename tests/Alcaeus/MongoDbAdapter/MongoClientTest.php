@@ -55,7 +55,7 @@ class MongoClientTest extends TestCase
                     'host' => 'localhost',
                     'port' => 27017,
                     'health' => 1,
-                    'state' => 1,
+                    'state' => 0,
                 ],
             ],
             $client->getHosts()

@@ -180,21 +180,34 @@ class MongoClient
     public function getHosts()
     {
         $this->forceConnect();
-        $servers = $this->manager->getServers();
-        $results = [];
-        foreach ($servers as $server) {
+
+        $servers = [];
+        foreach ($this->manager->getServers() as $server) {
             $key = sprintf('%s:%d', $server->getHost(), $server->getPort());
             $info = $server->getInfo();
-            $results[$key] = [
-                'host'     => $server->getHost(),
-                'port'     => $server->getPort(),
-                'health'   => (int)$info['ok'], // Not totally sure about this
-                'state'    => $server->getType(),
-                'ping'     => $server->getLatency(),
+
+            switch ($server->getType()) {
+                case \MongoDB\Driver\Server::TYPE_RS_PRIMARY:
+                    $state = 1;
+                    break;
+                case \MongoDB\Driver\Server::TYPE_RS_SECONDARY:
+                    $state = 2;
+                    break;
+                default:
+                    $state = 0;
+            }
+
+            $servers[$key] = [
+                'host' => $server->getHost(),
+                'port' => $server->getPort(),
+                'health' => (int) $info['ok'],
+                'state' => $state,
+                'ping' => $server->getLatency(),
                 'lastPing' => null,
             ];
         }
-        return $results;
+
+        return $servers;
     }
 
     /**
