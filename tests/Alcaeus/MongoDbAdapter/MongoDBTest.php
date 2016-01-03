@@ -51,10 +51,10 @@ class MongoDBTest extends TestCase
         $this->assertSame(['type' => \MongoClient::RP_SECONDARY, 'tagsets' => ['a' => 'b']], $database->getReadPreference());
 
         // Only way to check whether options are passed down is through debugInfo
-        $writeConcern = $database->getDb()->__debugInfo()['readPreference'];
+        $readPreference = $database->getDb()->__debugInfo()['readPreference'];
 
-        $this->assertSame(ReadPreference::RP_SECONDARY, $writeConcern->getMode());
-        $this->assertSame(['a' => 'b'], $writeConcern->getTagSets());
+        $this->assertSame(ReadPreference::RP_SECONDARY, $readPreference->getMode());
+        $this->assertSame(['a' => 'b'], $readPreference->getTagSets());
     }
 
     public function testReadPreferenceIsInherited()
@@ -96,6 +96,16 @@ class MongoDBTest extends TestCase
 
         $database = $client->selectDB('test');
         $this->assertSame(['w' => 'majority', 'wtimeout' => 100], $database->getWriteConcern());
+    }
+
+    public function testSlave()
+    {
+        $database = $this->getDatabase();
+        $this->assertFalse($database->getSlaveOkay());
+        $this->assertFalse($database->setSlaveOkay());
+        $this->assertTrue($database->getSlaveOkay());
+        $this->assertTrue($database->setSlaveOkay(false));
+        $this->assertFalse($database->getSlaveOkay());
     }
 
     /**

@@ -15,6 +15,8 @@
 
 use Alcaeus\MongoDbAdapter\Helper;
 use Alcaeus\MongoDbAdapter\TypeConverter;
+use MongoDB\Driver\ReadPreference;
+use MongoDB\Driver\WriteConcern;
 
 /**
  * Represents a database collection.
@@ -24,6 +26,7 @@ class MongoCollection
 {
     use Helper\ReadPreference;
     use Helper\WriteConcern;
+    use Helper\Slave;
 
     const ASCENDING = 1;
     const DESCENDING = -1;
@@ -186,22 +189,13 @@ class MongoCollection
     }
 
     /**
-     * @link http://www.php.net/manual/en/mongocollection.getslaveokay.php
-     * @return bool
-     */
-    public function getSlaveOkay()
-    {
-        $this->notImplemented();
-    }
-
-    /**
-     * @link http://www.php.net/manual/en/mongocollection.setslaveokay.php
-     * @param bool $ok
-     * @return bool
+     * {@inheritdoc}
      */
     public function setSlaveOkay($ok = true)
     {
-        $this->notImplemented();
+        $result = $this->setSlaveOkayFromParameter($ok);
+        $this->createCollectionObject();
+        return $result;
     }
 
     /**
@@ -244,7 +238,16 @@ class MongoCollection
      */
     public function validate($scan_data = FALSE)
     {
-        $this->notImplemented();
+        $command = [
+            'validate' => $this->name,
+            'full'     => $scan_data,
+        ];
+        $result = $this->db->command($command, [], $hash);
+        if ($result) {
+            return $result;
+        }
+
+        return false;
     }
 
     /**
@@ -359,6 +362,7 @@ class MongoCollection
         $multiple = isset($options['justOne']) ? !$options['justOne'] : false;
 //        $multiple = !$options['justOne'] ?? false;
         $method = $multiple ? 'deleteMany' : 'deleteOne';
+        $criteria = TypeConverter::convertLegacyArrayToObject($criteria);
 
         return $this->collection->$method($criteria, $options);
     }
@@ -399,9 +403,32 @@ class MongoCollection
      * @param array $options An array of options to apply, such as remove the match document from the DB and return it.
      * @return array Returns the original document, or the modified document when new is set.
      */
-    public function findAndModify(array $query, array $update = NULL, array $fields = NULL, array $options = NULL)
+    public function findAndModify(array $query, array $update = NULL, array $fields = NULL, array $options = [])
     {
-
+        $query = TypeConverter::convertLegacyArrayToObject($query);
+        if (isset($options['remove'])) {
+            unset($options['remove']);
+            $document = $this->collection->findOneAndDelete($query, $options);
+        } else {
+            if (is_array($update)) {
+                $update = TypeConverter::convertLegacyArrayToObject($update);
+            }
+            if (is_array($fields)) {
+                $fields = TypeConverter::convertLegacyArrayToObject($fields);
+            }
+            if (isset($options['new'])) {
+                $options['returnDocument'] = \MongoDB\Operation\FindOneAndUpdate::RETURN_DOCUMENT_AFTER;
+                unset($options['new']);
+            }
+            if ($fields) {
+                $options['projection'] = $fields;
+            }
+            $document = $this->collection->findOneAndUpdate($query, $update, $options);
+        }
+        if ($document) {
+            $document = TypeConverter::convertObjectToLegacyArray($document);
+        }
+        return $document;
     }
 
     /**
@@ -428,7 +455,10 @@ class MongoCollection
      * @param array $options [optional] This parameter is an associative array of the form array("optionname" => <boolean>, ...).
      * @return array Returns the database response.
      */
-    public function createIndex(array $keys, array $options = array()) {}
+    public function createIndex(array $keys, array $options = array())
+    {
+        return $this->collection->createIndex($keys, $options);
+    }
 
     /**
      * @deprecated Use MongoCollection::createIndex() instead.
@@ -438,7 +468,11 @@ class MongoCollection
      * @param array $options [optional] This parameter is an associative array of the form array("optionname" => <boolean>, ...).
      * @return boolean always true
      */
-    public function ensureIndex(array $keys, array $options = array()) {}
+    public function ensureIndex(array $keys, array $options = array())
+    {
+        $this->createIndex($keys, $options);
+        return true;
+    }
 
     /**
      * Deletes an index from this collection
@@ -446,21 +480,40 @@ class MongoCollection
      * @param string|array $keys Field or fields from which to delete the index.
      * @return array Returns the database response.
      */
-    public function deleteIndex($keys) {}
+    public function deleteIndex($keys)
+    {
+        if (is_string($keys)) {
+            $indexName = $keys;
+        } elseif (is_array($keys)) {
+            $indexName = self::toIndexString($keys);
+        } else {
+            throw new \InvalidArgumentException();
+        }
+        return $this->collection->dropIndex($indexName);
+    }
 
     /**
      * Delete all indexes for this collection
      * @link http://www.php.net/manual/en/mongocollection.deleteindexes.php
      * @return array Returns the database response.
      */
-    public function deleteIndexes() {}
+    public function deleteIndexes()
+    {
+        return $this->collection->dropIndexes();
+    }
 
     /**
      * Returns an array of index names for this collection
      * @link http://www.php.net/manual/en/mongocollection.getindexinfo.php
      * @return array Returns a list of index names.
      */
-    public function getIndexInfo() {}
+    public function getIndexInfo()
+    {
+        $convertIndex = function($indexInfo) {
+            return $indexInfo->__debugInfo();
+        };
+        return array_map($convertIndex, iterator_to_array($this->collection->listIndexes()));
+    }
 
     /**
      * Counts the number of documents in this collection
@@ -496,7 +549,22 @@ class MongoCollection
      * @return array|boolean If w was set, returns an array containing the status of the save.
      * Otherwise, returns a boolean representing if the array was not empty (an empty array will not be inserted).
      */
-    public function save($a, array $options = array()) {}
+    public function save($a, array $options = array())
+    {
+        if (is_object($a)) {
+            $a = (array)$a;
+        }
+        if ( ! array_key_exists('_id', $a)) {
+            $id = new \MongoId();
+        } else {
+            $id = $a['_id'];
+            unset($a['_id']);
+        }
+        $filter = ['_id' => $id];
+        $filter = TypeConverter::convertLegacyArrayToObject($filter);
+        $a = TypeConverter::convertLegacyArrayToObject($a);
+        return $this->collection->updateOne($filter, ['$set' => $a], ['upsert' => true]);
+    }
 
     /**
      * Creates a database reference
@@ -504,7 +572,10 @@ class MongoCollection
      * @param array $a Object to which to create a reference.
      * @return array Returns a database reference array.
      */
-    public function createDBRef(array $a) {}
+    public function createDBRef(array $a)
+    {
+        return \MongoDBRef::create($this->name, $a['_id']);
+    }
 
     /**
      * Fetches the document pointed to by a database reference
@@ -512,14 +583,24 @@ class MongoCollection
      * @param array $ref A database reference.
      * @return array Returns the database document pointed to by the reference.
      */
-    public function getDBRef(array $ref) {}
+    public function getDBRef(array $ref)
+    {
+        return \MongoDBRef::get($this->db, $ref);
+    }
 
     /**
      * @param  mixed $keys
      * @static
      * @return string
      */
-    protected static function toIndexString($keys) {}
+    protected static function toIndexString($keys)
+    {
+        $result = '';
+        foreach ($keys as $name => $direction) {
+            $result .= sprintf('%s_%d', $name, $direction);
+        }
+        return $result;
+    }
 
     /**
      * Performs an operation similar to SQL's GROUP BY command
@@ -530,7 +611,59 @@ class MongoCollection
      * @param array $condition An condition that must be true for a row to be considered.
      * @return array
      */
-    public function group($keys, array $initial, MongoCode $reduce, array $condition = array()) {}
+    public function group($keys, array $initial, $reduce, array $condition = [])
+    {
+        if (is_string($reduce)) {
+            $reduce = new MongoCode($reduce);
+        }
+        if ( ! $reduce instanceof MongoCode) {
+            throw new \InvalidArgumentExcption('reduce parameter should be a string or MongoCode instance.');
+        }
+        $command = [
+            'group' => [
+                'ns'      => $this->name,
+                '$reduce' => (string)$reduce,
+                'initial' => $initial,
+                'cond'    => $condition,
+            ],
+        ];
+
+        if ($keys instanceof MongoCode) {
+            $command['group']['$keyf'] = (string)$keys;
+        } else {
+            $command['group']['key'] = $keys;
+        }
+        if (array_key_exists('condition', $condition)) {
+            $command['group']['cond'] = $condition['condition'];
+        }
+        if (array_key_exists('finalize', $condition)) {
+            if ($condition['finalize'] instanceof MongoCode) {
+                $condition['finalize'] = (string)$condition['finalize'];
+            }
+            $command['group']['finalize'] = $condition['finalize'];
+        }
+
+        $result = $this->db->command($command, [], $hash);
+        unset($result['waitedMS']);
+        $result['ok'] = (int)$result['ok'];
+        if (count($result['retval'])) {
+            $result['retval'] = current($result['retval']);
+        }
+        return $result;
+    }
+
+    // public function parallelCollectionScan(int $num_cursors)
+    // {
+    //     $command = [
+    //         'parallelCollectionScan' => $this->name,
+    //         'numCursors'             => $num_cursors,
+    //     ];
+    //     $result = $this->db->command($command, [], $hash);
+    //     if ($result) {
+    //         return $result;
+    //     }
+    //     return false;
+    // }
 
     protected function notImplemented()
     {
