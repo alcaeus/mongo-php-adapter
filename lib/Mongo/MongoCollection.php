@@ -503,9 +503,15 @@ class MongoCollection
      */
     public function getIndexInfo()
     {
-        $convertIndex = function($indexInfo) {
-            return $indexInfo->__debugInfo();
+        $convertIndex = function(\MongoDB\Model\IndexInfo $indexInfo) {
+            return [
+                'v' => $indexInfo->getVersion(),
+                'key' => $indexInfo->getKey(),
+                'name' => $indexInfo->getName(),
+                'ns' => $indexInfo->getNamespace(),
+            ];
         };
+
         return array_map($convertIndex, iterator_to_array($this->collection->listIndexes()));
     }
 
