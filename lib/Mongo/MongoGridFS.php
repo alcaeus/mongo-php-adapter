@@ -35,6 +35,11 @@ class MongoGridFS extends MongoCollection {
      */
     protected $chunksName;
 
+    protected $chunkCollection;
+    protected $collection;
+    protected $database;
+
+
 
 
     /**
@@ -48,14 +53,27 @@ class MongoGridFS extends MongoCollection {
      * @param mixed $chunks  [optional]
      * @return MongoGridFS
      */
-    public function __construct($db, $prefix = "fs", $chunks = "fs") {}
+    public function __construct(MongoDB $db, $prefix = "fs", $chunks = "fs")
+    {
+        $this->database = $db;
+        $name = $prefix . '.files';
+        $this->chunksName = $chunks . '.chunks';
+
+        $this->chunks = $db->selectCollection($this->chunksName);
+
+        parent::__construct($db, $name);
+    }
 
     /**
      * Drops the files and chunks collections
      * @link http://php.net/manual/en/mongogridfs.drop.php
      * @return array The database response
      */
-    public function drop() {}
+    public function drop()
+    {
+        $this->chunks->drop();
+        parent::drop();
+    }
 
     /**
      * @link http://php.net/manual/en/mongogridfs.find.php
