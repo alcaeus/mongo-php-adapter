@@ -23,6 +23,7 @@ use Alcaeus\MongoDbAdapter\TypeConverter;
 class MongoCollection
 {
     use Helper\ReadPreference;
+    use Helper\SlaveOkay;
     use Helper\WriteConcern;
 
     const ASCENDING = 1;
@@ -183,25 +184,6 @@ class MongoCollection
     public function getName()
     {
         return $this->name;
-    }
-
-    /**
-     * @link http://www.php.net/manual/en/mongocollection.getslaveokay.php
-     * @return bool
-     */
-    public function getSlaveOkay()
-    {
-        $this->notImplemented();
-    }
-
-    /**
-     * @link http://www.php.net/manual/en/mongocollection.setslaveokay.php
-     * @param bool $ok
-     * @return bool
-     */
-    public function setSlaveOkay($ok = true)
-    {
-        $this->notImplemented();
     }
 
     /**
