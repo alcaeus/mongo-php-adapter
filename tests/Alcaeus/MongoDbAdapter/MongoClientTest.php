@@ -46,6 +46,22 @@ class MongoClientTest extends TestCase
         $this->assertSame('mongo-php-adapter.test', (string) $collection);
     }
 
+    public function testGetHosts()
+    {
+        $client = $this->getClient();
+        $this->assertArraySubset(
+            [
+                'localhost:27017' => [
+                    'host' => 'localhost',
+                    'port' => 27017,
+                    'health' => 1,
+                    'state' => 1,
+                ],
+            ],
+            $client->getHosts()
+        );
+    }
+
     public function testReadPreference()
     {
         $client = $this->getClient();

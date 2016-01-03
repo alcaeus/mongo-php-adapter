@@ -62,6 +62,11 @@ class MongoClient
     private $client;
 
     /**
+     * @var \MongoDB\Driver\Manager
+     */
+    private $manager;
+
+    /**
      * Creates a new database connection object
      *
      * @link http://php.net/manual/en/mongo.construct.php
@@ -78,6 +83,8 @@ class MongoClient
 
         $this->server = $server;
         $this->client = new Client($server, $options, $driverOptions);
+        $info = $this->client->__debugInfo();
+        $this->manager = $info['manager'];
 
         if (isset($options['connect']) && $options['connect']) {
             $this->connect();
@@ -172,7 +179,22 @@ class MongoClient
      */
     public function getHosts()
     {
-        return [];
+        $this->forceConnect();
+        $servers = $this->manager->getServers();
+        $results = [];
+        foreach ($servers as $server) {
+            $key = sprintf('%s:%d', $server->getHost(), $server->getPort());
+            $info = $server->getInfo();
+            $results[$key] = [
+                'host'     => $server->getHost(),
+                'port'     => $server->getPort(),
+                'health'   => (int)$info['ok'], // Not totally sure about this
+                'state'    => $server->getType(),
+                'ping'     => $server->getLatency(),
+                'lastPing' => null,
+            ];
+        }
+        return $results;
     }
 
     /**
@@ -188,7 +210,7 @@ class MongoClient
      */
     public function killCursor($server_hash , $id)
     {
-
+        throw new \Exception('Not implemented');
     }
 
     /**
@@ -267,5 +289,12 @@ class MongoClient
     {
         return $this->server;
     }
+
+    private function forceConnect()
+    {
+        $command = new \MongoDB\Driver\Command(['ping' => 1]);
+        $this->manager->executeCommand('db', $command);
+    }
+
 }
 
