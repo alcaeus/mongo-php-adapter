@@ -220,7 +220,7 @@ class MongoClient
      */
     public function killCursor($server_hash , $id)
     {
-        throw new \Exception('Not implemented');
+        $this->notImplemented();
     }
 
     /**
@@ -299,7 +299,7 @@ class MongoClient
      */
     public function switchSlave()
     {
-        return $this->server;
+        $this->notImplemented();
     }
 
     /**
@@ -320,6 +320,11 @@ class MongoClient
     {
         $command = new \MongoDB\Driver\Command(['ping' => 1]);
         $this->manager->executeCommand('db', $command);
+    }
+
+    private function notImplemented()
+    {
+        throw new \Exception('Not implemented');
     }
 }
 
