@@ -24,6 +24,7 @@ class MongoDB
 {
     use Helper\ReadPreference;
     use Helper\WriteConcern;
+    use Helper\Slave;
 
     const PROFILING_OFF = 0;
     const PROFILING_SLOW = 1;
@@ -168,17 +169,6 @@ class MongoDB
     }
 
     /**
-     * (PECL mongo &gt;= 1.1.0)<br/>
-     * Get slaveOkay setting for this database
-     * @link http://www.php.net/manual/en/mongodb.getslaveokay.php
-     * @return bool Returns the value of slaveOkay for this instance.
-     */
-    public function getSlaveOkay()
-    {
-        return false;
-    }
-
-    /**
      * (PECL mongo &gt;= 0.9.0)<br/>
      * Sets this database's profiling level
      * @link http://www.php.net/manual/en/mongodb.setprofilinglevel.php
@@ -229,18 +219,13 @@ class MongoDB
     }
 
     /**
-     * (PECL mongo &gt;= 1.1.0)<br/>
-     * Change slaveOkay setting for this database
-     * @link http://php.net/manual/en/mongodb.setslaveokay.php
-     * @param bool $ok [optional] <p>
-     * If reads should be sent to secondary members of a replica set for all
-     * possible queries using this {@link http://www.php.net/manual/en/class.mongodb.php MongoDB} instance.
-     * </p>
-     * @return bool Returns the former value of slaveOkay for this instance.
+     * {@inheritdoc}
      */
-    public function setSlaveOkay ($ok = true)
+    public function setSlaveOkay($ok = true)
     {
-        return false;
+        $result = $this->setSlaveOkayFromParameter($ok);
+        $this->createDatabaseObject();
+        return $result;
     }
 
     /**
