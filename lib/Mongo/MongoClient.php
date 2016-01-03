@@ -75,7 +75,7 @@ class MongoClient
      * @param array $driverOptions An array of options for the MongoDB driver.
      * @throws MongoConnectionException
      */
-    public function __construct($server = 'default', array $options = ["connect" => true], array $driverOptions = [])
+    public function __construct($server = 'default', array $options = ['connect' => true], array $driverOptions = [])
     {
         if ($server === 'default') {
             $server = 'mongodb://' . self::DEFAULT_HOST . ':' . self::DEFAULT_PORT;
@@ -214,12 +214,9 @@ class MongoClient
      * Kills a specific cursor on the server
      *
      * @link http://www.php.net/manual/en/mongoclient.killcursor.php
-     * @param string $server_hash The server hash that has the cursor. This can be obtained through
-     * {@link http://www.php.net/manual/en/mongocursor.info.php MongoCursor::info()}.
-     * @param int|MongoInt64 $id The ID of the cursor to kill. You can either supply an {@link http://www.php.net/manual/en/language.types.integer.php int}
-     * containing the 64 bit cursor ID, or an object of the
-     * {@link http://www.php.net/manual/en/class.mongoint64.php MongoInt64} class. The latter is necessary on 32
-     * bit platforms (and Windows).
+     * @param string $server_hash The server hash that has the cursor.
+     * @param int|MongoInt64 $id The ID of the cursor to kill.
+     * @return bool
      */
     public function killCursor($server_hash , $id)
     {
@@ -303,11 +300,13 @@ class MongoClient
         return $this->server;
     }
 
+    /**
+     * Forces a connection by executing the ping command
+     */
     private function forceConnect()
     {
         $command = new \MongoDB\Driver\Command(['ping' => 1]);
         $this->manager->executeCommand('db', $command);
     }
-
 }
 
