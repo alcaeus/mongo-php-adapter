@@ -27,7 +27,7 @@ class MongoDBTest extends TestCase
     public function testCommand()
     {
         $db = $this->getDatabase();
-        $this->assertEquals(['ok' => 1], $db->command(['ping' => 1], [], $hash));
+        $this->assertEquals(['ok' => 1], $db->command(['ping' => 1]));
     }
 
     public function testCommandError()
@@ -39,7 +39,7 @@ class MongoDBTest extends TestCase
             'code' => 13,
         ];
 
-        $this->assertEquals($expected, $db->command(['listDatabases' => 1], [], $hash));
+        $this->assertEquals($expected, $db->command(['listDatabases' => 1]));
     }
 
     public function testReadPreference()
@@ -106,21 +106,26 @@ class MongoDBTest extends TestCase
         $this->assertSame(['w' => 'majority', 'wtimeout' => 100], $database->getWriteConcern());
     }
 
-    /**
-     * @return \MongoDB
-     */
-    protected function getDatabase()
+    public function testProfilingLevel()
     {
-        $client = $this->getClient();
+        $this->assertSame(\MongoDB::PROFILING_OFF, $this->getDatabase()->getProfilingLevel());
+        $this->assertSame(\MongoDB::PROFILING_OFF, $this->getDatabase()->setProfilingLevel(\MongoDB::PROFILING_SLOW));
 
-        return $client->selectDB('mongo-php-adapter');
+        $this->assertSame(\MongoDB::PROFILING_SLOW, $this->getDatabase()->getProfilingLevel());
+        $this->assertSame(\MongoDB::PROFILING_SLOW, $this->getDatabase()->setProfilingLevel(\MongoDB::PROFILING_ON));
+        $this->assertSame(\MongoDB::PROFILING_ON, $this->getDatabase()->getProfilingLevel());
     }
 
-    /**
-     * @return \MongoClient
-     */
-    protected function getClient()
+    public function testForceError()
     {
-        return new \MongoClient();
+        $result = $this->getDatabase()->forceError();
+        $this->assertSame(0, $result['ok']);
+    }
+
+    public function testExecute()
+    {
+        $db = $this->getDatabase();
+        $this->getCollection()->insert(['foo' => 'bar']);
+        $this->assertEquals(['ok' => 1, 'retval' => 1], $db->execute("return db.test.count();"));
     }
 }

@@ -52,17 +52,6 @@ class MongoCommandCursorTest extends TestCase
     }
 
     /**
-     * @param string $name
-     * @return \MongoCollection
-     */
-    protected function getCollection($name = 'test')
-    {
-        $client = new \MongoClient();
-
-        return $client->selectCollection('mongo-php-adapter', $name);
-    }
-
-    /**
      * @return \MongoCollection
      */
     protected function prepareData()

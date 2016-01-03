@@ -22,6 +22,33 @@ class MongoDBRefTest extends TestCase
     }
 
     /**
+     * @dataProvider dataCreateThroughMongoDB
+     */
+    public function testCreateThroughMongoDB($expected, $document_or_id)
+    {
+        $ref = $this->getDatabase()->createDBRef('test', $document_or_id);
+
+        $this->assertEquals($expected, $ref);
+    }
+
+    public static function dataCreateThroughMongoDB()
+    {
+        $id = new \MongoId();
+        $validRef = ['$ref' => 'test', '$id' => $id, '$db' => 'mongo-php-adapter'];
+
+        $object = new \stdClass();
+        $object->_id = $id;
+
+        return [
+            'simpleId' => [$validRef, $id],
+            'arrayWithIdProperty' => [$validRef, ['_id' => $id]],
+            'objectWithIdProperty' => [$validRef, $object],
+            'arrayWithoutId' => [null, []],
+            'objectWithoutId' => [null, new \stdClass()],
+        ];
+    }
+
+    /**
      * @dataProvider dataIsRef
      */
     public function testIsRef($expected, $ref)
@@ -49,8 +76,7 @@ class MongoDBRefTest extends TestCase
     {
         $id = new \MongoId();
 
-        $client = new \MongoClient();
-        $db = $client->selectDB('mongo-php-adapter');
+        $db = $this->getDatabase();
 
         $document = ['_id' => $id, 'foo' => 'bar'];
         $db->selectCollection('test')->insert($document);
@@ -60,18 +86,30 @@ class MongoDBRefTest extends TestCase
         $this->assertEquals($document, $fetchedRef);
     }
 
+    public function testGetThroughMongoDB()
+    {
+        $id = new \MongoId();
+
+        $db = $this->getDatabase();
+
+        $document = ['_id' => $id, 'foo' => 'bar'];
+        $db->selectCollection('test')->insert($document);
+
+        $fetchedRef = $db->getDBRef(['$ref' => 'test', '$id' => $id]);
+        $this->assertInternalType('array', $fetchedRef);
+        $this->assertEquals($document, $fetchedRef);
+    }
+
     public function testGetWithNonExistingDocument()
     {
-        $client = new \MongoClient();
-        $db = $client->selectDB('mongo-php-adapter');
+        $db = $this->getDatabase();
 
         $this->assertNull(\MongoDBRef::get($db, ['$ref' => 'test', '$id' => 'foo']));
     }
 
     public function testGetWithInvalidRef()
     {
-        $client = new \MongoClient();
-        $db = $client->selectDB('mongo-php-adapter');
+        $db = $this->getDatabase();
 
         $this->assertNull(\MongoDBRef::get($db, []));
     }
