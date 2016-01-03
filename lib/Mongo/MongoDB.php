@@ -166,7 +166,7 @@ class MongoDB
      */
     public function getProfilingLevel()
     {
-        $result = $this->command(['profile' => -1], [], $hash);
+        $result = $this->command(['profile' => -1]);
 
         return ($result['ok'] && isset($result['was'])) ? $result['was'] : 0;
     }
@@ -180,7 +180,7 @@ class MongoDB
      */
     public function setProfilingLevel($level)
     {
-        $result = $this->command(['profile' => $level], [], $hash);
+        $result = $this->command(['profile' => $level]);
 
         return ($result['ok'] && isset($result['was'])) ? $result['was'] : 0;
     }
@@ -369,7 +369,7 @@ class MongoDB
      * The resulting document's structure depends on the command,
      * but most results will have the ok field to indicate success or failure and results containing an array of each of the resulting documents.
      */
-    public function command(array $data, $options, &$hash)
+    public function command(array $data, $options = [], &$hash = null)
     {
         try {
             $cursor = new \MongoCommandCursor($this->connection, $this->name, $data);

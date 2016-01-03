@@ -27,7 +27,7 @@ class MongoDBTest extends TestCase
     public function testCommand()
     {
         $db = $this->getDatabase();
-        $this->assertEquals(['ok' => 1], $db->command(['ping' => 1], [], $hash));
+        $this->assertEquals(['ok' => 1], $db->command(['ping' => 1]));
     }
 
     public function testCommandError()
@@ -39,7 +39,7 @@ class MongoDBTest extends TestCase
             'code' => 13,
         ];
 
-        $this->assertEquals($expected, $db->command(['listDatabases' => 1], [], $hash));
+        $this->assertEquals($expected, $db->command(['listDatabases' => 1]));
     }
 
     public function testReadPreference()

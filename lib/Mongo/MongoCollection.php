@@ -150,7 +150,7 @@ class MongoCollection
 
         $command += $options;
 
-        return $this->db->command($command, [], $hash);
+        return $this->db->command($command);
     }
 
     /**
@@ -241,7 +241,7 @@ class MongoCollection
             'full'     => $scan_data,
         ];
 
-        return $this->db->command($command, [], $hash);
+        return $this->db->command($command);
     }
 
     /**
@@ -598,7 +598,7 @@ class MongoCollection
             $command['group']['finalize'] = $condition['finalize'];
         }
 
-        return $this->db->command($command, [], $hash);
+        return $this->db->command($command);
     }
 
     /**
