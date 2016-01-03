@@ -13,6 +13,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+use Alcaeus\MongoDbAdapter\Helper;
+
+
 /**
  * The connection point between MongoDB and PHP.
  * This class is used to initiate a connection and for database server commands.
@@ -22,6 +25,8 @@
  * @see MongoClient
  */
 class Mongo extends MongoClient {
+    use Helper\Slave;
+
     /**
      * @deprecated This feature has been DEPRECATED as of version 1.2.3. Relying on this feature is highly discouraged. Please use MongoPool::getSize() instead.
      * (PECL mongo &gt;= 1.2.0)<br/>
@@ -30,25 +35,7 @@ class Mongo extends MongoClient {
      * @return int Returns the current pool size.
      */
     public function getPoolSize() {}
-    /**
-     * (PECL mongo &gt;= 1.1.0)<br/>
-     * Returns the address being used by this for slaveOkay reads
-     * @link http://php.net/manual/en/mongo.getslave.php
-     * @return bool <p>The address of the secondary this connection is using for reads.
-     * </p>
-     * <p>
-     * This returns <b>NULL</b> if this is not connected to a replica set or not yet
-     * initialized.
-     * </p>
-     */
-    public function getSlave() {}
-    /**
-     * (PECL mongo &gt;= 1.1.0)<br/>
-     * Get slaveOkay setting for this connection
-     * @link http://php.net/manual/en/mongo.getslaveokay.php
-     * @return bool Returns the value of slaveOkay for this instance.
-     */
-    public function getSlaveOkay() {}
+    
     /**
      * Connects to paired database server
      * @deprecated Pass a string of the form "mongodb://server1,server2" to the constructor instead of using this method.
@@ -92,7 +79,12 @@ class Mongo extends MongoClient {
      * </p>
      * @return bool returns the former value of slaveOkay for this instance.
      */
-    public function setSlaveOkay ($ok) {}
+    public function setSlaveOkay($ok = true)
+    {
+        $result = $this->setSlaveOkayFromParameter($ok);
+        return $result;
+    }
+
     /**
      * @deprecated Relying on this feature is highly discouraged. Please use MongoPool::setSize() instead.
      *(PECL mongo &gt;= 1.2.0)<br/>
@@ -164,4 +156,16 @@ class Mongo extends MongoClient {
      * @return boolean The database response.
      */
     public function forceError() {}
+
+    /**
+     * Choose a new secondary for slaveOkay reads
+     *
+     * @link www.php.net/manual/en/mongo.switchslave.php
+     * @return string The address of the secondary this connection is using for reads. This may be the same as the previous address as addresses are randomly chosen. It may return only one address if only one secondary (or only the primary) is available.
+     * @throws MongoException (error code 15) if it is called on a non-replica-set connection. It will also throw MongoExceptions if it cannot find anyone (primary or secondary) to read from (error code 16).
+     */
+    public function switchSlave()
+    {
+        return $this->server;
+    }
 }

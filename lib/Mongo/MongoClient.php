@@ -25,6 +25,7 @@ class MongoClient
 {
     use Helper\ReadPreference;
     use Helper\WriteConcern;
+    
 
     const VERSION = '1.6.12';
     const DEFAULT_HOST = "localhost" ;
@@ -62,6 +63,12 @@ class MongoClient
     private $client;
 
     /**
+     * @var \MongoDB\Driver\Manager
+     */
+    private $manager;
+
+
+    /**
      * Creates a new database connection object
      *
      * @link http://php.net/manual/en/mongo.construct.php
@@ -78,6 +85,10 @@ class MongoClient
 
         $this->server = $server;
         $this->client = new Client($server, $options, $driverOptions);
+        // Have to have this or Mongo test crash
+        $this->readPreference = new \MongoDB\Driver\ReadPreference(\MongoDB\Driver\ReadPreference::RP_PRIMARY);
+        $info = $this->client->__debugInfo();
+        $this->manager = $info['manager'];
 
         if (isset($options['connect']) && $options['connect']) {
             $this->connect();
@@ -172,7 +183,22 @@ class MongoClient
      */
     public function getHosts()
     {
-        return [];
+        $this->forceConnect();
+        $servers = $this->manager->getServers();
+        $results = [];
+        foreach ($servers as $server) {
+            $key = sprintf('%s:%d', $server->getHost(), $server->getPort());
+            $info = $server->getInfo();
+            $results[$key] = [
+                'host'     => $server->getHost(),
+                'port'     => $server->getPort(),
+                'health'   => (int)$info['ok'], // Not totally sure about this
+                'state'    => $server->getType(),
+                'ping'     => $server->getLatency(),
+                'lastPing' => null,
+            ];
+        }
+        return $results;
     }
 
     /**
@@ -188,7 +214,7 @@ class MongoClient
      */
     public function killCursor($server_hash , $id)
     {
-
+        throw new \Exception('Not implemented');
     }
 
     /**
@@ -232,7 +258,7 @@ class MongoClient
     /**
      * {@inheritdoc}
      */
-    public function setReadPreference($readPreference, $tags = null)
+    public function setReadPreference($readPreference, array $tags = null)
     {
         return $this->setReadPreferenceFromParameters($readPreference, $tags);
     }
@@ -246,18 +272,6 @@ class MongoClient
     }
 
     /**
-     * Choose a new secondary for slaveOkay reads
-     *
-     * @link www.php.net/manual/en/mongo.switchslave.php
-     * @return string The address of the secondary this connection is using for reads. This may be the same as the previous address as addresses are randomly chosen. It may return only one address if only one secondary (or only the primary) is available.
-     * @throws MongoException (error code 15) if it is called on a non-replica-set connection. It will also throw MongoExceptions if it cannot find anyone (primary or secondary) to read from (error code 16).
-     */
-    public function switchSlave()
-    {
-        return $this->server;
-    }
-
-    /**
      * String representation of this connection
      *
      * @link http://www.php.net/manual/en/mongoclient.tostring.php
@@ -267,5 +281,12 @@ class MongoClient
     {
         return $this->server;
     }
+
+    private function forceConnect()
+    {
+        $command = new \MongoDB\Driver\Command(['ping' => 1]);
+        $this->manager->executeCommand('db', $command);
+    }
+
 }
 
