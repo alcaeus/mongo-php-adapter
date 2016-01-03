@@ -428,11 +428,10 @@ class MongoCollectionTest extends TestCase
 
         $result = $collection->group($keys, $initial, $reduce, $condition);
 
-        $this->assertEquals(
+        $this->assertArraySubset(
             [
-                'waitedMS' => 0,
                 'retval' => [['count' => 1.0]],
-                'count' => 1,
+                'count' => 1.0,
                 'keys' => 1,
                 'ok' => 1.0,
             ],
