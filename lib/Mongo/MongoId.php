@@ -23,8 +23,6 @@ class MongoId implements Serializable, TypeInterface
      */
     private $objectID;
 
-    private $attributes = [];
-
     /**
      * Creates a new id
      *
@@ -88,7 +86,7 @@ class MongoId implements Serializable, TypeInterface
             return (string) $this->objectID;
         }
 
-        return $this->attributes[$name];
+        return null;
     }
 
     /**
@@ -101,8 +99,6 @@ class MongoId implements Serializable, TypeInterface
             trigger_error("The '\$id' property is read-only", E_DEPRECATED);
             return;
         }
-
-        $this->attributes[$name] = $value;
     }
 
     /**
@@ -111,7 +107,7 @@ class MongoId implements Serializable, TypeInterface
      */
     public function __isset($name)
     {
-        return $name === 'id' || array_key_exists($name, $this->attributes);
+        return $name === 'id';
     }
 
     /**
@@ -123,8 +119,6 @@ class MongoId implements Serializable, TypeInterface
             trigger_error("The '\$id' property is read-only", E_DEPRECATED);
             return;
         }
-
-        unset($this->attributes[$name]);
     }
 
     /**

@@ -13,6 +13,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+use Alcaeus\MongoDbAdapter\Helper;
 use MongoDB\Model\CollectionInfo;
 
 /**
@@ -21,24 +22,27 @@ use MongoDB\Model\CollectionInfo;
  */
 class MongoDB
 {
+    use Helper\ReadPreference;
+    use Helper\WriteConcern;
+
     const PROFILING_OFF = 0;
     const PROFILING_SLOW = 1;
     const PROFILING_ON = 2;
 
     /**
-     * @var int
+     * @var MongoClient
      */
-    public $w = 1;
-
-    /**
-     * @var int
-     */
-    public $wtimeout = 10000;
+    protected $connection;
 
     /**
      * @var \MongoDB\Database
      */
     protected $db;
+
+    /**
+     * @var string
+     */
+    protected $name;
 
     /**
      * Creates a new database
@@ -50,11 +54,15 @@ class MongoDB
      * @throws Exception
      * @return MongoDB Returns the database.
      */
-    public function __construct($conn, $name)
+    public function __construct(MongoClient $conn, $name)
     {
         $this->connection = $conn;
         $this->name = $name;
-        $this->db = $this->connection->getClient()->selectDatabase($name);
+
+        $this->setReadPreferenceFromArray($conn->getReadPreference());
+        $this->setWriteConcernFromArray($conn->getWriteConcern());
+
+        $this->createDatabaseObject();
     }
 
     /**
@@ -77,15 +85,32 @@ class MongoDB
     }
 
     /**
-     * (PECL mongo &gt;= 1.0.2)<br/>
      * Gets a collection
+     *
      * @link http://www.php.net/manual/en/mongodb.get.php
      * @param string $name The name of the collection.
      * @return MongoCollection
      */
     public function __get($name)
     {
+        // Handle w and wtimeout properties that replicate data stored in $readPreference
+        if ($name === 'w' || $name === 'wtimeout') {
+            return $this->getWriteConcern()[$name];
+        }
+
         return $this->selectCollection($name);
+    }
+
+    /**
+     * @param string $name
+     * @param mixed $value
+     */
+    public function __set($name, $value)
+    {
+        if ($name === 'w' || $name === 'wtimeout') {
+            $this->setWriteConcernFromArray([$name => $value] + $this->getWriteConcern());
+            $this->createDatabaseObject();
+        }
     }
 
     /**
@@ -335,19 +360,6 @@ class MongoDB
     }
 
     /**
-     * (PECL mongo &gt;= 1.5.0)<br/>
-     * Get the write concern for this database
-     * @link http://php.net/manual/en/mongodb.getwriteconcern.php
-     * @return array <p>This function returns an array describing the write concern.
-     * The array contains the values w for an integer acknowledgement level or string mode,
-     * and wtimeout denoting the maximum number of milliseconds to wait for the server to satisfy the write concern.</p>
-     */
-    public function getWriteConcern()
-    {
-        $this->notImplemented();
-    }
-
-    /**
      * (PECL mongo &gt;= 0.9.3)<br/>
      * Runs JavaScript code on the database server.
      * @link http://www.php.net/manual/en/mongodb.execute.php
@@ -381,6 +393,7 @@ class MongoDB
     {
         try {
             $cursor = new \MongoCommandCursor($this->connection, $this->name, $data);
+            $cursor->setReadPreference($this->getReadPreference());
 
             return iterator_to_array($cursor)[0];
         } catch (\MongoDB\Driver\Exception\RuntimeException $e) {
@@ -463,44 +476,46 @@ class MongoDB
     }
 
     /**
-     * (PECL mongo &gt;= 1.3.0)<br/>
-     * Get the read preference for this database
-     * @link http://www.php.net/manual/en/mongodb.getreadpreference.php
-     * @return array This function returns an array describing the read preference. The array contains the values type for the string read preference mode (corresponding to the MongoClient constants), and tagsets containing a list of all tag set criteria. If no tag sets were specified, tagsets will not be present in the array.
+     * {@inheritdoc}
      */
-    public function getReadPreference()
+    public function setReadPreference($readPreference, $tags = null)
     {
-        $this->notImplemented();
+        $result = $this->setReadPreferenceFromParameters($readPreference, $tags);
+        $this->createDatabaseObject();
+
+        return $result;
     }
 
     /**
-     * (PECL mongo &gt;= 1.3.0)<br/>
-     * Set the read preference for this database
-     * @link http://www.php.net/manual/en/mongodb.setreadpreference.php
-     * @param string $read_preference <p>The read preference mode: <b>MongoClient::RP_PRIMARY</b>, <b>MongoClient::RP_PRIMARY_PREFERRED</b>, <b>MongoClient::RP_SECONDARY</b>, <b>MongoClient::RP_SECONDARY_PREFERRED</b>, or <b>MongoClient::RP_NEAREST</b>.</p>
-     * @param array $tags [optional] <p>An array of zero or more tag sets, where each tag set is itself an array of criteria used to match tags on replica set members.</p>
-     * @return boolean Returns <b>TRUE</b> on success, or <b>FALSE</b> otherwise.
+     * {@inheritdoc}
      */
-    public function setReadPreference($read_preference, array $tags)
+    public function setWriteConcern($wstring, $wtimeout = 0)
     {
-        $this->notImplemented();
-    }
+        $result = $this->setWriteConcernFromParameters($wstring, $wtimeout);
+        $this->createDatabaseObject();
 
-    /**
-     * (PECL mongo &gt;= 1.5.0)<br/>
-     * @link http://php.net/manual/en/mongodb.setwriteconcern.php
-     * Set the write concern for this database
-     * @param mixed $w <p>The write concern. This may be an integer denoting the number of servers required to acknowledge the write, or a string mode (e.g. "majority").</p>
-     * @param int $wtimeout[optional] <p>The maximum number of milliseconds to wait for the server to satisfy the write concern.</p>
-     * @return boolean Returns <b>TRUE</b> on success, or <b>FALSE</b> otherwise.
-     */
-    public function setWriteConcern($w, $wtimeout)
-    {
-        $this->notImplemented();
+        return $result;
     }
 
     protected function notImplemented()
     {
         throw new \Exception('Not implemented');
+    }
+
+    /**
+     * @return \MongoDB\Database
+     */
+    private function createDatabaseObject()
+    {
+        $options = [
+            'readPreference' => $this->readPreference,
+            'writeConcern' => $this->writeConcern,
+        ];
+
+        if ($this->db === null) {
+            $this->db = $this->connection->getClient()->selectDatabase($this->name, $options);
+        } else {
+            $this->db = $this->db->withOptions($options);
+        }
     }
 }

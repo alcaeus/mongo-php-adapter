@@ -327,6 +327,11 @@ class MongoCursor extends AbstractCursor implements Iterator
     {
         $this->errorIfOpened();
         static::$slaveOkay = $okay;
+
+        $readPreferenceArray = $this->getReadPreference();
+        $readPreferenceArray['type'] = $okay ? \MongoClient::RP_SECONDARY_PREFERRED : \MongoClient::RP_PRIMARY;
+
+        $this->setReadPreferenceFromArray($readPreferenceArray);
     }
 
     /**
@@ -397,19 +402,6 @@ class MongoCursor extends AbstractCursor implements Iterator
         }
 
         return $modifiers;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    protected function convertReadPreference()
-    {
-        $readPreference = parent::convertReadPreference();
-        if ($readPreference === null && static::$slaveOkay) {
-            $readPreference = new ReadPreference(ReadPreference::RP_SECONDARY_PREFERRED);
-        }
-
-        return $readPreference;
     }
 
     /**

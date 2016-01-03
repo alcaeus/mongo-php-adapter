@@ -14,15 +14,18 @@
  */
 
 namespace Alcaeus\MongoDbAdapter;
+
+use Alcaeus\MongoDbAdapter\Helper\ReadPreference;
 use MongoDB\Collection;
 use MongoDB\Driver\Cursor;
-use MongoDB\Driver\ReadPreference;
 
 /**
  * @internal
  */
 abstract class AbstractCursor
 {
+    use ReadPreference;
+
     /**
      * @var int
      */
@@ -65,11 +68,6 @@ abstract class AbstractCursor
         'batchSize',
         'readPreference',
     ];
-
-    /**
-     * @var array
-     */
-    protected $readPreference = [];
 
     /**
      * @return Cursor
@@ -188,16 +186,6 @@ abstract class AbstractCursor
     }
 
     /**
-     * Get the read preference for this query
-     * @link http://www.php.net/manual/en/mongocursor.getreadpreference.php
-     * @return array
-     */
-    public function getReadPreference()
-    {
-        return $this->readPreference;
-    }
-
-    /**
      * @return array
      */
     public function info()
@@ -213,27 +201,7 @@ abstract class AbstractCursor
      */
     public function setReadPreference($readPreference, $tags = null)
     {
-        $availableReadPreferences = [
-            \MongoClient::RP_PRIMARY,
-            \MongoClient::RP_PRIMARY_PREFERRED,
-            \MongoClient::RP_SECONDARY,
-            \MongoClient::RP_SECONDARY_PREFERRED,
-            \MongoClient::RP_NEAREST
-        ];
-        if (! in_array($readPreference, $availableReadPreferences)) {
-            trigger_error("The value '$readPreference' is not valid as read preference type", E_WARNING);
-            return $this;
-        }
-
-        if ($readPreference == \MongoClient::RP_PRIMARY && count($tags)) {
-            trigger_error("You can't use read preference tags with a read preference of PRIMARY", E_WARNING);
-            return $this;
-        }
-
-        $this->readPreference = [
-            'type' => $readPreference,
-            'tagsets' => $tags
-        ];
+        $this->setReadPreferenceFromParameters($readPreference, $tags);
 
         return $this;
     }
@@ -275,38 +243,6 @@ abstract class AbstractCursor
         }
 
         return $options;
-    }
-
-    /**
-     * @return ReadPreference|null
-     */
-    protected function convertReadPreference()
-    {
-        $type = array_key_exists('type', $this->readPreference) ? $this->readPreference['type'] : null;
-        if ($type === null) {
-            return null;
-        }
-
-        switch ($type) {
-            case \MongoClient::RP_PRIMARY_PREFERRED:
-                $mode = ReadPreference::RP_PRIMARY_PREFERRED;
-                break;
-            case \MongoClient::RP_SECONDARY:
-                $mode = ReadPreference::RP_SECONDARY;
-                break;
-            case \MongoClient::RP_SECONDARY_PREFERRED:
-                $mode = ReadPreference::RP_SECONDARY_PREFERRED;
-                break;
-            case \MongoClient::RP_NEAREST:
-                $mode = ReadPreference::RP_NEAREST;
-                break;
-            default:
-                $mode = ReadPreference::RP_PRIMARY;
-        }
-
-        $tagSets = array_key_exists('tagsets', $this->readPreference) ? $this->readPreference['tagsets'] : [];
-
-        return new ReadPreference($mode, $tagSets);
     }
 
     /**
