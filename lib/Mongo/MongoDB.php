@@ -123,8 +123,9 @@ class MongoDB
      */
     public function getCollectionNames(array $options = [])
     {
-        if (is_bool($options)) {
-            $options = ['includeSystemCollections' => $options];
+        // The includeSystemCollections option is no longer supported
+        if (isset($options['includeSystemCollections'])) {
+            unset($options['includeSystemCollections']);
         }
 
         $collections = $this->db->listCollections($options);
@@ -133,7 +134,7 @@ class MongoDB
             return $collectionInfo->getName();
         };
 
-        return array_map($getCollectionName, (array) $collections);
+        return array_map($getCollectionName, (array)$collections);
     }
 
     /**
@@ -165,7 +166,9 @@ class MongoDB
      */
     public function getProfilingLevel()
     {
-        return static::PROFILING_OFF;
+        $result = $this->command(['profile' => -1], [], $hash);
+
+        return ($result['ok'] && isset($result['was'])) ? $result['was'] : 0;
     }
 
     /**
@@ -177,7 +180,9 @@ class MongoDB
      */
     public function setProfilingLevel($level)
     {
-        return static::PROFILING_OFF;
+        $result = $this->command(['profile' => $level], [], $hash);
+
+        return ($result['ok'] && isset($result['was'])) ? $result['was'] : 0;
     }
 
     /**

@@ -106,6 +106,16 @@ class MongoDBTest extends TestCase
         $this->assertSame(['w' => 'majority', 'wtimeout' => 100], $database->getWriteConcern());
     }
 
+    public function testProfilingLevel()
+    {
+        $this->assertSame(\MongoDB::PROFILING_OFF, $this->getDatabase()->getProfilingLevel());
+        $this->assertSame(\MongoDB::PROFILING_OFF, $this->getDatabase()->setProfilingLevel(\MongoDB::PROFILING_SLOW));
+
+        $this->assertSame(\MongoDB::PROFILING_SLOW, $this->getDatabase()->getProfilingLevel());
+        $this->assertSame(\MongoDB::PROFILING_SLOW, $this->getDatabase()->setProfilingLevel(\MongoDB::PROFILING_ON));
+        $this->assertSame(\MongoDB::PROFILING_ON, $this->getDatabase()->getProfilingLevel());
+    }
+
     /**
      * @return \MongoDB
      */
