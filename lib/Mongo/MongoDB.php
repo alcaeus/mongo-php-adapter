@@ -306,9 +306,14 @@ class MongoDB
      */
     public function createDBRef($collection, $document_or_id)
     {
-        if (is_object($document_or_id)) {
-            $id = isset($document_or_id->_id) ? $document_or_id->_id : null;
-//            $id = $document_or_id->_id ?? null;
+        if ($document_or_id instanceof \MongoId) {
+            $id = $document_or_id;
+        } elseif (is_object($document_or_id)) {
+            if (! isset($document_or_id->_id)) {
+                return null;
+            }
+
+            $id = $document_or_id->_id;
         } elseif (is_array($document_or_id)) {
             if (! isset($document_or_id['_id'])) {
                 return null;
@@ -319,11 +324,7 @@ class MongoDB
             $id = $document_or_id;
         }
 
-        return [
-            '$ref' => $collection,
-            '$id' => $id,
-            '$db' => $this->name,
-        ];
+        return MongoDBRef::create($collection, $id, $this->name);
     }
 
 
@@ -336,7 +337,7 @@ class MongoDB
      */
     public function getDBRef(array $ref)
     {
-        $this->notImplemented();
+        return MongoDBRef::get($this, $ref);
     }
 
     /**
