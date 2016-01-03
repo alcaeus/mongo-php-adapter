@@ -351,19 +351,6 @@ class MongoCollectionTest extends TestCase
         $this->assertSame(0, $newCollection->count());
     }
 
-    public function testRemoveMultiple()
-    {
-        $collection = $this->getCollection();
-        
-
-        $collection->insert(['foo' => 'bar']);
-        $collection->insert(['foo' => 'bar']);
-        $collection->remove([], ['justOne' => false]);
-
-        $newCollection = $this->getCheckDatabase()->selectCollection('test');
-        $this->assertSame(0, $newCollection->count());
-    }
-
     public function testSaveUpdate()
     {
         $id = '54203e08d51d4a1f868b456e';
