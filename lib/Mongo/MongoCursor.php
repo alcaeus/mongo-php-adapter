@@ -326,12 +326,10 @@ class MongoCursor extends AbstractCursor implements Iterator
     public function slaveOkay($okay = true)
     {
         $this->errorIfOpened();
-        static::$slaveOkay = $okay;
 
-        $readPreferenceArray = $this->getReadPreference();
-        $readPreferenceArray['type'] = $okay ? \MongoClient::RP_SECONDARY_PREFERRED : \MongoClient::RP_PRIMARY;
+        $this->setReadPreferenceFromSlaveOkay($okay);
 
-        $this->setReadPreferenceFromArray($readPreferenceArray);
+        return $this;
     }
 
     /**

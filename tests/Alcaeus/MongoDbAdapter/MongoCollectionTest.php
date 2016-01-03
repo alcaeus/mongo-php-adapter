@@ -141,15 +141,23 @@ class MongoCollectionTest extends TestCase
     {
         $collection = $this->getCollection();
         $this->assertSame(['type' => \MongoClient::RP_PRIMARY], $collection->getReadPreference());
+        $this->assertFalse($collection->getSlaveOkay());
 
         $this->assertTrue($collection->setReadPreference(\MongoClient::RP_SECONDARY, ['a' => 'b']));
         $this->assertSame(['type' => \MongoClient::RP_SECONDARY, 'tagsets' => ['a' => 'b']], $collection->getReadPreference());
+        $this->assertTrue($collection->getSlaveOkay());
 
         // Only way to check whether options are passed down is through debugInfo
         $writeConcern = $collection->getCollection()->__debugInfo()['readPreference'];
 
         $this->assertSame(ReadPreference::RP_SECONDARY, $writeConcern->getMode());
         $this->assertSame(['a' => 'b'], $writeConcern->getTagSets());
+
+        $this->assertTrue($collection->setSlaveOkay(true));
+        $this->assertSame(['type' => \MongoClient::RP_SECONDARY_PREFERRED, 'tagsets' => ['a' => 'b']], $collection->getReadPreference());
+
+        $this->assertTrue($collection->setSlaveOkay(false));
+        $this->assertSame(['type' => \MongoClient::RP_PRIMARY], $collection->getReadPreference());
     }
 
     public function testReadPreferenceIsInherited()
