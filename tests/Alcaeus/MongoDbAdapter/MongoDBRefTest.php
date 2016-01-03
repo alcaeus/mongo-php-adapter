@@ -49,8 +49,7 @@ class MongoDBRefTest extends TestCase
     {
         $id = new \MongoId();
 
-        $client = new \MongoClient();
-        $db = $client->selectDB('mongo-php-adapter');
+        $db = $this->getDatabase();
 
         $document = ['_id' => $id, 'foo' => 'bar'];
         $db->selectCollection('test')->insert($document);
@@ -62,16 +61,14 @@ class MongoDBRefTest extends TestCase
 
     public function testGetWithNonExistingDocument()
     {
-        $client = new \MongoClient();
-        $db = $client->selectDB('mongo-php-adapter');
+        $db = $this->getDatabase();
 
         $this->assertNull(\MongoDBRef::get($db, ['$ref' => 'test', '$id' => 'foo']));
     }
 
     public function testGetWithInvalidRef()
     {
-        $client = new \MongoClient();
-        $db = $client->selectDB('mongo-php-adapter');
+        $db = $this->getDatabase();
 
         $this->assertNull(\MongoDBRef::get($db, []));
     }

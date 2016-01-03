@@ -79,20 +79,4 @@ class MongoClientTest extends TestCase
         $this->assertTrue($client->setWriteConcern('majority', 100));
         $this->assertSame(['w' => 'majority', 'wtimeout' => 100], $client->getWriteConcern());
     }
-
-    /**
-     * @param array|null $options
-     * @return \MongoClient
-     */
-    protected function getClient($options = null)
-    {
-        $args = ['mongodb://localhost'];
-        if ($options !== null) {
-            $args[] = $options;
-        }
-
-        $reflection = new \ReflectionClass('MongoClient');
-
-        return $reflection->newInstanceArgs($args);
-    }
 }

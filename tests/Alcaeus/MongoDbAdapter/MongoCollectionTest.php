@@ -482,24 +482,6 @@ class MongoCollectionTest extends TestCase
     /**
      * @return \MongoCollection
      */
-    protected function getCollection($name = 'test')
-    {
-        return $this->getDatabase()->selectCollection($name);
-    }
-
-    /**
-     * @return \MongoDB
-     */
-    protected function getDatabase()
-    {
-        $client = new \MongoClient();
-
-        return $client->selectDB('mongo-php-adapter');
-    }
-
-    /**
-     * @return \MongoCollection
-     */
     protected function prepareData()
     {
         $collection = $this->getCollection();
