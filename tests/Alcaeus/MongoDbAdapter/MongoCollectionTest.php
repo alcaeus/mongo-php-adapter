@@ -55,7 +55,7 @@ class MongoCollectionTest extends TestCase
         $this->prepareData();
 
         $document = $this->getCollection()->findOne(['foo' => 'foo'], ['_id' => false]);
-        $this->assertEquals(['foo' => 'foo'], $document);
+        $this->assertSame(['foo' => 'foo'], $document);
     }
 
     public function testDistinct()
@@ -199,6 +199,285 @@ class MongoCollectionTest extends TestCase
 
         $collection = $database->selectCollection('test');
         $this->assertSame(['w' => 'majority', 'wtimeout' => 100], $collection->getWriteConcern());
+    }
+
+    public function testSaveInsert()
+    {
+        $id = '54203e08d51d4a1f868b456e';
+        $collection = $this->getCollection();
+
+        $collection->save(['_id' => new \MongoId($id), 'foo' => 'bar']);
+        $newCollection = $this->getCheckDatabase()->selectCollection('test');
+        $this->assertSame(1, $newCollection->count());
+        $object = $newCollection->findOne();
+
+        $this->assertNotNull($object);
+        $this->assertAttributeInstanceOf('MongoDB\BSON\ObjectID', '_id', $object);
+        $this->assertSame($id, (string) $object->_id);
+        $this->assertObjectHasAttribute('foo', $object);
+        $this->assertAttributeSame('bar', 'foo', $object);
+    }
+
+    public function testSaveUpdate()
+    {
+        $id = '54203e08d51d4a1f868b456e';
+        $collection = $this->getCollection();
+
+        $collection->insert(['_id' => new \MongoId($id), 'foo' => 'bar']);
+        $collection->save(['_id' => new \MongoId($id), 'foo' => 'foo']);
+
+        $newCollection = $this->getCheckDatabase()->selectCollection('test');
+        $this->assertSame(1, $newCollection->count());
+        $object = $newCollection->findOne();
+
+        $this->assertNotNull($object);
+        $this->assertAttributeInstanceOf('MongoDB\BSON\ObjectID', '_id', $object);
+        $this->assertSame($id, (string) $object->_id);
+        $this->assertObjectHasAttribute('foo', $object);
+        $this->assertAttributeSame('foo', 'foo', $object);
+    }
+
+    public function testGetDBRef()
+    {
+        $collection = $this->getCollection();
+
+        $collection->insert(['_id' => 1, 'foo' => 'bar']);
+
+        $document = $collection->getDBRef([
+            '$ref' => 'test',
+            '$id' => 1,
+        ]);
+        $this->assertEquals(['_id' => 1, 'foo' => 'bar'], $document);
+    }
+
+    public function testCreateDBRef()
+    {
+        $collection = $this->getCollection();
+        $reference = $collection->createDBRef(['_id' => 'foo']);
+        $this->assertSame(
+            [
+                '$ref' => 'test',
+                '$id' => 'foo',
+            ],
+            $reference
+        );
+    }
+
+    public function testCreateIndex()
+    {
+        $collection = $this->getCollection();
+        $collection->createIndex(['foo' => 1]);
+
+        $newCollection = $this->getCheckDatabase()->selectCollection('test');
+        $iterator = $newCollection->listIndexes();
+        $indexes = iterator_to_array($iterator);
+        $this->assertCount(2, $indexes);
+        $index = $indexes[1];
+        $this->assertSame(['foo' => 1], $index->getKey());
+        $this->assertSame('mongo-php-adapter.test', $index->getNamespace());
+    }
+
+    public function testEnsureIndex()
+    {
+        $collection = $this->getCollection();
+        $this->assertTrue($collection->ensureIndex(['bar' => 1], ['unique' => true]));
+
+        $newCollection = $this->getCheckDatabase()->selectCollection('test');
+        $indexes = iterator_to_array($newCollection->listIndexes());
+        $this->assertCount(2, $indexes);
+        $index = $indexes[1];
+        $this->assertSame(['bar' => 1], $index->getKey());
+        $this->assertTrue($index->isUnique());
+        $this->assertSame('mongo-php-adapter.test', $index->getNamespace());
+    }
+
+    public function testDeleteIndexUsingIndexName()
+    {
+        $newCollection = $this->getCheckDatabase()->selectCollection('test');
+        $newCollection->createIndex(['bar' => 1], ['name' => 'bar']);
+
+        $expected = [
+            'nIndexesWas' => 2,
+            'ok' => 1.0,
+        ];
+        $this->assertSame($expected, $this->getCollection()->deleteIndex('bar'));
+
+        $this->assertCount(1, iterator_to_array($newCollection->listIndexes()));
+    }
+
+    public function testDeleteIndexUsingKeys()
+    {
+        $newCollection = $this->getCheckDatabase()->selectCollection('test');
+        $newCollection->createIndex(['bar' => 1]);
+
+        $expected = [
+            'nIndexesWas' => 2,
+            'ok' => 1.0,
+        ];
+        $this->assertSame($expected, $this->getcollection()->deleteIndex(['bar' => 1]));
+
+        $this->assertCount(1, iterator_to_array($newCollection->listIndexes()));
+    }
+
+    public function testDeleteIndexes()
+    {
+        $newCollection = $this->getCheckDatabase()->selectCollection('test');
+        $newCollection->createIndex(['bar' => 1]);
+
+        $expected = [
+            'nIndexesWas' => 2,
+            'msg' => 'non-_id indexes dropped for collection',
+            'ok' => 1.0,
+        ];
+        $this->assertSame($expected, $this->getcollection()->deleteIndexes());
+
+        $this->assertCount(1, iterator_to_array($newCollection->listIndexes())); // ID index is present by default
+    }
+
+    public function testGetIndexInfo()
+    {
+        $collection = $this->getCollection();
+        $collection->createIndex(['foo' => 1]);
+
+        $expected = [
+            [
+                'v' => 1,
+                'key' => ['_id' => 1],
+                'name' => '_id_',
+                'ns' => 'mongo-php-adapter.test',
+            ],
+            [
+                'v' => 1,
+                'key' => ['foo' => 1],
+                'name' => 'foo_1',
+                'ns' => 'mongo-php-adapter.test',
+            ],
+        ];
+
+        $this->assertSame(
+            $expected,
+            $collection->getIndexInfo()
+        );
+    }
+
+    public function testFindAndModifyUpdate()
+    {
+        $id = '54203e08d51d4a1f868b456e';
+        $collection = $this->getCollection();
+
+        $collection->insert(['_id' => new \MongoId($id), 'foo' => 'bar']);
+        $document = $collection->findAndModify(
+            ['_id' => new \MongoId($id)],
+            ['$set' => ['foo' => 'foo']]
+        );
+        $this->assertSame('bar', $document['foo']);
+
+        $newCollection = $this->getCheckDatabase()->selectCollection('test');
+        $this->assertSame(1, $newCollection->count());
+        $object = $newCollection->findOne();
+
+        $this->assertNotNull($object);
+        $this->assertAttributeSame('foo', 'foo', $object);
+    }
+
+    public function testFindAndModifyUpdateReturnNew()
+    {
+        $id = '54203e08d51d4a1f868b456e';
+        $collection = $this->getCollection();
+
+        $collection->insert(['_id' => new \MongoId($id), 'foo' => 'bar']);
+        $document = $collection->findAndModify(
+            ['_id' => new \MongoId($id)],
+            ['$set' => ['foo' => 'foo']],
+            null,
+            ['new' => true]
+        );
+        $this->assertSame('foo', $document['foo']);
+    }
+
+    public function testFindAndModifyWithFields()
+    {
+        $id = '54203e08d51d4a1f868b456e';
+        $collection = $this->getCollection();
+
+        $collection->insert([
+            '_id' => new \MongoId($id),
+            'foo' => 'bar',
+            'bar' => 'foo',
+        ]);
+        $document = $collection->findAndModify(
+            ['_id' => new \MongoId($id)],
+            ['$set' => ['foo' => 'foo']],
+            ['foo' => true]
+        );
+        $this->assertArrayNotHasKey('bar', $document);
+        $this->assertArrayHasKey('foo', $document);
+    }
+
+    public function testGroup()
+    {
+        $collection = $this->getCollection();
+
+        $collection->insert(['a' => 2]);
+        $collection->insert(['b' => 5]);
+        $collection->insert(['a' => 1]);
+        $keys = [];
+        $initial = ["count" => 0];
+        $reduce = "function (obj, prev) { prev.count++; }";
+        $condition = ['condition' => ["a" => [ '$gt' => 1]]];
+
+        $result = $collection->group($keys, $initial, $reduce, $condition);
+
+        $this->assertEquals(
+            [
+                'waitedMS' => 0,
+                'retval' => [['count' => 1.0]],
+                'count' => 1,
+                'keys' => 1,
+                'ok' => 1.0,
+            ],
+            $result
+        );
+    }
+
+    public function testFindAndModifyRemove()
+    {
+        $id = '54203e08d51d4a1f868b456e';
+        $collection = $this->getCollection();
+
+        $collection->insert(['_id' => new \MongoId($id), 'foo' => 'bar']);
+        $document = $collection->findAndModify(
+            ['_id' => new \MongoId($id)],
+            null,
+            null,
+            ['remove' => true]
+        );
+
+        $this->assertEquals('bar', $document['foo']);
+
+        $newCollection = $this->getCheckDatabase()->selectCollection('test');
+        $this->assertSame(0, $newCollection->count());
+    }
+
+    public function testValidate()
+    {
+        $collection = $this->getCollection();
+        $collection->insert(['foo' => 'bar']);
+        $result = $collection->validate();
+
+        $this->assertArraySubset(
+            [
+                'ns' => 'mongo-php-adapter.test',
+                'nrecords' => 1,
+                'nIndexes' => 1,
+                'keysPerIndex' => ['mongo-php-adapter.test.$_id_' => 1],
+                'valid' => true,
+                'errors' => [],
+                'warning' => 'Some checks omitted for speed. use {full:true} option to do more thorough scan.',
+                'ok'  => 1.0
+            ],
+            $result
+        );
     }
 
     /**

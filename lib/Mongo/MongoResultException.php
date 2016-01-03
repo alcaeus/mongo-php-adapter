@@ -20,7 +20,6 @@
  */
 class MongoResultException extends MongoException {
     /**
-     * <p>(PECL mongo &gt;= 1.3.0)</p>
      * Retrieve the full result document
      * http://php.net/manual/en/mongoresultexception.getdocument.php
      * @return array <p>The full result document as an array, including partial data if available and additional keys.</p>
