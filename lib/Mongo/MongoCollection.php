@@ -26,6 +26,7 @@ class MongoCollection
 {
     use Helper\ReadPreference;
     use Helper\WriteConcern;
+    use Helper\Slave;
 
     const ASCENDING = 1;
     const DESCENDING = -1;
@@ -187,14 +188,6 @@ class MongoCollection
         return $this->name;
     }
 
-    /**
-     * @link http://www.php.net/manual/en/mongocollection.getslaveokay.php
-     * @return bool
-     */
-    public function getSlaveOkay()
-    {
-        return $this->readPreference->getMode() != ReadPreference::RP_PRIMARY;
-    }
 
     /**
      * @link http://www.php.net/manual/en/mongocollection.setslaveokay.php
@@ -203,11 +196,7 @@ class MongoCollection
      */
     public function setSlaveOkay($ok = true)
     {
-        $result = $this->getSlaveOkay();
-        $this->readPreference = new ReadPreference(
-            $ok ? ReadPreference::RP_SECONDARY_PREFERRED : ReadPreference::RP_PRIMARY,
-            $this->readPreference->getTagSets()
-        );
+        $result = $this->setSlaveOkayInternal($ok);
         $this->createCollectionObject();
         return $result;
     }
