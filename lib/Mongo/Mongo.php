@@ -21,108 +21,133 @@
  * Relying on this feature is highly discouraged. Please use MongoClient instead.
  * @see MongoClient
  */
-class Mongo extends MongoClient {
+class Mongo extends MongoClient
+{
     /**
-     * @deprecated This feature has been DEPRECATED as of version 1.2.3. Relying on this feature is highly discouraged. Please use MongoPool::getSize() instead.
-     * (PECL mongo &gt;= 1.2.0)<br/>
+     * Dummy constructor to throw an exception
+     */
+    public function __construct()
+    {
+        $this->notImplemented();
+    }
+
+    /**
      * Get pool size for connection pools
+     *
      * @link http://php.net/manual/en/mongo.getpoolsize.php
      * @return int Returns the current pool size.
+     *
+     * @deprecated This feature has been DEPRECATED as of version 1.2.3. Relying on this feature is highly discouraged. Please use MongoPool::getSize() instead.
      */
-    public function getPoolSize() {}
+    public function getPoolSize()
+    {
+        $this->notImplemented();
+    }
+
     /**
-     * (PECL mongo &gt;= 1.1.0)<br/>
      * Returns the address being used by this for slaveOkay reads
+     *
      * @link http://php.net/manual/en/mongo.getslave.php
-     * @return bool <p>The address of the secondary this connection is using for reads.
-     * </p>
-     * <p>
-     * This returns <b>NULL</b> if this is not connected to a replica set or not yet
+     * @return bool The address of the secondary this connection is using for
+     * reads. This returns NULL if this is not connected to a replica set or not yet
      * initialized.
-     * </p>
      */
-    public function getSlave() {}
+    public function getSlave()
+    {
+        $this->notImplemented();
+    }
+
     /**
-     * (PECL mongo &gt;= 1.1.0)<br/>
      * Get slaveOkay setting for this connection
+     *
      * @link http://php.net/manual/en/mongo.getslaveokay.php
      * @return bool Returns the value of slaveOkay for this instance.
      */
-    public function getSlaveOkay() {}
+    public function getSlaveOkay()
+    {
+        $this->notImplemented();
+    }
+
     /**
      * Connects to paired database server
-     * @deprecated Pass a string of the form "mongodb://server1,server2" to the constructor instead of using this method.
+     *
      * @link http://www.php.net/manual/en/mongo.pairconnect.php
      * @throws MongoConnectionException
      * @return boolean
+     *
+     * @deprecated Pass a string of the form "mongodb://server1,server2" to the constructor instead of using this method.
      */
-    public function pairConnect() {}
+    public function pairConnect()
+    {
+        $this->notImplemented();
+    }
 
     /**
-     * (PECL mongo &gt;= 1.2.0)<br/>
-     * @deprecated This feature has been DEPRECATED as of version 1.2.3. Relying on this feature is highly discouraged. Please use MongoPool::info() instead.
      * Returns information about all connection pools.
+     *
      * @link http://php.net/manual/en/mongo.pooldebug.php
-     * @return array  Each connection pool has an identifier, which starts with the host. For each pool, this function shows the following fields:
-     * <p><b>in use</b></p>
-     * <p>The number of connections currently being used by MongoClient instances.
-     * in pool
-     * The number of connections currently in the pool (not being used).</p>
-     * <p><b>remaining</b></p>
-     *
-     * <p>The number of connections that could be created by this pool. For example, suppose a pool had 5 connections remaining and 3 connections in the pool. We could create 8 new instances of MongoClient before we exhausted this pool (assuming no instances of MongoClient went out of scope, returning their connections to the pool).
-     *
-     * A negative number means that this pool will spawn unlimited connections.
-     *
-     * Before a pool is created, you can change the max number of connections by calling Mongo::setPoolSize(). Once a pool is showing up in the output of this function, its size cannot be changed.</p>
-     * <p><b>timeout</b></p>
-     *
-     * <p>The socket timeout for connections in this pool. This is how long connections in this pool will attempt to connect to a server before giving up.</p>
-     *
+     * @return array
+     * @deprecated This feature has been DEPRECATED as of version 1.2.3. Relying on this feature is highly discouraged. Please use MongoPool::info() instead.
      */
-    public function poolDebug() {}
+    public function poolDebug()
+    {
+        $this->notImplemented();
+    }
 
     /**
-     * (PECL mongo &gt;= 1.1.0)<br/>
      * Change slaveOkay setting for this connection
+     *
      * @link http://php.net/manual/en/mongo.setslaveokay.php
-     * @param bool $ok [optional] <p class="para">
-     * If reads should be sent to secondary members of a replica set for all
-     * possible queries using this {@see MongoClient} instance.
-     * </p>
+     * @param bool $ok
      * @return bool returns the former value of slaveOkay for this instance.
      */
-    public function setSlaveOkay ($ok) {}
+    public function setSlaveOkay ($ok)
+    {
+        $this->notImplemented();
+    }
+
     /**
-     * @deprecated Relying on this feature is highly discouraged. Please use MongoPool::setSize() instead.
-     *(PECL mongo &gt;= 1.2.0)<br/>
      * Set the size for future connection pools.
+     *
      * @link http://php.net/manual/en/mongo.setpoolsize.php
      * @param $size <p>The max number of connections future pools will be able to create. Negative numbers mean that the pool will spawn an infinite number of connections.</p>
      * @return bool Returns the former value of pool size.
+     * @deprecated Relying on this feature is highly discouraged. Please use MongoPool::setSize() instead.
      */
-    public function setPoolSize($size) {}
+    public function setPoolSize($size)
+    {
+        $this->notImplemented();
+    }
+
     /**
      * Creates a persistent connection with a database server
+     *
      * @link http://www.php.net/manual/en/mongo.persistconnect.php
-     * @deprecated Pass array("persist" => $id) to the constructor instead of using this method.
      * @param string $username A username used to identify the connection.
      * @param string $password A password used to identify the connection.
      * @throws MongoConnectionException
      * @return boolean If the connection was successful.
+     * @deprecated Pass array("persist" => $id) to the constructor instead of using this method.
      */
-    public function persistConnect($username = "", $password = "") {}
+    public function persistConnect($username = "", $password = "")
+    {
+        $this->notImplemented();
+    }
 
     /**
      * Creates a persistent connection with paired database servers
-     * @deprecated Pass "mongodb://server1,server2" and array("persist" => $id) to the constructor instead of using this method.
+     *
      * @link http://www.php.net/manual/en/mongo.pairpersistconnect.php
      * @param string $username A username used to identify the connection.
      * @param string $password A password used to identify the connection.
      * @throws MongoConnectionException
      * @return boolean If the connection was successful.
+     * @deprecated Pass "mongodb://server1,server2" and array("persist" => $id) to the constructor instead of using this method.
      */
-    public function pairPersistConnect($username = "", $password = "") {}
+    public function pairPersistConnect($username = "", $password = "")
+    {
+        $this->notImplemented();
+    }
 
     /**
      * Connects with a database server
@@ -131,37 +156,61 @@ class Mongo extends MongoClient {
      * @throws MongoConnectionException
      * @return boolean If the connection was successful.
      */
-    protected function connectUtil() {}
+    protected function connectUtil()
+    {
+        $this->notImplemented();
+    }
 
     /**
      * Check if there was an error on the most recent db operation performed
-     * @deprecated Use MongoDB::lastError() instead.
+     *
      * @link http://www.php.net/manual/en/mongo.lasterror.php
      * @return array|null Returns the error, if there was one, or NULL.
+     * @deprecated Use MongoDB::lastError() instead.
      */
-    public function lastError() {}
+    public function lastError()
+    {
+        $this->notImplemented();
+    }
 
     /**
      * Checks for the last error thrown during a database operation
-     * @deprecated Use MongoDB::prevError() instead.
+     *
      * @link http://www.php.net/manual/en/mongo.preverror.php
      * @return array Returns the error and the number of operations ago it occurred.
+     * @deprecated Use MongoDB::prevError() instead.
      */
-    public function prevError() {}
+    public function prevError()
+    {
+        $this->notImplemented();
+    }
 
     /**
      * Clears any flagged errors on the connection
-     * @deprecated Use MongoDB::resetError() instead.
+     *
      * @link http://www.php.net/manual/en/mongo.reseterror.php
      * @return array Returns the database response.
+     * @deprecated Use MongoDB::resetError() instead.
      */
-    public function resetError() {}
+    public function resetError()
+    {
+        $this->notImplemented();
+    }
 
     /**
      * Creates a database error on the database.
-     * @deprecated Use MongoDB::forceError() instead.
+     *
      * @link http://www.php.net/manual/en/mongo.forceerror.php
      * @return boolean The database response.
+     * @deprecated Use MongoDB::forceError() instead.
      */
-    public function forceError() {}
+    public function forceError()
+    {
+        $this->notImplemented();
+    }
+
+    protected function notImplemented()
+    {
+        throw new \Exception('The Mongo class is deprecated and not supported through mongo-php-adapter');
+    }
 }

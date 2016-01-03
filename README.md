@@ -21,3 +21,8 @@ The preferred method of installing this library is with
 root:
 
     $ composer require "alcaeus/mongo-php-adapter=dev-master"
+
+# Known issues
+ - The [Mongo](https://secure.php.net/manual/en/class.mongo.php) class is
+ deprecated and was not implemented in this library. If you are still using it
+ please update your code to use the new classes.

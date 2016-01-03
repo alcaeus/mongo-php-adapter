@@ -62,6 +62,11 @@ class MongoClient
     private $client;
 
     /**
+     * @var \MongoDB\Driver\Manager
+     */
+    private $manager;
+
+    /**
      * Creates a new database connection object
      *
      * @link http://php.net/manual/en/mongo.construct.php
@@ -70,7 +75,7 @@ class MongoClient
      * @param array $driverOptions An array of options for the MongoDB driver.
      * @throws MongoConnectionException
      */
-    public function __construct($server = 'default', array $options = ["connect" => true], array $driverOptions = [])
+    public function __construct($server = 'default', array $options = ['connect' => true], array $driverOptions = [])
     {
         if ($server === 'default') {
             $server = 'mongodb://' . self::DEFAULT_HOST . ':' . self::DEFAULT_PORT;
@@ -78,6 +83,8 @@ class MongoClient
 
         $this->server = $server;
         $this->client = new Client($server, $options, $driverOptions);
+        $info = $this->client->__debugInfo();
+        $this->manager = $info['manager'];
 
         if (isset($options['connect']) && $options['connect']) {
             $this->connect();
@@ -172,23 +179,48 @@ class MongoClient
      */
     public function getHosts()
     {
-        return [];
+        $this->forceConnect();
+
+        $servers = [];
+        foreach ($this->manager->getServers() as $server) {
+            $key = sprintf('%s:%d', $server->getHost(), $server->getPort());
+            $info = $server->getInfo();
+
+            switch ($server->getType()) {
+                case \MongoDB\Driver\Server::TYPE_RS_PRIMARY:
+                    $state = 1;
+                    break;
+                case \MongoDB\Driver\Server::TYPE_RS_SECONDARY:
+                    $state = 2;
+                    break;
+                default:
+                    $state = 0;
+            }
+
+            $servers[$key] = [
+                'host' => $server->getHost(),
+                'port' => $server->getPort(),
+                'health' => (int) $info['ok'],
+                'state' => $state,
+                'ping' => $server->getLatency(),
+                'lastPing' => null,
+            ];
+        }
+
+        return $servers;
     }
 
     /**
      * Kills a specific cursor on the server
      *
      * @link http://www.php.net/manual/en/mongoclient.killcursor.php
-     * @param string $server_hash The server hash that has the cursor. This can be obtained through
-     * {@link http://www.php.net/manual/en/mongocursor.info.php MongoCursor::info()}.
-     * @param int|MongoInt64 $id The ID of the cursor to kill. You can either supply an {@link http://www.php.net/manual/en/language.types.integer.php int}
-     * containing the 64 bit cursor ID, or an object of the
-     * {@link http://www.php.net/manual/en/class.mongoint64.php MongoInt64} class. The latter is necessary on 32
-     * bit platforms (and Windows).
+     * @param string $server_hash The server hash that has the cursor.
+     * @param int|MongoInt64 $id The ID of the cursor to kill.
+     * @return bool
      */
     public function killCursor($server_hash , $id)
     {
-
+        throw new \Exception('Not implemented');
     }
 
     /**
@@ -266,6 +298,15 @@ class MongoClient
     public function __toString()
     {
         return $this->server;
+    }
+
+    /**
+     * Forces a connection by executing the ping command
+     */
+    private function forceConnect()
+    {
+        $command = new \MongoDB\Driver\Command(['ping' => 1]);
+        $this->manager->executeCommand('db', $command);
     }
 }
 
