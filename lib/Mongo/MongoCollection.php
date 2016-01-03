@@ -188,15 +188,12 @@ class MongoCollection
         return $this->name;
     }
 
-
     /**
-     * @link http://www.php.net/manual/en/mongocollection.setslaveokay.php
-     * @param bool $ok
-     * @return bool
+     * {@inheritdoc}
      */
     public function setSlaveOkay($ok = true)
     {
-        $result = $this->setSlaveOkayInternal($ok);
+        $result = $this->setSlaveOkayFromParameter($ok);
         $this->createCollectionObject();
         return $result;
     }

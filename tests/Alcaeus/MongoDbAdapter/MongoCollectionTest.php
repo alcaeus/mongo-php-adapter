@@ -294,7 +294,7 @@ class MongoCollectionTest extends TestCase
         $this->assertCount(1, iterator_to_array($newCollection->listIndexes()));
     }
 
-    public function testdeleteindexusingkeys()
+    public function testDeleteIndexUsingKeys()
     {
         $collection = $this->getcollection();
         $newCollection = $this->getCheckDatabase()->selectCollection('test');

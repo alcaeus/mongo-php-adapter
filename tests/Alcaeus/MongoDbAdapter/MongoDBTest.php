@@ -98,6 +98,16 @@ class MongoDBTest extends TestCase
         $this->assertSame(['w' => 'majority', 'wtimeout' => 100], $database->getWriteConcern());
     }
 
+    public function testSlave()
+    {
+        $database = $this->getDatabase();
+        $this->assertFalse($database->getSlaveOkay());
+        $this->assertFalse($database->setSlaveOkay());
+        $this->assertTrue($database->getSlaveOkay());
+        $this->assertTrue($database->setSlaveOkay(false));
+        $this->assertFalse($database->getSlaveOkay());
+    }
+
     /**
      * @return \MongoDB
      */

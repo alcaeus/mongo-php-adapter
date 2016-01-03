@@ -20,6 +20,15 @@ namespace Alcaeus\MongoDbAdapter\Helper;
  */
 trait Slave
 {
+
+    /**
+     * @link http://www.php.net/manual/en/mongocollection.setslaveokay.php
+     * @param bool $ok
+     * @return bool
+     */
+    abstract public function setSlaveOkay($ok = true);
+
+
 	/**
      * @link http://www.php.net/manual/en/mongocollection.getslaveokay.php
      * @return bool
@@ -29,7 +38,7 @@ trait Slave
         return $this->readPreference->getMode() != \MongoDB\Driver\ReadPreference::RP_PRIMARY;
     }
 
-    private function setSlaveOkayInternal($ok = true)
+    private function setSlaveOkayFromParameter($ok = true)
     {
     	$result = $this->getSlaveOkay();
         $this->readPreference = new \MongoDB\Driver\ReadPreference(

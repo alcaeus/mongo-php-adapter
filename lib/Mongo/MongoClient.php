@@ -25,6 +25,7 @@ class MongoClient
 {
     use Helper\ReadPreference;
     use Helper\WriteConcern;
+    
 
     const VERSION = '1.6.12';
     const DEFAULT_HOST = "localhost" ;
@@ -78,6 +79,7 @@ class MongoClient
 
         $this->server = $server;
         $this->client = new Client($server, $options, $driverOptions);
+        $this->readPreference = new \MongoDB\Driver\ReadPreference(\MongoDB\Driver\ReadPreference::RP_PRIMARY);
 
         if (isset($options['connect']) && $options['connect']) {
             $this->connect();
