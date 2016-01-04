@@ -198,6 +198,18 @@ class Mongo extends MongoClient
     }
 
     /**
+     * Choose a new secondary for slaveOkay reads
+     *
+     * @link www.php.net/manual/en/mongo.switchslave.php
+     * @return string The address of the secondary this connection is using for reads. This may be the same as the previous address as addresses are randomly chosen. It may return only one address if only one secondary (or only the primary) is available.
+     * @throws MongoException (error code 15) if it is called on a non-replica-set connection. It will also throw MongoExceptions if it cannot find anyone (primary or secondary) to read from (error code 16).
+     */
+    public function switchSlave()
+    {
+        $this->notImplemented();
+    }
+
+    /**
      * Creates a database error on the database.
      *
      * @link http://www.php.net/manual/en/mongo.forceerror.php
