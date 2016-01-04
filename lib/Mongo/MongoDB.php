@@ -14,6 +14,7 @@
  */
 
 use Alcaeus\MongoDbAdapter\Helper;
+use Alcaeus\MongoDbAdapter\TypeConverter;
 use MongoDB\Model\CollectionInfo;
 
 /**
@@ -220,7 +221,7 @@ class MongoDB
      */
     public function drop()
     {
-        return $this->db->drop();
+        return TypeConverter::convertObjectToLegacyArray($this->db->drop());
     }
 
     /**
@@ -233,7 +234,7 @@ class MongoDB
      */
     public function repair($preserve_cloned_files = FALSE, $backup_original_files = FALSE)
     {
-        return [];
+        $this->notImplemented();
     }
 
     /**
@@ -278,7 +279,7 @@ class MongoDB
             $coll = $coll->getName();
         }
 
-        return $this->db->dropCollection((string) $coll);
+        return TypeConverter::convertObjectToLegacyArray($this->db->dropCollection((string) $coll));
     }
 
     /**

@@ -162,4 +162,21 @@ class MongoDBTest extends TestCase
 
         $this->fail('The test collection was not found');
     }
+
+    public function testDrop()
+    {
+        $this->getCollection()->insert(['foo' => 'bar']);
+        $this->assertSame(['dropped' => 'mongo-php-adapter', 'ok' => 1.0], $this->getDatabase()->drop());
+    }
+
+    public function testDropCollection()
+    {
+        $this->getCollection()->insert(['foo' => 'bar']);
+        $expected = [
+            'ns' => (string) $this->getCollection(),
+            'nIndexesWas' => 1,
+            'ok' => 1.0
+        ];
+        $this->assertSame($expected, $this->getDatabase()->dropCollection('test'));
+    }
 }
