@@ -51,9 +51,9 @@ trait WriteConcern
     /**
      * @param string|int $wstring
      * @param int $wtimeout
-     * @return bool
+     * @return \MongoDB\Driver\WriteConcern
      */
-    protected function setWriteConcernFromParameters($wstring, $wtimeout = 0)
+    protected function createWriteConcernFromParameters($wstring, $wtimeout)
     {
         if (! is_string($wstring) && ! is_int($wstring)) {
             trigger_error("w for WriteConcern must be a string or integer", E_WARNING);
@@ -61,7 +61,17 @@ trait WriteConcern
         }
 
         // Ensure wtimeout is not < 0
-        $this->writeConcern = new \MongoDB\Driver\WriteConcern($wstring, max($wtimeout, 0));
+        return new \MongoDB\Driver\WriteConcern($wstring, max($wtimeout, 0));
+    }
+
+    /**
+     * @param string|int $wstring
+     * @param int $wtimeout
+     * @return bool
+     */
+    protected function setWriteConcernFromParameters($wstring, $wtimeout = 0)
+    {
+        $this->writeConcern = $this->createWriteConcernFromParameters($wstring, $wtimeout);
 
         return true;
     }

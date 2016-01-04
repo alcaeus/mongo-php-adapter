@@ -19,7 +19,13 @@ class MongoCollectionTest extends TestCase
         $id = '54203e08d51d4a1f868b456e';
         $collection = $this->getCollection();
 
-        $collection->insert(['_id' => new \MongoId($id), 'foo' => 'bar']);
+        $expected = [
+            'ok' => 1.0,
+            'n' => 0,
+            'err' => null,
+            'errmsg' => null,
+        ];
+        $this->assertSame($expected, $collection->insert(['_id' => new \MongoId($id), 'foo' => 'bar']));
 
         $newCollection = $this->getCheckDatabase()->selectCollection('test');
         $this->assertSame(1, $newCollection->count());
@@ -30,6 +36,64 @@ class MongoCollectionTest extends TestCase
         $this->assertSame($id, (string) $object->_id);
         $this->assertObjectHasAttribute('foo', $object);
         $this->assertAttributeSame('bar', 'foo', $object);
+    }
+
+    public function testUnacknowledgedWrite()
+    {
+        $this->assertTrue($this->getCollection()->insert(['foo' => 'bar'], ['w' => 0]));
+    }
+
+    public function testInsertMany()
+    {
+        $expected = [
+            'connectionId' => 0,
+            'n' => 0,
+            'syncMillis' => 0,
+            'writtenTo' => null,
+            'err' => null,
+            'errmsg' => null
+        ];
+
+        $documents = [
+            ['foo' => 'bar'],
+            ['bar' => 'foo']
+        ];
+        $this->assertSame($expected, $this->getCollection()->batchInsert($documents));
+    }
+
+    public function testUpdateOne()
+    {
+        $this->getCollection()->insert(['foo' => 'bar']);
+        $this->getCollection()->insert(['foo' => 'bar']);
+        $expected = [
+            'ok' => 1.0,
+            'nModified' => 1,
+            'n' => 1,
+            'err' => null,
+            'errmsg' => null,
+            'updatedExisting' => true,
+        ];
+
+        $result = $this->getCollection()->update(['foo' => 'bar'], ['$set' => ['foo' => 'foo']]);
+        $this->assertSame($expected, $result);
+    }
+
+    public function testUpdateMany()
+    {
+        $this->getCollection()->insert(['change' => true, 'foo' => 'bar']);
+        $this->getCollection()->insert(['change' => true, 'foo' => 'bar']);
+        $this->getCollection()->insert(['change' => true, 'foo' => 'foo']);
+        $expected = [
+            'ok' => 1.0,
+            'nModified' => 2,
+            'n' => 3,
+            'err' => null,
+            'errmsg' => null,
+            'updatedExisting' => true,
+        ];
+
+        $result = $this->getCollection()->update(['change' => true], ['$set' => ['foo' => 'foo']], ['multiple' => true]);
+        $this->assertSame($expected, $result);
     }
 
     public function testFindReturnsCursor()
@@ -477,6 +541,17 @@ class MongoCollectionTest extends TestCase
             ],
             $result
         );
+    }
+
+    public function testDrop()
+    {
+        $this->getCollection()->insert(['foo' => 'bar']);
+        $expected = [
+            'ns' => (string) $this->getCollection(),
+            'nIndexesWas' => 1,
+            'ok' => 1.0
+        ];
+        $this->assertSame($expected, $this->getCollection()->drop());
     }
 
     /**

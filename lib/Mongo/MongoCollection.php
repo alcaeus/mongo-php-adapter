@@ -177,7 +177,7 @@ class MongoCollection
 
         $command += $options;
 
-        $cursor = new MongoCommandCursor($this->db->getConnection(), (string)$this, $command);
+        $cursor = new MongoCommandCursor($this->db->getConnection(), (string) $this, $command);
         $cursor->setReadPreference($this->getReadPreference());
 
         return $cursor;
@@ -224,7 +224,7 @@ class MongoCollection
      */
     public function drop()
     {
-        return $this->collection->drop();
+        return TypeConverter::convertObjectToLegacyArray($this->collection->drop());
     }
 
     /**
@@ -257,7 +257,21 @@ class MongoCollection
      */
     public function insert($a, array $options = [])
     {
-        return $this->collection->insertOne(TypeConverter::convertLegacyArrayToObject($a), $options);
+        $result = $this->collection->insertOne(
+            TypeConverter::convertLegacyArrayToObject($a),
+            $this->convertWriteConcernOptions($options)
+        );
+
+        if (! $result->isAcknowledged()) {
+            return true;
+        }
+
+        return [
+            'ok' => 1.0,
+            'n' => 0,
+            'err' => null,
+            'errmsg' => null,
+        ];
     }
 
     /**
@@ -267,11 +281,27 @@ class MongoCollection
      * @param array $a An array of arrays.
      * @param array $options Options for the inserts.
      * @throws MongoCursorException
-     * @return mixed f "safe" is set, returns an associative array with the status of the inserts ("ok") and any error that may have occured ("err"). Otherwise, returns TRUE if the batch insert was successfully sent, FALSE otherwise.
+     * @return mixed If "safe" is set, returns an associative array with the status of the inserts ("ok") and any error that may have occured ("err"). Otherwise, returns TRUE if the batch insert was successfully sent, FALSE otherwise.
      */
     public function batchInsert(array $a, array $options = [])
     {
-        return $this->collection->insertMany($a, $options);
+        $result = $this->collection->insertMany(
+            TypeConverter::convertLegacyArrayToObject($a),
+            $this->convertWriteConcernOptions($options)
+        );
+
+        if (! $result->isAcknowledged()) {
+            return true;
+        }
+
+        return [
+            'connectionId' => 0,
+            'n' => 0,
+            'syncMillis' => 0,
+            'writtenTo' => null,
+            'err' => null,
+            'errmsg' => null,
+        ];
     }
 
     /**
@@ -286,10 +316,29 @@ class MongoCollection
      */
     public function update(array $criteria , array $newobj, array $options = [])
     {
-        $multiple = ($options['multiple']) ? $options['multiple'] : false;
+        $multiple = isset($options['multiple']) ? $options['multiple'] : false;
         $method = $multiple ? 'updateMany' : 'updateOne';
+        unset($options['multiple']);
 
-        return $this->collection->$method($criteria, $newobj, $options);
+        /** @var \MongoDB\UpdateResult $result */
+        $result = $this->collection->$method(
+            TypeConverter::convertLegacyArrayToObject($criteria),
+            TypeConverter::convertLegacyArrayToObject($newobj),
+            $this->convertWriteConcernOptions($options)
+        );
+
+        if (! $result->isAcknowledged()) {
+            return true;
+        }
+
+        return [
+            'ok' => 1.0,
+            'nModified' => $result->getModifiedCount(),
+            'n' => $result->getMatchedCount(),
+            'err' => null,
+            'errmsg' => null,
+            'updatedExisting' => $result->getUpsertedCount() == 0,
+        ];
     }
 
     /**
@@ -633,6 +682,38 @@ class MongoCollection
         } else {
             $this->collection = $this->collection->withOptions($options);
         }
+    }
+
+    /**
+     * @param array $options
+     * @return array
+     */
+    private function convertWriteConcernOptions(array $options)
+    {
+        if (isset($options['safe'])) {
+            $options['w'] = ($options['safe']) ? 1 : 0;
+        }
+
+        if (isset($options['wtimeout']) && !isset($options['wTimeoutMS'])) {
+            $options['wTimeoutMS'] = $options['wtimeout'];
+        }
+
+        if (isset($options['w']) || !isset($options['wTimeoutMS'])) {
+            $collectionWriteConcern = $this->getWriteConcern();
+            $writeConcern = $this->createWriteConcernFromParameters(
+                isset($options['w']) ? $options['w'] : $collectionWriteConcern['w'],
+                isset($options['wTimeoutMS']) ? $options['wTimeoutMS'] : $collectionWriteConcern['wtimeout']
+            );
+
+            $options['writeConcern'] = $writeConcern;
+        }
+
+        unset($options['safe']);
+        unset($options['w']);
+        unset($options['wTimeout']);
+        unset($options['wTimeoutMS']);
+
+        return $options;
     }
 }
 
