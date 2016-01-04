@@ -116,9 +116,36 @@ class MongoDB
     }
 
     /**
+     * Returns information about collections in this database
+     *
+     * @link http://www.php.net/manual/en/mongodb.getcollectioninfo.php
+     * @param array $options An array of options for listing the collections.
+     * @return array
+     */
+    public function getCollectionInfo(array $options = [])
+    {
+        // The includeSystemCollections option is no longer supported
+        if (isset($options['includeSystemCollections'])) {
+            unset($options['includeSystemCollections']);
+        }
+
+        $collections = $this->db->listCollections($options);
+
+        $getCollectionInfo = function (CollectionInfo $collectionInfo) {
+            return [
+                'name' => $collectionInfo->getName(),
+                'options' => $collectionInfo->getOptions(),
+            ];
+        };
+
+        return array_map($getCollectionInfo, iterator_to_array($collections));
+    }
+
+    /**
      * Get all collections from this database
      *
      * @link http://www.php.net/manual/en/mongodb.getcollectionnames.php
+     * @param array $options An array of options for listing the collections.
      * @return array Returns the names of the all the collections in the database as an array
      */
     public function getCollectionNames(array $options = [])
@@ -134,7 +161,7 @@ class MongoDB
             return $collectionInfo->getName();
         };
 
-        return array_map($getCollectionName, (array)$collections);
+        return array_map($getCollectionName, iterator_to_array($collections));
     }
 
     /**
@@ -259,7 +286,7 @@ class MongoDB
      *
      * @link http://www.php.net/manual/en/mongodb.listcollections.php
      * @param array $options
-     * @return array Returns a list of MongoCollections.
+     * @return MongoCollection[] Returns a list of MongoCollections.
      */
     public function listCollections(array $options = [])
     {

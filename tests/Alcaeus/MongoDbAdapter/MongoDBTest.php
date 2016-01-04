@@ -128,4 +128,38 @@ class MongoDBTest extends TestCase
         $this->getCollection()->insert(['foo' => 'bar']);
         $this->assertEquals(['ok' => 1, 'retval' => 1], $db->execute("return db.test.count();"));
     }
+
+    public function testGetCollectionNames()
+    {
+        $this->getCollection()->insert(['foo' => 'bar']);
+        $this->assertContains('test', $this->getDatabase()->getCollectionNames());
+    }
+
+    public function testGetCollectionInfo()
+    {
+        $this->getCollection()->insert(['foo' => 'bar']);
+
+        foreach ($this->getDatabase()->getCollectionInfo() as $collectionInfo) {
+            if ($collectionInfo['name'] === 'test') {
+                $this->assertSame(['name' => 'test', 'options' => []], $collectionInfo);
+                return;
+            }
+        }
+
+        $this->fail('The test collection was not found');
+    }
+
+    public function testListCollections()
+    {
+        $this->getCollection()->insert(['foo' => 'bar']);
+        foreach ($this->getDatabase()->listCollections() as $collection) {
+            $this->assertInstanceOf('MongoCollection', $collection);
+
+            if ($collection->getName() === 'test') {
+                return;
+            }
+        }
+
+        $this->fail('The test collection was not found');
+    }
 }
