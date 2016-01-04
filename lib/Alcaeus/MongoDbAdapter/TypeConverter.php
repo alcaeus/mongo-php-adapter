@@ -49,7 +49,20 @@ class TypeConverter
         switch (true) {
             case $value instanceof \MongoDB\BSON\ObjectID:
                 return new \MongoId($value);
-
+            case $value instanceof \MongoDB\BSON\Binary:
+                return new \MongoBinData($value);
+            case $value instanceof \MongoDB\BSON\Javascript:
+                return new \MongoCode($value);
+            case $value instanceof \MongoDB\BSON\MaxKey:
+                return new \MongoMaxKey();
+            case $value instanceof \MongoDB\BSON\MinKey:
+                return new \MongoMinKey();
+            case $value instanceof \MongoDB\BSON\Regex:
+                return new \MongoRegex($value);
+            case $value instanceof \MongoDB\BSON\Timestamp:
+                return new \MongoTimestamp($value);
+            case $value instanceof \MongoDB\BSON\UTCDatetime:
+                return new \MongoDate($value);
             default:
                 return $value;
         }
