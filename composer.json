@@ -5,7 +5,8 @@
     "keywords": ["mongodb", "database"],
     "license": "MIT",
     "authors": [
-        { "name": "alcaeus", "email": "alcaeus@alcaeus.org" }
+        { "name": "alcaeus", "email": "alcaeus@alcaeus.org" },
+        { "name": "Olivier Lechevalier", "email": "olivier.lechevalier@gmail.com" }
     ],
     "require": {
         "php": "^5.5 || ^7.0",
