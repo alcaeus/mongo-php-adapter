@@ -110,7 +110,7 @@ class MongoGridFSFile
     {
         $handle = tmpfile();
         $this->writeFromRessource($handle);
-        fseek($handle, 0);
+        rewind($handle);
         return $handle;
     }
 
