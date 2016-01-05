@@ -572,18 +572,18 @@ class MongoCollection
     public function save($a, array $options = [])
     {
         if (is_object($a)) {
-            $a = (array)$a;
+            $a = (array) $a;
         }
+
         if ( ! array_key_exists('_id', $a)) {
             $id = new \MongoId();
         } else {
             $id = $a['_id'];
             unset($a['_id']);
         }
-        $filter = ['_id' => $id];
-        $filter = TypeConverter::convertLegacyArrayToObject($filter);
-        $a = TypeConverter::convertLegacyArrayToObject($a);
-        return $this->collection->updateOne($filter, ['$set' => $a], ['upsert' => true]);
+        $options['upsert'] = true;
+
+        return $this->update(['_id' => $id], ['$set' => $a], $options);
     }
 
     /**
