@@ -159,7 +159,7 @@ class MongoGridFS extends MongoCollection
      * @param array $fields Fields of the results to return.
      * @return MongoGridFSFile|null
      */
-    public function findOne(array $query = array(), array $fields = array(), array $options = array())
+    public function findOne(array $query = [], array $fields = [], array $options = [])
     {
         $file = parent::findOne($query, $fields);
         if (! $file) {
@@ -176,7 +176,7 @@ class MongoGridFS extends MongoCollection
      * @throws MongoCursorException
      * @return boolean
      */
-    public function remove(array $criteria = array(), array $options = array())
+    public function remove(array $criteria = [], array $options = [])
     {
         $matchingFiles = parent::find($criteria, ['_id' => 1]);
         $ids = [];
@@ -288,6 +288,8 @@ class MongoGridFS extends MongoCollection
         $offset = 0;
         $i = 0;
 
+        rewind($file);
+
         while ($offset < $length) {
             $data = stream_get_contents($file, $chunkSize);
             $this->insertChunk($fileId, $data, $i++);
@@ -298,8 +300,9 @@ class MongoGridFS extends MongoCollection
     private function calculateMD5($file)
     {
         // XXX: this could be really a bad idea with big files...
-        $data = stream_get_contents($file);
         rewind($file);
+        $data = stream_get_contents($file);
+
         return md5($data);
     }
 
