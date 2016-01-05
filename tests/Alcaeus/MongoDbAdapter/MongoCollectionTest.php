@@ -76,6 +76,8 @@ class MongoCollectionTest extends TestCase
 
         $result = $this->getCollection()->update(['foo' => 'bar'], ['$set' => ['foo' => 'foo']]);
         $this->assertSame($expected, $result);
+
+        $this->assertSame(1, $this->getCheckDatabase()->selectCollection('test')->count(['foo' => 'foo']));
     }
 
     public function testUpdateMany()
@@ -94,6 +96,61 @@ class MongoCollectionTest extends TestCase
 
         $result = $this->getCollection()->update(['change' => true], ['$set' => ['foo' => 'foo']], ['multiple' => true]);
         $this->assertSame($expected, $result);
+
+        $this->assertSame(3, $this->getCheckDatabase()->selectCollection('test')->count(['foo' => 'foo']));
+    }
+
+    public function testUnacknowledgedUpdate()
+    {
+        $this->getCollection()->insert(['foo' => 'bar']);
+        $this->getCollection()->insert(['foo' => 'bar']);
+
+        $this->assertTrue($this->getCollection()->update(['foo' => 'bar'], ['$set' => ['foo' => 'foo']], ['w' => 0]));
+    }
+
+    public function testRemoveMultiple()
+    {
+        $this->getCollection()->insert(['change' => true, 'foo' => 'bar']);
+        $this->getCollection()->insert(['change' => true, 'foo' => 'bar']);
+        $this->getCollection()->insert(['change' => true, 'foo' => 'foo']);
+        $expected = [
+            'ok' => 1.0,
+            'n' => 2,
+            'err' => null,
+            'errmsg' => null,
+        ];
+
+        $result = $this->getCollection()->remove(['foo' => 'bar']);
+        $this->assertSame($expected, $result);
+
+        $this->assertSame(1, $this->getCheckDatabase()->selectCollection('test')->count());
+    }
+
+    public function testRemoveSingle()
+    {
+        $this->getCollection()->insert(['change' => true, 'foo' => 'bar']);
+        $this->getCollection()->insert(['change' => true, 'foo' => 'bar']);
+        $this->getCollection()->insert(['change' => true, 'foo' => 'foo']);
+        $expected = [
+            'ok' => 1.0,
+            'n' => 1,
+            'err' => null,
+            'errmsg' => null,
+        ];
+
+        $result = $this->getCollection()->remove(['foo' => 'bar'], ['justOne' => true]);
+        $this->assertSame($expected, $result);
+
+        $this->assertSame(2, $this->getCheckDatabase()->selectCollection('test')->count());
+    }
+
+    public function testRemoveUnacknowledged()
+    {
+        $this->getCollection()->insert(['change' => true, 'foo' => 'bar']);
+        $this->getCollection()->insert(['change' => true, 'foo' => 'bar']);
+        $this->getCollection()->insert(['change' => true, 'foo' => 'foo']);
+
+        $this->assertTrue($this->getCollection()->remove(['foo' => 'bar'], ['w' => 0]));
     }
 
     public function testFindReturnsCursor()

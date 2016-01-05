@@ -354,10 +354,25 @@ class MongoCollection
      */
     public function remove(array $criteria = [], array $options = [])
     {
-        $multiple = isset($options['justOne']) ? !$options['justOne'] : false;
+        $multiple = isset($options['justOne']) ? !$options['justOne'] : true;
         $method = $multiple ? 'deleteMany' : 'deleteOne';
 
-        return $this->collection->$method($criteria, $options);
+        /** @var \MongoDB\DeleteResult $result */
+        $result = $this->collection->$method(
+            TypeConverter::convertLegacyArrayToObject($criteria),
+            $this->convertWriteConcernOptions($options)
+        );
+
+        if (! $result->isAcknowledged()) {
+            return true;
+        }
+
+        return [
+            'ok' => 1.0,
+            'n' => $result->getDeletedCount(),
+            'err' => null,
+            'errmsg' => null
+        ];
     }
 
     /**
@@ -370,7 +385,7 @@ class MongoCollection
      */
     public function find(array $query = [], array $fields = [])
     {
-        $cursor = new MongoCursor($this->db->getConnection(), (string)$this, $query, $fields);
+        $cursor = new MongoCursor($this->db->getConnection(), (string) $this, $query, $fields);
         $cursor->setReadPreference($this->getReadPreference());
 
         return $cursor;
@@ -430,11 +445,14 @@ class MongoCollection
      * @link http://www.php.net/manual/en/mongocollection.findone.php
      * @param array $query The fields for which to search.
      * @param array $fields Fields of the results to return.
+     * @param array $options
      * @return array|null
      */
-    public function findOne(array $query = [], array $fields = [])
+    public function findOne(array $query = [], array $fields = [], array $options = [])
     {
-        $document = $this->collection->findOne(TypeConverter::convertLegacyArrayToObject($query), ['projection' => $fields]);
+        $options = ['projection' => $fields] + $options;
+
+        $document = $this->collection->findOne(TypeConverter::convertLegacyArrayToObject($query), $options);
         if ($document !== null) {
             $document = TypeConverter::convertObjectToLegacyArray($document);
         }
@@ -531,11 +549,12 @@ class MongoCollection
      * Counts the number of documents in this collection
      * @link http://www.php.net/manual/en/mongocollection.count.php
      * @param array|stdClass $query
+     * @param array $options
      * @return int Returns the number of documents matching the query.
      */
-    public function count($query = [])
+    public function count($query = [], array $options = [])
     {
-        return $this->collection->count($query);
+        return $this->collection->count(TypeConverter::convertLegacyArrayToObject($query), $options);
     }
 
     /**
