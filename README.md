@@ -6,10 +6,20 @@ between applications relying on ext-mongo and the new driver (ext-mongodb).
 It provides the API of ext-mongo built on top of mongo-php-library, thus being
 compatible with PHP7.
 
+# Goal
+
+This library aims to provide a compatibility layer for applications that rely on
+on libraries using ext-mongo (e.g. [Doctrine ODM](https://github.com/doctrine/mongodb-odm))
+but want to migrate to PHP 7 or HHVM on which ext-mongo will not run.
+
+You should not be using this library if you do not rely on a library using
+ext-mongo. If you are starting a new project, please check out [mongodb/mongodb](https://github.com/mongodb/mongo-php-library).
+
 # Stability
 
-This library is not yet stable enough to be used in production. Use at your own
-risk.
+This library is still in development and not stable enough to be used in
+production. In addition to the known issues outlined below, other issues or
+fatal errors may occur. Please use at your own risk.
 
 # Installation
 
@@ -24,7 +34,7 @@ root:
 
 # Known issues
 
-## [Mongo](https://secure.php.net/manual/en/class.mongo.php)
+## Mongo
 
  - The Mongo class is deprecated and was not implemented in this library. If you
  are still using it please update your code to use the new classes.
