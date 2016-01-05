@@ -22,7 +22,8 @@
         "psr-4": {
             "": "lib/Mongo",
             "Alcaeus\\MongoDbAdapter\\": "lib/Alcaeus/MongoDbAdapter"
-        }
+        },
+        "files": [ "lib/Mongo/functions.php" ]
     },
     "autoload-dev": {
         "psr-4": { "Alcaeus\\MongoDbAdapter\\Tests\\": "tests/Alcaeus/MongoDbAdapter" }
