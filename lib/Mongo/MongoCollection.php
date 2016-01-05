@@ -648,7 +648,7 @@ class MongoCollection
      * @link http://www.php.net/manual/en/mongocollection.group.php
      * @param mixed $keys Fields to group by. If an array or non-code object is passed, it will be the key used to group results.
      * @param array $initial Initial value of the aggregation counter object.
-     * @param MongoCode $reduce A function that aggregates (reduces) the objects iterated.
+     * @param MongoCode|string $reduce A function that aggregates (reduces) the objects iterated.
      * @param array $condition An condition that must be true for a row to be considered.
      * @return array
      */
@@ -657,9 +657,7 @@ class MongoCollection
         if (is_string($reduce)) {
             $reduce = new MongoCode($reduce);
         }
-        if ( ! $reduce instanceof MongoCode) {
-            throw new \InvalidArgumentExcption('reduce parameter should be a string or MongoCode instance.');
-        }
+
         $command = [
             'group' => [
                 'ns' => $this->name,
