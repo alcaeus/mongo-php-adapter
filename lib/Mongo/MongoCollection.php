@@ -590,12 +590,30 @@ class MongoCollection
      * Creates a database reference
      *
      * @link http://www.php.net/manual/en/mongocollection.createdbref.php
-     * @param array $a Object to which to create a reference.
+     * @param array|object $document_or_id Object to which to create a reference.
      * @return array Returns a database reference array.
      */
-    public function createDBRef(array $a)
+    public function createDBRef($document_or_id)
     {
-        return \MongoDBRef::create($this->name, $a['_id']);
+        if ($document_or_id instanceof \MongoId) {
+            $id = $document_or_id;
+        } elseif (is_object($document_or_id)) {
+            if (! isset($document_or_id->_id)) {
+                return null;
+            }
+
+            $id = $document_or_id->_id;
+        } elseif (is_array($document_or_id)) {
+            if (! isset($document_or_id['_id'])) {
+                return null;
+            }
+
+            $id = $document_or_id['_id'];
+        } else {
+            $id = $document_or_id;
+        }
+
+        return MongoDBRef::create($this->name, $id);
     }
 
     /**
@@ -607,7 +625,7 @@ class MongoCollection
      */
     public function getDBRef(array $ref)
     {
-        return \MongoDBRef::get($this->db, $ref);
+        return $this->db->getDBRef($ref);
     }
 
     /**
