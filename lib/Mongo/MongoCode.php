@@ -13,7 +13,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-class MongoCode
+class MongoCode implements \Alcaeus\MongoDbAdapter\TypeInterface
 {
     /**
      * @var string
@@ -32,6 +32,11 @@ class MongoCode
      */
     public function __construct($code, array $scope = [])
     {
+        if ($code instanceof \MongoDB\BSON\Javascript) {
+            // @todo Use properties from object once they are accessible
+            $code = '';
+        }
+
         $this->code = $code;
         $this->scope = $scope;
     }
@@ -43,5 +48,16 @@ class MongoCode
     public function __toString()
     {
         return $this->code;
+    }
+
+    /**
+     * Converts this MongoCode to the new BSON JavaScript type
+     *
+     * @return \MongoDB\BSON\Javascript
+     * @internal This method is not part of the ext-mongo API
+     */
+    public function toBSONType()
+    {
+        return new \MongoDB\BSON\Javascript($this->code, $this->scope);
     }
 }

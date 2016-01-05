@@ -53,7 +53,14 @@ class MongoCommandCursor extends AbstractCursor implements MongoCursorInterface
     protected function ensureCursor()
     {
         if ($this->cursor === null) {
-            $this->cursor = $this->db->command(TypeConverter::convertLegacyArrayToObject($this->command), $this->getOptions());
+            $convertedCommand = TypeConverter::fromLegacy($this->command);
+            if (isset($convertedCommand->cursor)) {
+                if ($convertedCommand->cursor === true || $convertedCommand->cursor === []) {
+                    $convertedCommand->cursor = new \stdClass();
+                }
+            }
+
+            $this->cursor = $this->db->command($convertedCommand, $this->getOptions());
         }
 
         return $this->cursor;

@@ -27,7 +27,7 @@ class MongoCommandCursorTest extends TestCase
                         '$match' => ['foo' => 'bar']
                     ]
                 ],
-                'cursor' => new \stdClass()
+                'cursor' => true,
             ],
             'fields' => null,
             'started_iterating' => false,

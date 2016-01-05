@@ -170,14 +170,13 @@ class MongoCollection
         ];
 
         // Convert cursor option
-        if (! isset($options['cursor']) || $options['cursor'] === true || $options['cursor'] === []) {
-            // Cursor option needs to be an object convert bools and empty arrays since those won't be handled by TypeConverter
-            $options['cursor'] = new \stdClass;
+        if (! isset($options['cursor'])) {
+            $options['cursor'] = true;
         }
 
         $command += $options;
 
-        $cursor = new MongoCommandCursor($this->db->getConnection(), (string)$this, $command);
+        $cursor = new MongoCommandCursor($this->db->getConnection(), (string) $this, $command);
         $cursor->setReadPreference($this->getReadPreference());
 
         return $cursor;
@@ -224,7 +223,7 @@ class MongoCollection
      */
     public function drop()
     {
-        return $this->collection->drop();
+        return TypeConverter::toLegacy($this->collection->drop());
     }
 
     /**
@@ -257,7 +256,21 @@ class MongoCollection
      */
     public function insert($a, array $options = [])
     {
-        return $this->collection->insertOne(TypeConverter::convertLegacyArrayToObject($a), $options);
+        $result = $this->collection->insertOne(
+            TypeConverter::fromLegacy($a),
+            $this->convertWriteConcernOptions($options)
+        );
+
+        if (! $result->isAcknowledged()) {
+            return true;
+        }
+
+        return [
+            'ok' => 1.0,
+            'n' => 0,
+            'err' => null,
+            'errmsg' => null,
+        ];
     }
 
     /**
@@ -267,11 +280,27 @@ class MongoCollection
      * @param array $a An array of arrays.
      * @param array $options Options for the inserts.
      * @throws MongoCursorException
-     * @return mixed f "safe" is set, returns an associative array with the status of the inserts ("ok") and any error that may have occured ("err"). Otherwise, returns TRUE if the batch insert was successfully sent, FALSE otherwise.
+     * @return mixed If "safe" is set, returns an associative array with the status of the inserts ("ok") and any error that may have occured ("err"). Otherwise, returns TRUE if the batch insert was successfully sent, FALSE otherwise.
      */
     public function batchInsert(array $a, array $options = [])
     {
-        return $this->collection->insertMany($a, $options);
+        $result = $this->collection->insertMany(
+            TypeConverter::fromLegacy($a),
+            $this->convertWriteConcernOptions($options)
+        );
+
+        if (! $result->isAcknowledged()) {
+            return true;
+        }
+
+        return [
+            'connectionId' => 0,
+            'n' => 0,
+            'syncMillis' => 0,
+            'writtenTo' => null,
+            'err' => null,
+            'errmsg' => null,
+        ];
     }
 
     /**
@@ -286,10 +315,29 @@ class MongoCollection
      */
     public function update(array $criteria , array $newobj, array $options = [])
     {
-        $multiple = ($options['multiple']) ? $options['multiple'] : false;
+        $multiple = isset($options['multiple']) ? $options['multiple'] : false;
         $method = $multiple ? 'updateMany' : 'updateOne';
+        unset($options['multiple']);
 
-        return $this->collection->$method($criteria, $newobj, $options);
+        /** @var \MongoDB\UpdateResult $result */
+        $result = $this->collection->$method(
+            TypeConverter::fromLegacy($criteria),
+            TypeConverter::fromLegacy($newobj),
+            $this->convertWriteConcernOptions($options)
+        );
+
+        if (! $result->isAcknowledged()) {
+            return true;
+        }
+
+        return [
+            'ok' => 1.0,
+            'nModified' => $result->getModifiedCount(),
+            'n' => $result->getMatchedCount(),
+            'err' => null,
+            'errmsg' => null,
+            'updatedExisting' => $result->getUpsertedCount() == 0,
+        ];
     }
 
     /**
@@ -305,10 +353,25 @@ class MongoCollection
      */
     public function remove(array $criteria = [], array $options = [])
     {
-        $multiple = isset($options['justOne']) ? !$options['justOne'] : false;
+        $multiple = isset($options['justOne']) ? !$options['justOne'] : true;
         $method = $multiple ? 'deleteMany' : 'deleteOne';
 
-        return $this->collection->$method($criteria, $options);
+        /** @var \MongoDB\DeleteResult $result */
+        $result = $this->collection->$method(
+            TypeConverter::fromLegacy($criteria),
+            $this->convertWriteConcernOptions($options)
+        );
+
+        if (! $result->isAcknowledged()) {
+            return true;
+        }
+
+        return [
+            'ok' => 1.0,
+            'n' => $result->getDeletedCount(),
+            'err' => null,
+            'errmsg' => null
+        ];
     }
 
     /**
@@ -321,7 +384,7 @@ class MongoCollection
      */
     public function find(array $query = [], array $fields = [])
     {
-        $cursor = new MongoCursor($this->db->getConnection(), (string)$this, $query, $fields);
+        $cursor = new MongoCursor($this->db->getConnection(), (string) $this, $query, $fields);
         $cursor->setReadPreference($this->getReadPreference());
 
         return $cursor;
@@ -337,11 +400,12 @@ class MongoCollection
      */
     public function distinct($key, array $query = [])
     {
-        return array_map([TypeConverter::class, 'convertToLegacyType'], $this->collection->distinct($key, $query));
+        return array_map([TypeConverter::class, 'toLegacy'], $this->collection->distinct($key, $query));
     }
 
     /**
      * Update a document and return it
+     *
      * @link http://www.php.net/manual/ru/mongocollection.findandmodify.php
      * @param array $query The query criteria to search for.
      * @param array $update The update criteria.
@@ -351,26 +415,26 @@ class MongoCollection
      */
     public function findAndModify(array $query, array $update = null, array $fields = null, array $options = [])
     {
-        $query = TypeConverter::convertLegacyArrayToObject($query);
+        $query = TypeConverter::fromLegacy($query);
 
         if (isset($options['remove'])) {
             unset($options['remove']);
             $document = $this->collection->findOneAndDelete($query, $options);
         } else {
-            $update = is_array($update) ? TypeConverter::convertLegacyArrayToObject($update) : [];
+            $update = is_array($update) ? TypeConverter::fromLegacy($update) : [];
 
             if (isset($options['new'])) {
                 $options['returnDocument'] = \MongoDB\Operation\FindOneAndUpdate::RETURN_DOCUMENT_AFTER;
                 unset($options['new']);
             }
 
-            $options['projection'] = is_array($fields) ? TypeConverter::convertLegacyArrayToObject($fields) : [];
+            $options['projection'] = is_array($fields) ? TypeConverter::fromLegacy($fields) : [];
 
             $document = $this->collection->findOneAndUpdate($query, $update, $options);
         }
 
         if ($document) {
-            $document = TypeConverter::convertObjectToLegacyArray($document);
+            $document = TypeConverter::toLegacy($document);
         }
 
         return $document;
@@ -378,16 +442,20 @@ class MongoCollection
 
     /**
      * Querys this collection, returning a single element
+     *
      * @link http://www.php.net/manual/en/mongocollection.findone.php
      * @param array $query The fields for which to search.
      * @param array $fields Fields of the results to return.
+     * @param array $options
      * @return array|null
      */
-    public function findOne(array $query = [], array $fields = [])
+    public function findOne(array $query = [], array $fields = [], array $options = [])
     {
-        $document = $this->collection->findOne(TypeConverter::convertLegacyArrayToObject($query), ['projection' => $fields]);
+        $options = ['projection' => $fields] + $options;
+
+        $document = $this->collection->findOne(TypeConverter::fromLegacy($query), $options);
         if ($document !== null) {
-            $document = TypeConverter::convertObjectToLegacyArray($document);
+            $document = TypeConverter::toLegacy($document);
         }
 
         return $document;
@@ -395,6 +463,7 @@ class MongoCollection
 
     /**
      * Creates an index on the given field(s), or does nothing if the index already exists
+     *
      * @link http://www.php.net/manual/en/mongocollection.createindex.php
      * @param array $keys Field or fields to use as index.
      * @param array $options [optional] This parameter is an associative array of the form array("optionname" => <boolean>, ...).
@@ -416,12 +485,13 @@ class MongoCollection
     }
 
     /**
-     * @deprecated Use MongoCollection::createIndex() instead.
      * Creates an index on the given field(s), or does nothing if the index already exists
+     *
      * @link http://www.php.net/manual/en/mongocollection.ensureindex.php
      * @param array $keys Field or fields to use as index.
      * @param array $options [optional] This parameter is an associative array of the form array("optionname" => <boolean>, ...).
      * @return boolean always true
+     * @deprecated Use MongoCollection::createIndex() instead.
      */
     public function ensureIndex(array $keys, array $options = [])
     {
@@ -432,6 +502,7 @@ class MongoCollection
 
     /**
      * Deletes an index from this collection
+     *
      * @link http://www.php.net/manual/en/mongocollection.deleteindex.php
      * @param string|array $keys Field or fields from which to delete the index.
      * @return array Returns the database response.
@@ -441,26 +512,28 @@ class MongoCollection
         if (is_string($keys)) {
             $indexName = $keys;
         } elseif (is_array($keys)) {
-            $indexName = self::toIndexString($keys);
+            $indexName = \MongoDB\generate_index_name($keys);
         } else {
             throw new \InvalidArgumentException();
         }
 
-        return TypeConverter::convertObjectToLegacyArray($this->collection->dropIndex($indexName));
+        return TypeConverter::toLegacy($this->collection->dropIndex($indexName));
     }
 
     /**
      * Delete all indexes for this collection
+     *
      * @link http://www.php.net/manual/en/mongocollection.deleteindexes.php
      * @return array Returns the database response.
      */
     public function deleteIndexes()
     {
-        return TypeConverter::convertObjectToLegacyArray($this->collection->dropIndexes());
+        return TypeConverter::toLegacy($this->collection->dropIndexes());
     }
 
     /**
      * Returns an array of index names for this collection
+     *
      * @link http://www.php.net/manual/en/mongocollection.getindexinfo.php
      * @return array Returns a list of index names.
      */
@@ -480,13 +553,15 @@ class MongoCollection
 
     /**
      * Counts the number of documents in this collection
+     *
      * @link http://www.php.net/manual/en/mongocollection.count.php
      * @param array|stdClass $query
+     * @param array $options
      * @return int Returns the number of documents matching the query.
      */
-    public function count($query = [])
+    public function count($query = [], array $options = [])
     {
-        return $this->collection->count($query);
+        return $this->collection->count(TypeConverter::fromLegacy($query), $options);
     }
 
     /**
@@ -504,30 +579,48 @@ class MongoCollection
     public function save($a, array $options = [])
     {
         if (is_object($a)) {
-            $a = (array)$a;
+            $a = (array) $a;
         }
+
         if ( ! array_key_exists('_id', $a)) {
             $id = new \MongoId();
         } else {
             $id = $a['_id'];
             unset($a['_id']);
         }
-        $filter = ['_id' => $id];
-        $filter = TypeConverter::convertLegacyArrayToObject($filter);
-        $a = TypeConverter::convertLegacyArrayToObject($a);
-        return $this->collection->updateOne($filter, ['$set' => $a], ['upsert' => true]);
+        $options['upsert'] = true;
+
+        return $this->update(['_id' => $id], ['$set' => $a], $options);
     }
 
     /**
      * Creates a database reference
      *
      * @link http://www.php.net/manual/en/mongocollection.createdbref.php
-     * @param array $a Object to which to create a reference.
+     * @param array|object $document_or_id Object to which to create a reference.
      * @return array Returns a database reference array.
      */
-    public function createDBRef(array $a)
+    public function createDBRef($document_or_id)
     {
-        return \MongoDBRef::create($this->name, $a['_id']);
+        if ($document_or_id instanceof \MongoId) {
+            $id = $document_or_id;
+        } elseif (is_object($document_or_id)) {
+            if (! isset($document_or_id->_id)) {
+                return null;
+            }
+
+            $id = $document_or_id->_id;
+        } elseif (is_array($document_or_id)) {
+            if (! isset($document_or_id['_id'])) {
+                return null;
+            }
+
+            $id = $document_or_id['_id'];
+        } else {
+            $id = $document_or_id;
+        }
+
+        return MongoDBRef::create($this->name, $id);
     }
 
     /**
@@ -539,21 +632,7 @@ class MongoCollection
      */
     public function getDBRef(array $ref)
     {
-        return \MongoDBRef::get($this->db, $ref);
-    }
-
-    /**
-     * @param mixed $keys
-     * @static
-     * @return string
-     */
-    protected static function toIndexString($keys)
-    {
-        $result = '';
-        foreach ($keys as $name => $direction) {
-            $result .= sprintf('%s_%d', $name, $direction);
-        }
-        return $result;
+        return $this->db->getDBRef($ref);
     }
 
     /**
@@ -562,7 +641,7 @@ class MongoCollection
      * @link http://www.php.net/manual/en/mongocollection.group.php
      * @param mixed $keys Fields to group by. If an array or non-code object is passed, it will be the key used to group results.
      * @param array $initial Initial value of the aggregation counter object.
-     * @param MongoCode $reduce A function that aggregates (reduces) the objects iterated.
+     * @param MongoCode|string $reduce A function that aggregates (reduces) the objects iterated.
      * @param array $condition An condition that must be true for a row to be considered.
      * @return array
      */
@@ -571,9 +650,7 @@ class MongoCollection
         if (is_string($reduce)) {
             $reduce = new MongoCode($reduce);
         }
-        if ( ! $reduce instanceof MongoCode) {
-            throw new \InvalidArgumentExcption('reduce parameter should be a string or MongoCode instance.');
-        }
+
         $command = [
             'group' => [
                 'ns' => $this->name,
@@ -633,6 +710,40 @@ class MongoCollection
         } else {
             $this->collection = $this->collection->withOptions($options);
         }
+    }
+
+    /**
+     * Converts legacy write concern options to a WriteConcern object
+     *
+     * @param array $options
+     * @return array
+     */
+    private function convertWriteConcernOptions(array $options)
+    {
+        if (isset($options['safe'])) {
+            $options['w'] = ($options['safe']) ? 1 : 0;
+        }
+
+        if (isset($options['wtimeout']) && !isset($options['wTimeoutMS'])) {
+            $options['wTimeoutMS'] = $options['wtimeout'];
+        }
+
+        if (isset($options['w']) || !isset($options['wTimeoutMS'])) {
+            $collectionWriteConcern = $this->getWriteConcern();
+            $writeConcern = $this->createWriteConcernFromParameters(
+                isset($options['w']) ? $options['w'] : $collectionWriteConcern['w'],
+                isset($options['wTimeoutMS']) ? $options['wTimeoutMS'] : $collectionWriteConcern['wtimeout']
+            );
+
+            $options['writeConcern'] = $writeConcern;
+        }
+
+        unset($options['safe']);
+        unset($options['w']);
+        unset($options['wTimeout']);
+        unset($options['wTimeoutMS']);
+
+        return $options;
     }
 }
 

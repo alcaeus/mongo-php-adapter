@@ -20,59 +20,114 @@ namespace Alcaeus\MongoDbAdapter;
  */
 class TypeConverter
 {
-    public static function convertLegacyArrayToObject($array)
-    {
-        // TODO: provide actual class once mongodb/mongo-php-library#78 has been merged
-        $result = [];
-
-        foreach ($array as $key => $value) {
-            $result[$key] = (is_array($value)) ? static::convertLegacyArrayToObject($value) : static::convertToBSONType($value);
-        }
-
-        return self::ensureCorrectType($result);
-    }
-
-    public static function convertObjectToLegacyArray($object)
-    {
-        $result = [];
-
-        foreach ($object as $key => $value) {
-            // TODO: use actual class instead of \stdClass once mongodb/mongo-php-library#78 has been merged
-            $result[$key] = ($value instanceof \stdClass || is_array($value)) ? static::convertObjectToLegacyArray($value) : static::convertToLegacyType($value);
-        }
-
-        return $result;
-    }
-
-    public static function convertToLegacyType($value)
-    {
-        switch (true) {
-            case $value instanceof \MongoDB\BSON\ObjectID:
-                return new \MongoId($value);
-
-            default:
-                return $value;
-        }
-    }
-
-    public static function convertToBSONType($value)
+    /**
+     * Converts a legacy type to the new BSON type
+     *
+     * This method handles type conversion from ext-mongo to ext-mongodb:
+     *  - For all types (MongoId, MongoDate, etc.) it returns the correct BSON
+     *    object instance
+     *  - For arrays and objects it iterates over properties and converts each
+     *    item individually
+     *  - For other types it returns the value unconverted
+     *
+     * @param mixed $value
+     * @return mixed
+     */
+    public static function fromLegacy($value)
     {
         switch (true) {
             case $value instanceof TypeInterface:
                 return $value->toBSONType();
+            case is_array($value):
+            case is_object($value);
+                $result = [];
 
+                foreach ($value as $key => $item) {
+                    $result[$key] = self::fromLegacy($item);
+                }
+
+                return self::ensureCorrectType($result);
             default:
                 return $value;
         }
     }
 
     /**
+     * Converts a BSON type to the legacy types
+     *
+     * This method handles type conversion from ext-mongodb to ext-mongo:
+     *  - For all instances of \MongoDB\BSON\Type it returns an object of the
+     *    corresponding legacy type (MongoId, MongoDate, etc.)
+     *  - For arrays and objects it iterates over properties and converts each
+     *    item individually
+     *  - For other types it returns the value unconverted
+     *
+     * @param mixed $value
+     * @return mixed
+     */
+    public static function toLegacy($value)
+    {
+        switch (true) {
+            case $value instanceof \MongoDB\BSON\Type:
+                return self::convertBSONObjectToLegacy($value);
+            case is_array($value):
+            case is_object($value):
+                $result = [];
+
+                foreach ($value as $key => $item) {
+                    $result[$key] = self::toLegacy($item);
+                }
+
+                return $result;
+            default:
+                return $value;
+        }
+    }
+
+    /**
+     * Helper method to find out if an array has numerical indexes
+     *
+     * For performance reason, this method checks the first array index only.
+     * More thorough inspection of the array might be needed.
+     * Note: Returns true for empty arrays to preserve compatibility with empty
+     * lists.
+     *
      * @param array $array
      * @return bool
      */
     public static function isNumericArray(array $array)
     {
         return $array === [] || is_numeric(array_keys($array)[0]);
+    }
+
+    /**
+     * Converter method to convert a BSON object to its legacy type
+     *
+     * @param \MongoDB\BSON\Type $value
+     * @return mixed
+     */
+    private static function convertBSONObjectToLegacy(\MongoDB\BSON\Type $value)
+    {
+        switch (true) {
+            case $value instanceof \MongoDB\BSON\ObjectID:
+                return new \MongoId($value);
+            case $value instanceof \MongoDB\BSON\Binary:
+                return new \MongoBinData($value);
+            case $value instanceof \MongoDB\BSON\Javascript:
+                return new \MongoCode($value);
+            case $value instanceof \MongoDB\BSON\MaxKey:
+                return new \MongoMaxKey();
+            case $value instanceof \MongoDB\BSON\MinKey:
+                return new \MongoMinKey();
+            case $value instanceof \MongoDB\BSON\Regex:
+                return new \MongoRegex($value);
+            case $value instanceof \MongoDB\BSON\Timestamp:
+                return new \MongoTimestamp($value);
+            case $value instanceof \MongoDB\BSON\UTCDatetime:
+                return new \MongoDate($value);
+            default:
+                return $value;
+        }
     }
 
     /**

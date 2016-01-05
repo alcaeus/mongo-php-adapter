@@ -110,7 +110,7 @@ abstract class AbstractCursor
     {
         $document = $this->ensureIterator()->current();
         if ($document !== null) {
-            $document = TypeConverter::convertObjectToLegacyArray($document);
+            $document = TypeConverter::toLegacy($document);
         }
 
         return $document;
