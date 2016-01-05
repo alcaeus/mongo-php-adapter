@@ -406,6 +406,7 @@ class MongoCollection
 
     /**
      * Update a document and return it
+     *
      * @link http://www.php.net/manual/ru/mongocollection.findandmodify.php
      * @param array $query The query criteria to search for.
      * @param array $update The update criteria.
@@ -442,6 +443,7 @@ class MongoCollection
 
     /**
      * Querys this collection, returning a single element
+     *
      * @link http://www.php.net/manual/en/mongocollection.findone.php
      * @param array $query The fields for which to search.
      * @param array $fields Fields of the results to return.
@@ -462,6 +464,7 @@ class MongoCollection
 
     /**
      * Creates an index on the given field(s), or does nothing if the index already exists
+     *
      * @link http://www.php.net/manual/en/mongocollection.createindex.php
      * @param array $keys Field or fields to use as index.
      * @param array $options [optional] This parameter is an associative array of the form array("optionname" => <boolean>, ...).
@@ -483,12 +486,13 @@ class MongoCollection
     }
 
     /**
-     * @deprecated Use MongoCollection::createIndex() instead.
      * Creates an index on the given field(s), or does nothing if the index already exists
+     *
      * @link http://www.php.net/manual/en/mongocollection.ensureindex.php
      * @param array $keys Field or fields to use as index.
      * @param array $options [optional] This parameter is an associative array of the form array("optionname" => <boolean>, ...).
      * @return boolean always true
+     * @deprecated Use MongoCollection::createIndex() instead.
      */
     public function ensureIndex(array $keys, array $options = [])
     {
@@ -499,6 +503,7 @@ class MongoCollection
 
     /**
      * Deletes an index from this collection
+     *
      * @link http://www.php.net/manual/en/mongocollection.deleteindex.php
      * @param string|array $keys Field or fields from which to delete the index.
      * @return array Returns the database response.
@@ -518,6 +523,7 @@ class MongoCollection
 
     /**
      * Delete all indexes for this collection
+     *
      * @link http://www.php.net/manual/en/mongocollection.deleteindexes.php
      * @return array Returns the database response.
      */
@@ -528,6 +534,7 @@ class MongoCollection
 
     /**
      * Returns an array of index names for this collection
+     *
      * @link http://www.php.net/manual/en/mongocollection.getindexinfo.php
      * @return array Returns a list of index names.
      */
@@ -547,6 +554,7 @@ class MongoCollection
 
     /**
      * Counts the number of documents in this collection
+     *
      * @link http://www.php.net/manual/en/mongocollection.count.php
      * @param array|stdClass $query
      * @param array $options
@@ -706,6 +714,8 @@ class MongoCollection
     }
 
     /**
+     * Converts legacy write concern options to a WriteConcern object
+     *
      * @param array $options
      * @return array
      */
