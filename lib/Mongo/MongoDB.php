@@ -221,7 +221,7 @@ class MongoDB
      */
     public function drop()
     {
-        return TypeConverter::convertObjectToLegacyArray($this->db->drop());
+        return TypeConverter::toLegacy($this->db->drop());
     }
 
     /**
@@ -279,7 +279,7 @@ class MongoDB
             $coll = $coll->getName();
         }
 
-        return TypeConverter::convertObjectToLegacyArray($this->db->dropCollection((string) $coll));
+        return TypeConverter::toLegacy($this->db->dropCollection((string) $coll));
     }
 
     /**

@@ -170,9 +170,8 @@ class MongoCollection
         ];
 
         // Convert cursor option
-        if (! isset($options['cursor']) || $options['cursor'] === true || $options['cursor'] === []) {
-            // Cursor option needs to be an object convert bools and empty arrays since those won't be handled by TypeConverter
-            $options['cursor'] = new \stdClass;
+        if (! isset($options['cursor'])) {
+            $options['cursor'] = true;
         }
 
         $command += $options;
@@ -224,7 +223,7 @@ class MongoCollection
      */
     public function drop()
     {
-        return TypeConverter::convertObjectToLegacyArray($this->collection->drop());
+        return TypeConverter::toLegacy($this->collection->drop());
     }
 
     /**
@@ -258,7 +257,7 @@ class MongoCollection
     public function insert($a, array $options = [])
     {
         $result = $this->collection->insertOne(
-            TypeConverter::convertLegacyArrayToObject($a),
+            TypeConverter::fromLegacy($a),
             $this->convertWriteConcernOptions($options)
         );
 
@@ -286,7 +285,7 @@ class MongoCollection
     public function batchInsert(array $a, array $options = [])
     {
         $result = $this->collection->insertMany(
-            TypeConverter::convertLegacyArrayToObject($a),
+            TypeConverter::fromLegacy($a),
             $this->convertWriteConcernOptions($options)
         );
 
@@ -322,8 +321,8 @@ class MongoCollection
 
         /** @var \MongoDB\UpdateResult $result */
         $result = $this->collection->$method(
-            TypeConverter::convertLegacyArrayToObject($criteria),
-            TypeConverter::convertLegacyArrayToObject($newobj),
+            TypeConverter::fromLegacy($criteria),
+            TypeConverter::fromLegacy($newobj),
             $this->convertWriteConcernOptions($options)
         );
 
@@ -359,7 +358,7 @@ class MongoCollection
 
         /** @var \MongoDB\DeleteResult $result */
         $result = $this->collection->$method(
-            TypeConverter::convertLegacyArrayToObject($criteria),
+            TypeConverter::fromLegacy($criteria),
             $this->convertWriteConcernOptions($options)
         );
 
@@ -401,7 +400,7 @@ class MongoCollection
      */
     public function distinct($key, array $query = [])
     {
-        return array_map([TypeConverter::class, 'convertToLegacyType'], $this->collection->distinct($key, $query));
+        return array_map([TypeConverter::class, 'toLegacy'], $this->collection->distinct($key, $query));
     }
 
     /**
@@ -416,26 +415,26 @@ class MongoCollection
      */
     public function findAndModify(array $query, array $update = null, array $fields = null, array $options = [])
     {
-        $query = TypeConverter::convertLegacyArrayToObject($query);
+        $query = TypeConverter::fromLegacy($query);
 
         if (isset($options['remove'])) {
             unset($options['remove']);
             $document = $this->collection->findOneAndDelete($query, $options);
         } else {
-            $update = is_array($update) ? TypeConverter::convertLegacyArrayToObject($update) : [];
+            $update = is_array($update) ? TypeConverter::fromLegacy($update) : [];
 
             if (isset($options['new'])) {
                 $options['returnDocument'] = \MongoDB\Operation\FindOneAndUpdate::RETURN_DOCUMENT_AFTER;
                 unset($options['new']);
             }
 
-            $options['projection'] = is_array($fields) ? TypeConverter::convertLegacyArrayToObject($fields) : [];
+            $options['projection'] = is_array($fields) ? TypeConverter::fromLegacy($fields) : [];
 
             $document = $this->collection->findOneAndUpdate($query, $update, $options);
         }
 
         if ($document) {
-            $document = TypeConverter::convertObjectToLegacyArray($document);
+            $document = TypeConverter::toLegacy($document);
         }
 
         return $document;
@@ -454,9 +453,9 @@ class MongoCollection
     {
         $options = ['projection' => $fields] + $options;
 
-        $document = $this->collection->findOne(TypeConverter::convertLegacyArrayToObject($query), $options);
+        $document = $this->collection->findOne(TypeConverter::fromLegacy($query), $options);
         if ($document !== null) {
-            $document = TypeConverter::convertObjectToLegacyArray($document);
+            $document = TypeConverter::toLegacy($document);
         }
 
         return $document;
@@ -518,7 +517,7 @@ class MongoCollection
             throw new \InvalidArgumentException();
         }
 
-        return TypeConverter::convertObjectToLegacyArray($this->collection->dropIndex($indexName));
+        return TypeConverter::toLegacy($this->collection->dropIndex($indexName));
     }
 
     /**
@@ -529,7 +528,7 @@ class MongoCollection
      */
     public function deleteIndexes()
     {
-        return TypeConverter::convertObjectToLegacyArray($this->collection->dropIndexes());
+        return TypeConverter::toLegacy($this->collection->dropIndexes());
     }
 
     /**
@@ -562,7 +561,7 @@ class MongoCollection
      */
     public function count($query = [], array $options = [])
     {
-        return $this->collection->count(TypeConverter::convertLegacyArrayToObject($query), $options);
+        return $this->collection->count(TypeConverter::fromLegacy($query), $options);
     }
 
     /**
