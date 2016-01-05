@@ -159,7 +159,7 @@ class MongoGridFS extends MongoCollection
      * @param array $fields Fields of the results to return.
      * @return MongoGridFSFile|null
      */
-    public function findOne(array $query = array(), array $fields = array())
+    public function findOne(array $query = array(), array $fields = array(), array $options = array())
     {
         $file = parent::findOne($query, $fields);
         if (! $file) {

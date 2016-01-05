@@ -355,7 +355,6 @@ class MongoCollection
     {
         $multiple = isset($options['justOne']) ? !$options['justOne'] : true;
         $method = $multiple ? 'deleteMany' : 'deleteOne';
-        $criteria = TypeConverter::convertLegacyArrayToObject($criteria);
 
         /** @var \MongoDB\DeleteResult $result */
         $result = $this->collection->$method(
