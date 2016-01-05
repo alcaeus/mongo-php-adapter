@@ -13,7 +13,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-class MongoGridFSCursor extends MongoCursor implements Traversable, Iterator {
+class MongoGridFSCursor extends MongoCursor implements Traversable, Iterator
+{
     /**
      * @static
      * @var $slaveOkay
@@ -36,27 +37,43 @@ class MongoGridFSCursor extends MongoCursor implements Traversable, Iterator {
      * @param array $fields Fields to return
      * @return MongoGridFSCursor Returns the new cursor
      */
-    public function __construct($gridfs, $connection, $ns, $query, $fields) {}
+    public function __construct(MongoGridFS $gridfs, $connection, $ns, array $query = array(), array $fields = array())
+    {
+        $this->gridfs = $gridfs;
+        parent::__construct($connection, $ns, $query, $fields);
+    }
 
     /**
      * Return the next file to which this cursor points, and advance the cursor
      * @link http://php.net/manual/en/mongogridfscursor.getnext.php
      * @return MongoGridFSFile Returns the next file
      */
-    public function getNext() {}
+    public function getNext()
+    {
+        $file = parent::next();
+        return new MongoGridFSFile($this->gridfs, $file);
+    }
 
     /**
      * Returns the current file
      * @link http://php.net/manual/en/mongogridfscursor.current.php
      * @return MongoGridFSFile The current file
      */
-    public function current() {}
+    public function current()
+    {
+        $file = parent::current();
+        return new MongoGridFSFile($this->gridfs, $file);
+    }
 
     /**
      * Returns the current result's filename
      * @link http://php.net/manual/en/mongogridfscursor.key.php
      * @return string The current results filename
      */
-    public function key() {}
+    public function key()
+    {
+        $file = parent::current();
+        return isset($file['filename']) ? $file['filename'] : null;
+    }
 
 }

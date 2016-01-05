@@ -17,6 +17,7 @@ use Alcaeus\MongoDbAdapter\AbstractCursor;
 use MongoDB\Driver\Cursor;
 use MongoDB\Driver\ReadPreference;
 use MongoDB\Operation\Find;
+use Alcaeus\MongoDbAdapter\TypeConverter;
 
 /**
  * Result object for database query.
@@ -154,6 +155,7 @@ class MongoCursor extends AbstractCursor implements Iterator
     {
         $options = $this->getOptions() + $this->options;
 
+        //$this->cursor = $this->collection->find(TypeConverter::convertLegacyArrayToObject($this->query), $options);
         $this->cursor = $this->collection->find($this->query, $options);
     }
 
