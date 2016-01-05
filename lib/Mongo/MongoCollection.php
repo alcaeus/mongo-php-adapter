@@ -508,7 +508,7 @@ class MongoCollection
         if (is_string($keys)) {
             $indexName = $keys;
         } elseif (is_array($keys)) {
-            $indexName = self::toIndexString($keys);
+            $indexName = \MongoDB\generate_index_name($keys);
         } else {
             throw new \InvalidArgumentException();
         }
@@ -626,20 +626,6 @@ class MongoCollection
     public function getDBRef(array $ref)
     {
         return $this->db->getDBRef($ref);
-    }
-
-    /**
-     * @param mixed $keys
-     * @static
-     * @return string
-     */
-    protected static function toIndexString($keys)
-    {
-        $result = '';
-        foreach ($keys as $name => $direction) {
-            $result .= sprintf('%s_%d', $name, $direction);
-        }
-        return $result;
     }
 
     /**
