@@ -68,6 +68,18 @@ root:
  method does not yet return the same result as the original method. Instead, it
  always returns the name of the index created.
 
+## MongoCursor
+ - The [MongoCursor::explain](https://php.net/manual/de/mongocursor.explain.php)
+ method is not yet implemented.
+ - The [MongoCursor::hasNext](https://php.net/manual/de/mongocursor.hasnext.php)
+ method is not yet implemented.
+ - The [MongoCursor::setFlag](https://php.net/manual/de/mongocursor.setflag.php)
+ method is not yet implemented.
+
+## MongoCommandCursor
+ - The [MongoCommandCursor::createFromDocument](https://php.net/manual/de/mongocommandcursor.createfromdocument.php)
+ method is not yet implemented.
+
 ## Types
 
  - Return values containing objects of the [MongoDB\BSON\Javascript](https://secure.php.net/manual/de/class.mongodb-bson-javascript.php)
