@@ -29,18 +29,4 @@ class MongoGridFSCursorTest extends TestCase
 
         return $gridFS->find();
     }
-
-    /**
-     * @param string $name
-     * @param \MongoDB|null $database
-     * @return \MongoGridFS
-     */
-    private function getGridFS($name = 'testfs', \MongoDB $database = null)
-    {
-        if ($database === null) {
-            $database = $this->getDatabase();
-        }
-
-        return new \MongoGridFS($database, $name);
-    }
 }

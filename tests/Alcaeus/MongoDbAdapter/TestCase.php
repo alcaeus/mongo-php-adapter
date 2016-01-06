@@ -62,4 +62,18 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
 
         return $database->selectCollection($name);
     }
+
+    /**
+     * @param string $prefix
+     * @param \MongoDB|null $database
+     * @return \MongoGridFS
+     */
+    protected function getGridFS($prefix = 'fs', \MongoDB $database = null)
+    {
+        if ($database === null) {
+            $database = $this->getDatabase();
+        }
+
+        return $database->getGridFS($prefix);
+    }
 }

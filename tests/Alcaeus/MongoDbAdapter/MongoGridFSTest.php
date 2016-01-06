@@ -8,7 +8,7 @@ class MongoGridFSTest extends TestCase
     {
         $collection = $this->getGridFS();
         $this->assertInstanceOf('MongoCollection', $collection->chunks);
-        $this->assertSame('mongo-php-adapter.testfs.chunks', (string) $collection->chunks);
+        $this->assertSame('mongo-php-adapter.fs.chunks', (string) $collection->chunks);
     }
 
     public function testCustomCollectionName()
@@ -28,8 +28,8 @@ class MongoGridFSTest extends TestCase
 
         $collection->drop();
 
-        $newCollection = $this->getCheckDatabase()->selectCollection('testfs.files');
-        $newChunksCollection = $this->getCheckDatabase()->selectCollection('testfs.chunks');
+        $newCollection = $this->getCheckDatabase()->selectCollection('fs.files');
+        $newChunksCollection = $this->getCheckDatabase()->selectCollection('fs.chunks');
         $this->assertSame(0, $newCollection->count());
         $this->assertSame(0, $newChunksCollection->count());
     }
@@ -54,8 +54,8 @@ class MongoGridFSTest extends TestCase
             ]
         );
 
-        $newCollection = $this->getCheckDatabase()->selectCollection('testfs.files');
-        $newChunksCollection = $this->getCheckDatabase()->selectCollection('testfs.chunks');
+        $newCollection = $this->getCheckDatabase()->selectCollection('fs.files');
+        $newChunksCollection = $this->getCheckDatabase()->selectCollection('fs.chunks');
         $this->assertSame(1, $newCollection->count());
         $this->assertSame(2, $newChunksCollection->count());
 
@@ -103,14 +103,14 @@ class MongoGridFSTest extends TestCase
             ]
         );
 
-        $newCollection = $this->getCheckDatabase()->selectCollection('testfs.files');
+        $newCollection = $this->getCheckDatabase()->selectCollection('fs.files');
 
         $indexes = iterator_to_array($newCollection->listIndexes());
         $this->assertCount(2, $indexes);
         $index = $indexes[1];
         $this->assertSame(['filename' => 1, 'uploadDate' => 1], $index->getKey());
 
-        $newChunksCollection = $this->getCheckDatabase()->selectCollection('testfs.chunks');
+        $newChunksCollection = $this->getCheckDatabase()->selectCollection('fs.chunks');
         $indexes = iterator_to_array($newChunksCollection->listIndexes());
         $this->assertCount(2, $indexes);
         $index = $indexes[1];
@@ -126,8 +126,8 @@ class MongoGridFSTest extends TestCase
 
         $collection->delete($id);
 
-        $newCollection = $this->getCheckDatabase()->selectCollection('testfs.files');
-        $newChunksCollection = $this->getCheckDatabase()->selectCollection('testfs.chunks');
+        $newCollection = $this->getCheckDatabase()->selectCollection('fs.files');
+        $newChunksCollection = $this->getCheckDatabase()->selectCollection('fs.chunks');
         $this->assertSame(0, $newCollection->count());
         $this->assertSame(0, $newChunksCollection->count());
     }
@@ -140,8 +140,8 @@ class MongoGridFSTest extends TestCase
 
         $collection->remove(['foo' => 'bar']);
 
-        $newCollection = $this->getCheckDatabase()->selectCollection('testfs.files');
-        $newChunksCollection = $this->getCheckDatabase()->selectCollection('testfs.chunks');
+        $newCollection = $this->getCheckDatabase()->selectCollection('fs.files');
+        $newChunksCollection = $this->getCheckDatabase()->selectCollection('fs.chunks');
         $this->assertSame(0, $newCollection->count());
         $this->assertSame(0, $newChunksCollection->count());
     }
@@ -153,8 +153,8 @@ class MongoGridFSTest extends TestCase
         $id = $collection->storeFile(__FILE__, ['chunkSize' => 100, 'foo' => 'bar']);
 
 
-        $newCollection = $this->getCheckDatabase()->selectCollection('testfs.files');
-        $newChunksCollection = $this->getCheckDatabase()->selectCollection('testfs.chunks');
+        $newCollection = $this->getCheckDatabase()->selectCollection('fs.files');
+        $newChunksCollection = $this->getCheckDatabase()->selectCollection('fs.chunks');
         $this->assertSame(1, $newCollection->count());
 
         $md5 = md5_file(__FILE__);
@@ -198,8 +198,8 @@ class MongoGridFSTest extends TestCase
         );
 
 
-        $newCollection = $this->getCheckDatabase()->selectCollection('testfs.files');
-        $newChunksCollection = $this->getCheckDatabase()->selectCollection('testfs.chunks');
+        $newCollection = $this->getCheckDatabase()->selectCollection('fs.files');
+        $newChunksCollection = $this->getCheckDatabase()->selectCollection('fs.chunks');
         $this->assertSame(1, $newCollection->count());
 
         $md5 = md5_file(__FILE__);
@@ -285,25 +285,14 @@ class MongoGridFSTest extends TestCase
         $this->assertInstanceOf('MongoGridFSFile', $result);
     }
 
-    public function testMagicGetter()
-    {
-        $collection = $this->getGridFS();
-        $id = (string) $this->prepareFile();
-
-        $result = $collection->$id;
-
-        $this->assertInstanceOf('MongoGridFSFile', $result);
-    }
-
     public function testPut()
     {
         $collection = $this->getGridFS();
 
         $id = $collection->put(__FILE__, ['chunkSize' => 100, 'foo' => 'bar']);
 
-
-        $newCollection = $this->getCheckDatabase()->selectCollection('testfs.files');
-        $newChunksCollection = $this->getCheckDatabase()->selectCollection('testfs.chunks');
+        $newCollection = $this->getCheckDatabase()->selectCollection('fs.files');
+        $newChunksCollection = $this->getCheckDatabase()->selectCollection('fs.chunks');
         $this->assertSame(1, $newCollection->count());
 
         $size = filesize(__FILE__);
@@ -322,20 +311,6 @@ class MongoGridFSTest extends TestCase
         $extra += ['chunkSize' => 2];
 
         return $collection->storeBytes($data, $extra);
-    }
-
-    /**
-     * @param string $name
-     * @param \MongoDB|null $database
-     * @return \MongoGridFS
-     */
-    protected function getGridFS($name = 'testfs', \MongoDB $database = null)
-    {
-        if ($database === null) {
-            $database = $this->getDatabase();
-        }
-
-        return new \MongoGridFS($database, $name);
     }
 
     /**
