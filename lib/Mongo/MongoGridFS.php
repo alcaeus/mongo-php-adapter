@@ -55,14 +55,15 @@ class MongoGridFS extends MongoCollection
      * @param string $prefix [optional] <p>Optional collection name prefix.</p>
      * @param mixed $chunks  [optional]
      * @return MongoGridFS
+     * @throws \Exception
      */
     public function __construct(MongoDB $db, $prefix = "fs", $chunks = null)
     {
         if ($chunks) {
-            trigger_error(E_DEPRECATED, "The 'chunks' argument is deprecated and ignored");
+            trigger_error("The 'chunks' argument is deprecated and ignored", E_DEPRECATED);
         }
         if (empty($prefix)) {
-            throw new \InvalidArgumentException('prefix can not be empty');
+            throw new \Exception('MongoGridFS::__construct(): invalid prefix');
         }
 
         $this->database = $db;

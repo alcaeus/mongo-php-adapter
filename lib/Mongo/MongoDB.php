@@ -183,7 +183,7 @@ class MongoDB
      */
     public function getGridFS($prefix = "fs")
     {
-        return new \MongoGridFS($this, $prefix, $prefix);
+        return new \MongoGridFS($this, $prefix);
     }
 
     /**
