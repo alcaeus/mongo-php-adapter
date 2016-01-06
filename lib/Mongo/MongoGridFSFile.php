@@ -29,6 +29,7 @@ class MongoGridFSFile
 
     /**
      * @link http://php.net/manual/en/mongogridfsfile.construct.php
+     *
      * @param MongoGridFS $gridfs The parent MongoGridFS instance
      * @param array $file A file from the database
      * @return MongoGridFSFile Returns a new MongoGridFSFile
@@ -46,10 +47,7 @@ class MongoGridFSFile
      */
     public function getFilename()
     {
-        if (isset($this->file['filename'])) {
-            return $this->file['filename'];
-        }
-        return null;
+        return isset($this->file['filename']) ? $this->file['filename'] : null;
     }
 
     /**
@@ -77,9 +75,14 @@ class MongoGridFSFile
             $filename = 'file';
         }
 
-        $handle = fopen($filename, 'w');
-        $written = $this->writeFromRessource($handle);
+        if (! $handle = fopen($filename, 'w')) {
+            trigger_error(E_ERROR, 'Can not open the destination file');
+            return 0;
+        }
+
+        $written = $this->copyToResource($handle);
         fclose($handle);
+
         return $written;
     }
 
@@ -91,10 +94,10 @@ class MongoGridFSFile
     public function getBytes()
     {
         $result = '';
-        $chunks = $this->getChunks();
-        foreach ($chunks as $chunk) {
+        foreach ($this->getChunks() as $chunk) {
             $result .= $chunk['data']->bin;
         }
+
         return $result;
     }
 
@@ -108,33 +111,29 @@ class MongoGridFSFile
      */
     public function getResource()
     {
-        $handle = tmpfile();
-        $this->writeFromRessource($handle);
+        $handle = fopen('php://temp', 'w+');
+        $this->copyToResource($handle);
         rewind($handle);
+
         return $handle;
     }
 
-    private function writeFromRessource($handle)
+    private function copyToResource($handle)
     {
-
-        if (! $handle) {
-            trigger_error(E_ERROR, 'can not open the destination file');
-        }
         $written = 0;
-        $chunks = $this->getChunks();
-        foreach ($chunks as $chunk) {
+        foreach ($this->getChunks() as $chunk) {
             $written += fwrite($handle, $chunk['data']->bin);
         }
+
         return $written;
     }
 
     private function getChunks()
     {
         return $chunks = $this->gridfs->chunks->find(
-            ['files_id' => new \MongoDB\BSON\ObjectID((string) $this->file['_id'])],
+            ['files_id' => $this->file['_id']],
             ['data' => 1],
             ['n' => 1]
         );
     }
-
 }
