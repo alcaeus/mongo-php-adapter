@@ -14,6 +14,7 @@
  */
 
 use Alcaeus\MongoDbAdapter\AbstractCursor;
+use Alcaeus\MongoDbAdapter\TypeConverter;
 use MongoDB\Driver\Cursor;
 use MongoDB\Driver\ReadPreference;
 use MongoDB\Operation\Find;
@@ -140,7 +141,7 @@ class MongoCursor extends AbstractCursor implements Iterator
 
         $options = $this->getOptions($optionNames) + $this->options;
 
-        $count = $this->collection->count($this->query, $options);
+        $count = $this->collection->count(TypeConverter::fromLegacy($this->query), $options);
         return $count;
     }
 
@@ -154,7 +155,7 @@ class MongoCursor extends AbstractCursor implements Iterator
     {
         $options = $this->getOptions() + $this->options;
 
-        $this->cursor = $this->collection->find($this->query, $options);
+        $this->cursor = $this->collection->find(TypeConverter::fromLegacy($this->query), $options);
     }
 
     /**

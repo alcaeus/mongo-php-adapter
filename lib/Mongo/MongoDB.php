@@ -426,10 +426,12 @@ class MongoDB
      * @param string $username The username.
      * @param string $password The password (in plaintext).
      * @return array Returns database response. If the login was successful, it will return 1.
+     *
+     * @deprecated This method is not implemented, supply authentication credentials through the connection string instead.
      */
     public function authenticate($username, $password)
     {
-        $this->notImplemented();
+        throw new \Exception('The MongoDB::authenticate method is not supported. Please supply authentication credentials through the connection string');
     }
 
     /**

@@ -1,6 +1,7 @@
 <?php
 
 namespace Alcaeus\MongoDbAdapter\Tests;
+use Alcaeus\MongoDbAdapter\TypeConverter;
 use MongoDB\Driver\ReadPreference;
 use MongoDB\Operation\Find;
 
@@ -50,7 +51,7 @@ class MongoCursorTest extends TestCase
         $collectionMock
             ->expects($this->once())
             ->method('find')
-            ->with($this->equalTo($query), $this->callback($checkOptionCallback))
+            ->with($this->equalTo(TypeConverter::fromLegacy($query)), $this->callback($checkOptionCallback))
             ->will($this->returnValue(new \ArrayIterator([])));
 
         $collection = $this->getCollection('test');

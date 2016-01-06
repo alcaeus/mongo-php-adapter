@@ -52,6 +52,9 @@ root:
  method is not yet implemented.
 
 ## MongoDB
+ - The [MongoDB::authenticate](https://secure.php.net/manual/de/mongodb.authenticate.php)
+ method is not supported. To connect to a database with authentication, please
+ supply the credentials using the connection string.
  - The `includeSystemCollections` parameter used in the [MongoDB::getCollectionInfo](https://php.net/manual/de/mongodb.getcollectioninfo.php]),
  [MongoDB::getCollectionNames](https://php.net/manual/de/mongodb.getcollectionnames.php]),
  and [MongoDB::listCollections](https://php.net/manual/de/mongodb.listcollections.php)
@@ -59,14 +62,24 @@ root:
  collections.
  - The [MongoDB::repair](https://secure.php.net/manual/de/mongodb.repair.php)
  method is not yet implemented.
- - The [MongoDB::authenticate](https://secure.php.net/manual/de/mongodb.authenticate.php)
- method is not yet implemented.
 
 ## MongoCollection
 
  - The [MongoCollection::createIndex](https://secure.php.net/manual/de/mongocollection.createindex.php)
  method does not yet return the same result as the original method. Instead, it
  always returns the name of the index created.
+
+## MongoCursor
+ - The [MongoCursor::explain](https://php.net/manual/de/mongocursor.explain.php)
+ method is not yet implemented.
+ - The [MongoCursor::hasNext](https://php.net/manual/de/mongocursor.hasnext.php)
+ method is not yet implemented.
+ - The [MongoCursor::setFlag](https://php.net/manual/de/mongocursor.setflag.php)
+ method is not yet implemented.
+
+## MongoCommandCursor
+ - The [MongoCommandCursor::createFromDocument](https://php.net/manual/de/mongocommandcursor.createfromdocument.php)
+ method is not yet implemented.
 
 ## Types
 
