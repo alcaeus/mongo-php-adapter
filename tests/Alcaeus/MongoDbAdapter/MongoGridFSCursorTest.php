@@ -4,29 +4,25 @@ namespace Alcaeus\MongoDbAdapter\Tests;
 
 class MongoGridFSCursorTest extends TestCase
 {
-    public function testCursor()
+    public function testCursorItems()
     {
-        $cursor = $this->getCursor();
-        $array = iterator_to_array($cursor);
+        $gridfs = $this->getGridFS();
+        $gridfs->storeBytes('foo', ['filename' => 'foo.txt']);
+        $gridfs->storeBytes('bar', ['filename' => 'bar.txt']);
 
+        $cursor = $gridfs->find(['filename' => 'foo.txt']);
+        $this->assertCount(1, $cursor);
+        foreach ($cursor as $key => $value) {
+            $this->assertSame('foo.txt', $key);
+            $this->assertInstanceOf('MongoGridFSFile', $value);
+            $this->assertSame('foo', $value->getBytes());
 
-        $this->assertCount(2, $array);
-        $this->assertArrayHasKey('One.txt', $array);
-        $this->assertArrayHasKey('Two.txt', $array);
-        $firstFile = $array['One.txt'];
-        $this->assertInstanceOf('MongoGridFSFile', $firstFile);
-        $this->assertArraySubset(['length' => 3, 'filename' => 'One.txt'], $firstFile->file);
-        $secondFile = $array['Two.txt'];
-        $this->assertInstanceOf('MongoGridFSFile', $secondFile);
-        $this->assertArraySubset(['length' => 3, 'filename' => 'Two.txt'], $secondFile->file);
-    }
-
-    private function getCursor()
-    {
-        $gridFS = $this->getGridFS();
-        $gridFS->storeBytes('One', ['filename' => 'One.txt']);
-        $gridFS->storeBytes('Two', ['filename' => 'Two.txt']);
-
-        return $gridFS->find();
+            $this->assertArraySubset([
+                'filename' => 'foo.txt',
+                'chunkSize' => \MongoGridFS::DEFAULT_CHUNK_SIZE,
+                'length' => 3,
+                'md5' => 'acbd18db4cc2f85cedef654fccc4a4d8'
+            ], $value->file);
+        }
     }
 }
