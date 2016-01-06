@@ -52,14 +52,15 @@ root:
  method is not yet implemented.
 
 ## MongoDB
+ - The [MongoDB::authenticate](https://secure.php.net/manual/de/mongodb.authenticate.php)
+ method is not supported. To connect to a database with authentication, please
+ supply the credentials using the connection string.
  - The `includeSystemCollections` parameter used in the [MongoDB::getCollectionInfo](https://php.net/manual/de/mongodb.getcollectioninfo.php]),
  [MongoDB::getCollectionNames](https://php.net/manual/de/mongodb.getcollectionnames.php]),
  and [MongoDB::listCollections](https://php.net/manual/de/mongodb.listcollections.php)
  methods is ignored. These methods do not return information about system
  collections.
  - The [MongoDB::repair](https://secure.php.net/manual/de/mongodb.repair.php)
- method is not yet implemented.
- - The [MongoDB::authenticate](https://secure.php.net/manual/de/mongodb.authenticate.php)
  method is not yet implemented.
 
 ## MongoCollection
