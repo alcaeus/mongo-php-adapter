@@ -103,13 +103,6 @@ class MongoGridFSTest extends TestCase
             ]
         );
 
-        $newCollection = $this->getCheckDatabase()->selectCollection('fs.files');
-
-        $indexes = iterator_to_array($newCollection->listIndexes());
-        $this->assertCount(2, $indexes);
-        $index = $indexes[1];
-        $this->assertSame(['filename' => 1, 'uploadDate' => 1], $index->getKey());
-
         $newChunksCollection = $this->getCheckDatabase()->selectCollection('fs.chunks');
         $indexes = iterator_to_array($newChunksCollection->listIndexes());
         $this->assertCount(2, $indexes);
@@ -157,9 +150,9 @@ class MongoGridFSTest extends TestCase
         $newChunksCollection = $this->getCheckDatabase()->selectCollection('fs.chunks');
         $this->assertSame(1, $newCollection->count());
 
-        $md5 = md5_file(__FILE__);
-        $size = filesize(__FILE__);
-        $filename = basename(__FILE__);
+        $filename = __FILE__;
+        $md5 = md5_file($filename);
+        $size = filesize($filename);
         $record = $newCollection->findOne();
         $this->assertNotNull($record);
         $this->assertAttributeInstanceOf('MongoDB\BSON\ObjectID', '_id', $record);
@@ -249,13 +242,12 @@ class MongoGridFSTest extends TestCase
         );
 
 
-        $newCollection = $this->getCheckDatabase()->selectCollection('testfs.files');
-        $newChunksCollection = $this->getCheckDatabase()->selectCollection('testfs.chunks');
+        $newCollection = $this->getCheckDatabase()->selectCollection('fs.files');
+        $newChunksCollection = $this->getCheckDatabase()->selectCollection('fs.chunks');
         $this->assertSame(1, $newCollection->count());
 
         $md5 = md5_file(__FILE__);
         $size = filesize(__FILE__);
-        $filename = basename(__FILE__);
         $record = $newCollection->findOne();
         $this->assertNotNull($record);
         $this->assertAttributeInstanceOf('MongoDB\BSON\ObjectID', '_id', $record);
