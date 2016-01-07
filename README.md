@@ -1,6 +1,6 @@
 # Mongo PHP Adapter
 
-The Mongo PHP Adapter is a userland library designed to act as an adapter 
+The Mongo PHP Adapter is a userland library designed to act as an adapter
 between applications relying on ext-mongo and the new driver (ext-mongodb).
 
 It provides the API of ext-mongo built on top of mongo-php-library, thus being
@@ -38,6 +38,12 @@ root:
 
  - The Mongo class is deprecated and was not implemented in this library. If you
  are still using it please update your code to use the new classes.
+
+## MongoLog
+
+ - The [MongoLog](http://php.net/manual/en/class.mongolog.php) class does not
+ log anything because the underlying driver does not offer a method to retrieve
+ this data.
 
 ## MongoClient
 

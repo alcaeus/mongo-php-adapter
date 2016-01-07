@@ -13,7 +13,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-class MongoLog {
+class MongoLog
+{
     /**
      * @link http://php.net/manual/en/class.mongolog.php#mongolog.constants.none
      */
@@ -22,49 +23,68 @@ class MongoLog {
     /**
      * @link http://php.net/manual/en/class.mongolog.php#mongolog.constants.all
      */
-    const ALL = 0;
+    const ALL = 31;
 
     /**
      * @link http://php.net/manual/en/class.mongolog.php#mongolog.constants.warning
      */
-    const WARNING = 0;
+    const WARNING = 1;
 
     /**
      * @link http://php.net/manual/en/class.mongolog.php#mongolog.constants.info
      */
-    const INFO = 0;
+    const INFO = 2;
 
     /**
      * @link http://php.net/manual/en/class.mongolog.php#mongolog.constants.fine
      */
-    const FINE = 0;
+    const FINE = 4;
 
     /**
      * @link http://php.net/manual/en/class.mongolog.php#mongolog.constants.rs
      */
-    const RS = 0;
+    const RS = 1;
 
     /**
      * @link http://php.net/manual/en/class.mongolog.php#mongolog.constants.pool
      */
-    const POOL = 0;
+    const POOL = 1;
+
+    /**
+     * @link http://php.net/manual/en/class.mongolog.php#mongolog.constants.con
+     */
+    const CON = 2;
 
     /**
      * @link http://php.net/manual/en/class.mongolog.php#mongolog.constants.io
      */
-    const IO = 0;
+    const IO = 4;
 
     /**
      * @link http://php.net/manual/en/class.mongolog.php#mongolog.constants.server
      */
-    const SERVER = 0;
+    const SERVER = 8;
 
     /**
      * @link http://php.net/manual/en/class.mongolog.php#mongolog.constants.parse
      */
-    const PARSE = 0;
+    const PARSE = 16;
 
-    const CON = 2;
+
+    private static $callback;
+    private static $level;
+    private static $module;
+
+    /**
+     * (PECL mongo &gt;= 1.3.0)
+     * Gets the previously set callback function
+     *
+     * @return callable|null
+     */
+    public static function getCallback()
+    {
+        return self::$callback;
+    }
 
     /**
      * (PECL mongo &gt;= 1.3.0)<br/>
@@ -99,7 +119,11 @@ class MongoLog {
      * <ul>
      * @return boolean Returns <b>TRUE</b> on success or <b>FALSE</b> on failure.
      */
-    public static function setCallback ( callable $log_function ) {}
+    public static function setCallback(callable $log_function )
+    {
+        self::$callback = $log_function;
+        return true;
+    }
 
     /**
      * This function can be used to set how verbose logging should be and the types of
@@ -111,7 +135,10 @@ class MongoLog {
      * @param int $level The levels you would like to log
      * @return void
      */
-    public static function setLevel($level) {}
+    public static function setLevel($level)
+    {
+        self::$level = $level;
+    }
 
     /**
      * This can be used to see the log level. Use the constants described in the
@@ -121,7 +148,10 @@ class MongoLog {
      * @static
      * @return int Returns the current level
      */
-    public static function getLevel() {}
+    public static function getLevel()
+    {
+        return self::$level;
+    }
 
     /**
      * This function can be used to set which parts of the driver's functionality
@@ -133,7 +163,10 @@ class MongoLog {
      * @param int $module The module(s) you would like to log
      * @return void
      */
-    public static function setModule($module) {}
+    public static function setModule($module)
+    {
+        self::$module = $module;
+    }
 
     /**
      * This function can be used to see which parts of the driver's functionality are
@@ -144,5 +177,8 @@ class MongoLog {
      * @static
      * @return int Returns the modules currently being logged
      */
-    public static function getModule() {}
+    public static function getModule()
+    {
+        return self::$module;
+    }
 }
