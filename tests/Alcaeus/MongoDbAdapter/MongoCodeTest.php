@@ -1,6 +1,7 @@
 <?php
 
 namespace Alcaeus\MongoDbAdapter\Tests;
+use Alcaeus\MongoDbAdapter\TypeInterface;
 
 /**
  * @author alcaeus <alcaeus@alcaeus.org>
@@ -13,7 +14,17 @@ class MongoCodeTest extends TestCase
         $this->assertAttributeSame('code', 'code', $code);
         $this->assertAttributeSame(['scope' => 'bleh'], 'scope', $code);
 
-        $this->assertSame('code', (string) $code);
+        $this->assertSame('code', (string)$code);
+
+        return $code;
+    }
+
+    /**
+     * @depends testCreate
+     */
+    public function testConvertToBson(\MongoCode $code)
+    {
+        $this->skipTestUnless($code instanceof TypeInterface);
 
         $bsonCode = $code->toBSONType();
         $this->assertInstanceOf('MongoDB\BSON\Javascript', $bsonCode);
@@ -21,6 +32,8 @@ class MongoCodeTest extends TestCase
 
     public function testCreateWithBsonObject()
     {
+        $this->skipTestUnless(in_array(TypeInterface::class, class_implements('MongoCode')));
+
         $bsonCode = new \MongoDB\BSON\Javascript('code', ['scope' => 'bleh']);
         $code = new \MongoCode($bsonCode);
 

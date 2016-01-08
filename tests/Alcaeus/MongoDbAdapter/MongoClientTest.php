@@ -7,21 +7,6 @@ namespace Alcaeus\MongoDbAdapter\Tests;
  */
 class MongoClientTest extends TestCase
 {
-    public function testConnectAndDisconnect()
-    {
-        $client = $this->getClient();
-        $this->assertTrue($client->connected);
-
-        $client->close();
-        $this->assertFalse($client->connected);
-    }
-
-    public function testClientWithoutAutomaticConnect()
-    {
-        $client = $this->getClient([]);
-        $this->assertFalse($client->connected);
-    }
-
     public function testGetDb()
     {
         $client = $this->getClient();
@@ -63,16 +48,17 @@ class MongoClientTest extends TestCase
     public function testGetHosts()
     {
         $client = $this->getClient();
+        $hosts = $client->getHosts();
         $this->assertArraySubset(
             [
-                'localhost:27017' => [
+                'localhost:27017;-;.;' . getmypid() => [
                     'host' => 'localhost',
                     'port' => 27017,
                     'health' => 1,
                     'state' => 0,
                 ],
             ],
-            $client->getHosts()
+            $hosts
         );
     }
 

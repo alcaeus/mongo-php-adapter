@@ -1,6 +1,7 @@
 <?php
 
 namespace Alcaeus\MongoDbAdapter\Tests;
+use Alcaeus\MongoDbAdapter\TypeInterface;
 
 /**
  * @author alcaeus <alcaeus@alcaeus.org>
@@ -14,6 +15,16 @@ class MongoTimestampTest extends TestCase
         $this->assertAttributeSame(987654321, 'inc', $timestamp);
 
         $this->assertSame('1234567890', (string) $timestamp);
+
+        return $timestamp;
+    }
+
+    /**
+     * @depends testCreate
+     */
+    public function testConvertToBson(\MongoTimestamp $timestamp)
+    {
+        $this->skipTestUnless($timestamp instanceof TypeInterface);
 
         $bsonTimestamp = $timestamp->toBSONType();
         $this->assertInstanceOf('MongoDB\BSON\Timestamp', $bsonTimestamp);
@@ -31,6 +42,8 @@ class MongoTimestampTest extends TestCase
 
     public function testCreateWithBsonTimestamp()
     {
+        $this->skipTestUnless(in_array(TypeInterface::class, class_implements('MongoTimestamp')));
+
         $bsonTimestamp = new \MongoDB\BSON\Timestamp(1234567890, 987654321);
         $timestamp = new \MongoTimestamp($bsonTimestamp);
 
