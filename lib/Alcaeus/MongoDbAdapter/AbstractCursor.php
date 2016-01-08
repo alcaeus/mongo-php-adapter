@@ -327,7 +327,7 @@ abstract class AbstractCursor
                 'id' => (string) $this->cursor->getId(),
                 'at' => null, // @todo Complete info for cursor that is iterating
                 'numReturned' => null, // @todo Complete info for cursor that is iterating
-                'server' => null, // @todo Complete info for cursor that is iterating
+                'server' => sprintf('%s:%d;-;.;%d', $this->cursor->getServer()->getHost(), $this->cursor->getServer()->getPort(), getmypid()),
                 'host' => $this->cursor->getServer()->getHost(),
                 'port' => $this->cursor->getServer()->getPort(),
                 'connection_type_desc' => $typeString,

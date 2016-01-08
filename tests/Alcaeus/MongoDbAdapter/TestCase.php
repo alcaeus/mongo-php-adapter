@@ -145,4 +145,14 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
     {
         return $this->configureFailPoint("maxTimeAlwaysTimeOut", array("times" => 1));
     }
+
+    /**
+     * @param $condition
+     */
+    protected function skipTestUnless($condition)
+    {
+        if (!$condition) {
+            $this->markTestSkipped('Test only applies when running against mongo-php-adapter');
+        }
+    }
 }

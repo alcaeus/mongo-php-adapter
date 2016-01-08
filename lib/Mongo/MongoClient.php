@@ -195,7 +195,7 @@ class MongoClient
         }
 
         foreach ($servers as $server) {
-            $key = sprintf('%s:%d', $server->getHost(), $server->getPort());
+            $key = sprintf('%s:%d;-;.;%d', $server->getHost(), $server->getPort(), getmypid());
             $info = $server->getInfo();
 
             switch ($server->getType()) {
