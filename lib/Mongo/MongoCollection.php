@@ -55,6 +55,7 @@ class MongoCollection
      */
     public function __construct(MongoDB $db, $name)
     {
+        $this->checkCollectionName($name);
         $this->db = $db;
         $this->name = $name;
 
@@ -771,6 +772,15 @@ class MongoCollection
         }
 
         return null;
+    }
+
+    private function checkCollectionName($name)
+    {
+        if (empty($name)) {
+            throw new Exception('Collection name cannot be empty');
+        } elseif (strpos($name, chr(0)) !== false) {
+            throw new Exception('Collection name cannot contain null bytes');
+        }
     }
 }
 

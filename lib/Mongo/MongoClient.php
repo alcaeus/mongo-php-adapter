@@ -91,6 +91,7 @@ class MongoClient
         }
     }
 
+
     /**
      * Closes this database connection
      *

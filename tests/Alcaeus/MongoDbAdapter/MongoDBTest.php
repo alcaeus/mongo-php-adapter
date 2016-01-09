@@ -16,6 +16,50 @@ class MongoDBTest extends TestCase
         $this->assertSame('mongo-php-adapter.test', (string) $collection);
     }
 
+    public function testSelectCollectionEmptyName()
+    {
+        $database = $this->getDatabase();
+
+        $this->setExpectedException('Exception', 'Collection name cannot be empty');
+
+        $database->selectCollection('');
+    }
+
+    public function testSelectCollectionWithNullBytes()
+    {
+        $database = $this->getDatabase();
+
+        $this->setExpectedException('Exception', 'Collection name cannot contain null bytes');
+
+        $database->selectCollection('foo' . chr(0));
+    }
+
+    public function testCreateCollection()
+    {
+        $database = $this->getDatabase();
+
+        $collection = $database->createCollection('test', ['capped' => true, 'size' => 100]);
+        $this->assertInstanceOf('MongoCollection', $collection);
+
+        $document = ['foo' => 'bar'];
+        $collection->insert($document);
+
+        $checkDatabase = $this->getCheckDatabase();
+        foreach ($checkDatabase->listCollections() as $collectionInfo) {
+            if ($collectionInfo->getName() === 'test') {
+                $this->assertTrue($collectionInfo->isCapped());
+                return;
+            }
+        }
+    }
+
+    public function testCreateCollectionInvalidParameters()
+    {
+        $database = $this->getDatabase();
+
+        $this->assertFalse($database->createCollection('test', ['capped' => 2, 'size' => 100]));
+    }
+
     public function testGetCollectionProperty()
     {
         $db = $this->getDatabase();
@@ -40,6 +84,21 @@ class MongoDBTest extends TestCase
         ];
 
         $this->assertEquals($expected, $db->command(['listDatabases' => 1]));
+    }
+
+    public function testCommandCursorTimeout()
+    {
+        $database = $this->getDatabase();
+
+        $this->failMaxTimeMS();
+
+        $this->setExpectedException('MongoCursorTimeoutException');
+
+        $database->command([
+            "count" => "test",
+            "query" => array("a" => 1),
+            "maxTimeMS" => 100,
+        ]);
     }
 
     public function testReadPreference()
@@ -137,6 +196,19 @@ class MongoDBTest extends TestCase
         $this->assertContains('test', $this->getDatabase()->getCollectionNames());
     }
 
+    public function testGetCollectionNamesExecutionTimeoutException()
+    {
+        $document = ['foo' => 'bar'];
+        $this->getCollection()->insert($document);
+        $database = $this->getDatabase();
+
+        $this->failMaxTimeMS();
+
+        $this->setExpectedException('MongoExecutionTimeoutException');
+
+        $database->getCollectionNames(['maxTimeMS' => 1]);
+    }
+
     public function testGetCollectionInfo()
     {
         $document = ['foo' => 'bar'];
@@ -152,6 +224,20 @@ class MongoDBTest extends TestCase
         $this->fail('The test collection was not found');
     }
 
+    public function testGetCollectionInfoExecutionTimeoutException()
+    {
+        $document = ['foo' => 'bar'];
+        $this->getCollection()->insert($document);
+
+        $database = $this->getDatabase();
+
+        $this->failMaxTimeMS();
+
+        $this->setExpectedException('MongoExecutionTimeoutException');
+
+        $database->getCollectionInfo(['maxTimeMS' => 1]);
+    }
+
     public function testListCollections()
     {
         $document = ['foo' => 'bar'];
@@ -165,6 +251,15 @@ class MongoDBTest extends TestCase
         }
 
         $this->fail('The test collection was not found');
+    }
+
+    public function testListCollectionsExecutionTimeoutException()
+    {
+        $this->failMaxTimeMS();
+
+        $this->setExpectedException('MongoExecutionTimeoutException');
+
+        $this->getDatabase()->listCollections(['maxTimeMS' => 1]);
     }
 
     public function testDrop()
