@@ -339,6 +339,18 @@ class MongoCollectionTest extends TestCase
         $this->assertAttributeSame('bar', 'foo', $object);
     }
 
+    public function testRemoveOne()
+    {
+        $id = '54203e08d51d4a1f868b456e';
+        $collection = $this->getCollection();
+
+        $collection->insert(['_id' => new \MongoId($id), 'foo' => 'bar']);
+        $collection->remove(['_id' => new \MongoId($id)]);
+
+        $newCollection = $this->getCheckDatabase()->selectCollection('test');
+        $this->assertSame(0, $newCollection->count());
+    }
+
     public function testSaveUpdate()
     {
         $id = '54203e08d51d4a1f868b456e';

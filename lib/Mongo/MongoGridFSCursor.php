@@ -13,7 +13,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-class MongoGridFSCursor extends MongoCursor implements Traversable, Iterator {
+class MongoGridFSCursor extends MongoCursor
+{
     /**
      * @static
      * @var $slaveOkay
@@ -28,35 +29,42 @@ class MongoGridFSCursor extends MongoCursor implements Traversable, Iterator {
 
     /**
      * Create a new cursor
+     *
      * @link http://php.net/manual/en/mongogridfscursor.construct.php
      * @param MongoGridFS $gridfs Related GridFS collection
-     * @param resource $connection Database connection
+     * @param MongoClient $connection Database connection
      * @param string $ns Full name of database and collection
      * @param array $query Database query
      * @param array $fields Fields to return
      * @return MongoGridFSCursor Returns the new cursor
      */
-    public function __construct($gridfs, $connection, $ns, $query, $fields) {}
-
-    /**
-     * Return the next file to which this cursor points, and advance the cursor
-     * @link http://php.net/manual/en/mongogridfscursor.getnext.php
-     * @return MongoGridFSFile Returns the next file
-     */
-    public function getNext() {}
+    public function __construct(MongoGridFS $gridfs, MongoClient $connection, $ns, array $query = array(), array $fields = array())
+    {
+        $this->gridfs = $gridfs;
+        parent::__construct($connection, $ns, $query, $fields);
+    }
 
     /**
      * Returns the current file
+     *
      * @link http://php.net/manual/en/mongogridfscursor.current.php
      * @return MongoGridFSFile The current file
      */
-    public function current() {}
+    public function current()
+    {
+        $file = parent::current();
+        return ($file !== null) ? new MongoGridFSFile($this->gridfs, $file) : null;
+    }
 
     /**
      * Returns the current result's filename
+     *
      * @link http://php.net/manual/en/mongogridfscursor.key.php
      * @return string The current results filename
      */
-    public function key() {}
-
+    public function key()
+    {
+        $file = $this->current();
+        return ($file !== null) ? $file->getFilename() : null;
+    }
 }

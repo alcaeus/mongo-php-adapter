@@ -13,7 +13,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-class MongoGridFS extends MongoCollection {
+class MongoGridFS extends MongoCollection
+{
+    const DEFAULT_CHUNK_SIZE = 262144; // 256 kb
+
     const ASCENDING = 1;
     const DESCENDING = -1;
 
@@ -35,7 +38,12 @@ class MongoGridFS extends MongoCollection {
      */
     protected $chunksName;
 
+    /**
+     * @var MongoDB
+     */
+    private $database;
 
+    private $prefix;
 
     /**
      * Files as stored across two collections, the first containing file meta
@@ -47,33 +55,134 @@ class MongoGridFS extends MongoCollection {
      * @param string $prefix [optional] <p>Optional collection name prefix.</p>
      * @param mixed $chunks  [optional]
      * @return MongoGridFS
+     * @throws \Exception
      */
-    public function __construct($db, $prefix = "fs", $chunks = "fs") {}
+    public function __construct(MongoDB $db, $prefix = "fs", $chunks = null)
+    {
+        if ($chunks) {
+            trigger_error("The 'chunks' argument is deprecated and ignored", E_DEPRECATED);
+        }
+        if (empty($prefix)) {
+            throw new \Exception('MongoGridFS::__construct(): invalid prefix');
+        }
+
+        $this->database = $db;
+        $this->prefix = $prefix;
+        $this->filesName = $prefix . '.files';
+        $this->chunksName = $prefix . '.chunks';
+
+        $this->chunks = $db->selectCollection($this->chunksName);
+
+        parent::__construct($db, $this->filesName);
+    }
+
+    /**
+     * Delete a file from the database
+     *
+     * @link http://php.net/manual/en/mongogridfs.delete.php
+     * @param mixed $id _id of the file to remove
+     * @return boolean Returns true if the remove was successfully sent to the database.
+     */
+    public function delete($id)
+    {
+        $this->createChunksIndex();
+
+        $this->chunks->remove(['files_id' => $id], ['justOne' => false]);
+        return parent::remove(['_id' => $id]);
+    }
 
     /**
      * Drops the files and chunks collections
      * @link http://php.net/manual/en/mongogridfs.drop.php
      * @return array The database response
      */
-    public function drop() {}
+    public function drop()
+    {
+        $this->chunks->drop();
+        return parent::drop();
+    }
 
     /**
      * @link http://php.net/manual/en/mongogridfs.find.php
      * @param array $query The query
      * @param array $fields Fields to return
+     * @param array $options Options for the find command
      * @return MongoGridFSCursor A MongoGridFSCursor
      */
-    public function find(array $query = array(), array $fields = array()) {}
+    public function find(array $query = [], array $fields = [])
+    {
+        $cursor = new MongoGridFSCursor($this, $this->db->getConnection(), (string) $this, $query, $fields);
+        $cursor->setReadPreference($this->getReadPreference());
+
+        return $cursor;
+    }
+
+    /**
+     * Returns a single file matching the criteria
+     *
+     * @link http://www.php.net/manual/en/mongogridfs.findone.php
+     * @param array $query The fields for which to search.
+     * @param array $fields Fields of the results to return.
+     * @param array $options Options for the find command
+     * @return MongoGridFSFile|null
+     */
+    public function findOne(array $query = [], array $fields = [], array $options = [])
+    {
+        if (is_string($query)) {
+            $query = ['filename' => $query];
+        }
+
+        $items = iterator_to_array($this->find($query, $fields)->limit(1));
+        return current($items);
+    }
+
+    /**
+     * Retrieve a file from the database
+     *
+     * @link http://www.php.net/manual/en/mongogridfs.get.php
+     * @param mixed $id _id of the file to find.
+     * @return MongoGridFSFile|null
+     */
+    public function get($id)
+    {
+        return $this->findOne(['_id' => $id]);
+    }
 
     /**
      * Stores a file in the database
-     * @link http://php.net/manual/en/mongogridfs.storefile.php
+     *
+     * @link http://php.net/manual/en/mongogridfs.put.php
      * @param string $filename The name of the file
      * @param array $extra Other metadata to add to the file saved
-     * @param array $options Options for the store. "safe": Check that this store succeeded
+     * @param array $options An array of options for the insert operations executed against the chunks and files collections.
      * @return mixed Returns the _id of the saved object
      */
-    public function storeFile($filename, $extra = array(), $options = array()) {}
+    public function put($filename, array $extra = [], array $options = [])
+    {
+        return $this->storeFile($filename, $extra, $options);
+    }
+
+    /**
+     * Removes files from the collections
+     *
+     * @link http://www.php.net/manual/en/mongogridfs.remove.php
+     * @param array $criteria Description of records to remove.
+     * @param array $options Options for remove.
+     * @throws MongoCursorException
+     * @return boolean
+     */
+    public function remove(array $criteria = [], array $options = [])
+    {
+        $this->createChunksIndex();
+
+        $matchingFiles = parent::find($criteria, ['_id' => 1]);
+        $ids = [];
+        foreach ($matchingFiles as $file) {
+            $ids[] = $file['_id'];
+        }
+        $this->chunks->remove(['files_id' => ['$in' => $ids]], ['justOne' => false] + $options);
+        return parent::remove(['_id' => ['$in' => $ids]], ['justOne' => false] + $options);
+    }
 
     /**
      * Chunkifies and stores bytes in the database
@@ -83,60 +192,208 @@ class MongoGridFS extends MongoCollection {
      * @param array $options Options for the store. "safe": Check that this store succeeded
      * @return mixed The _id of the object saved
      */
-    public function storeBytes($bytes, $extra = array(), $options = array()) {}
+    public function storeBytes($bytes, array $extra = [], array $options = [])
+    {
+        $this->createChunksIndex();
+
+        $record = $extra + [
+            'length' => mb_strlen($bytes, '8bit'),
+            'md5' => md5($bytes),
+        ];
+
+        $file = $this->insertFile($record, $options);
+        $this->insertChunksFromBytes($bytes, $file);
+
+        return $file['_id'];
+    }
 
     /**
-     * Returns a single file matching the criteria
-     * @link http://www.php.net/manual/en/mongogridfs.findone.php
-     * @param array $query The fields for which to search.
-     * @param array $fields Fields of the results to return.
-     * @return MongoGridFSFile|null
+     * Stores a file in the database
+     *
+     * @link http://php.net/manual/en/mongogridfs.storefile.php
+     * @param string $filename The name of the file
+     * @param array $extra Other metadata to add to the file saved
+     * @param array $options Options for the store. "safe": Check that this store succeeded
+     * @return mixed Returns the _id of the saved object
+     * @throws MongoGridFSException
+     * @throws Exception
      */
-    public function findOne(array $query = array(), array $fields = array()) {}
+    public function storeFile($filename, array $extra = [], array $options = [])
+    {
+        $this->createChunksIndex();
 
-    /**
-     * Removes files from the collections
-     * @link http://www.php.net/manual/en/mongogridfs.remove.php
-     * @param array $criteria Description of records to remove.
-     * @param array $options Options for remove. Valid options are: "safe"- Check that the remove succeeded.
-     * @throws MongoCursorException
-     * @return boolean
-     */
-    public function remove(array $criteria = array(), array $options = array()) {}
+        $record = $extra;
+        if (is_string($filename)) {
+            $record += [
+                'md5' => md5_file($filename),
+                'length' => filesize($filename),
+                'filename' => $filename,
+            ];
 
-    /**
-     * Delete a file from the database
-     * @link http://php.net/manual/en/mongogridfs.delete.php
-     * @param mixed $id _id of the file to remove
-     * @return boolean Returns true if the remove was successfully sent to the database.
-     */
-    public function delete($id) {}
+            $handle = fopen($filename, 'r');
+            if (! $handle) {
+                throw new MongoGridFSException('could not open file: ' . $filename);
+            }
+        } elseif (! is_resource($filename)) {
+            throw new \Exception('first argument must be a string or stream resource');
+        } else {
+            $handle = $filename;
+        }
+
+        $file = $this->insertFile($record, $options);
+        $length = $this->insertChunksFromFile($handle, $file);
+
+        // Add length and MD5 if they were not present before
+        $update = [];
+        if (! isset($record['length'])) {
+            $update['length'] = $length;
+        }
+        if (! isset($record['md5'])) {
+            $update['md5'] = $this->getMd5ForFile($file['_id']);
+        }
+
+        if (count($update)) {
+            $this->update(['_id' => $file['_id']], ['$set' => $update]);
+        }
+
+        return $file['_id'];
+    }
 
     /**
      * Saves an uploaded file directly from a POST to the database
+     *
      * @link http://www.php.net/manual/en/mongogridfs.storeupload.php
      * @param string $name The name attribute of the uploaded file, from <input type="file" name="something"/>.
      * @param array $metadata An array of extra fields for the uploaded file.
      * @return mixed Returns the _id of the uploaded file.
+     * @throws MongoGridFSException
      */
-    public function storeUpload($name, array $metadata = array()) {}
+    public function storeUpload($name, array $metadata = [])
+    {
+        if (! isset($_FILES[$name]) || $_FILES[$name]['error'] !== UPLOAD_ERR_OK) {
+            throw new MongoGridFSException("Could not find uploaded file $name");
+        }
+        if (! isset($_FILES[$name]['tmp_name'])) {
+            throw new MongoGridFSException("Couldn't find tmp_name in the \$_FILES array. Are you sure the upload worked?");
+        }
 
+        $uploadedFile = $_FILES[$name];
+        $uploadedFile['tmp_name'] = (array) $uploadedFile['tmp_name'];
+        $uploadedFile['name'] = (array) $uploadedFile['name'];
+
+        if (count($uploadedFile['tmp_name']) > 1) {
+            foreach ($uploadedFile['tmp_name'] as $key => $file) {
+                $metadata['filename'] = $uploadedFile['name'][$key];
+                $this->storeFile($file, $metadata);
+            }
+
+            return null;
+        } else {
+            $metadata += ['filename' => array_pop($uploadedFile['name'])];
+            return $this->storeFile(array_pop($uploadedFile['tmp_name']), $metadata);
+        }
+    }
 
     /**
-     * Retrieve a file from the database
-     * @link http://www.php.net/manual/en/mongogridfs.get.php
-     * @param mixed $id _id of the file to find.
-     * @return MongoGridFSFile|null Returns the file, if found, or NULL.
+     * Creates the index on the chunks collection
      */
-    public function __get($id) {}
+    private function createChunksIndex()
+    {
+        $this->chunks->createIndex(['files_id' => 1, 'n' => 1], ['unique' => true]);
+    }
 
     /**
-     * Stores a file in the database
-     * @link http://php.net/manual/en/mongogridfs.put.php
-     * @param string $filename The name of the file
-     * @param array $extra Other metadata to add to the file saved
-     * @return mixed Returns the _id of the saved object
+     * Inserts a single chunk into the database
+     *
+     * @param mixed $fileId
+     * @param string $data
+     * @param int $chunkNumber
+     * @return array|bool
      */
-    public function put($filename, array $extra = array()) {}
+    private function insertChunk($fileId, $data, $chunkNumber)
+    {
+        $chunk = [
+            'files_id' => $fileId,
+            'n' => $chunkNumber,
+            'data' => new MongoBinData($data),
+        ];
+        return $this->chunks->insert($chunk);
+    }
 
+    /**
+     * Splits a string into chunks and writes them to the database
+     *
+     * @param string $bytes
+     * @param array $record
+     */
+    private function insertChunksFromBytes($bytes, $record)
+    {
+        $chunkSize = $record['chunkSize'];
+        $fileId = $record['_id'];
+        $i = 0;
+
+        $chunks = str_split($bytes, $chunkSize);
+        foreach ($chunks as $chunk) {
+            $this->insertChunk($fileId, $chunk, $i++);
+        }
+    }
+
+    /**
+     * Reads chunks from a file and writes them to the database
+     *
+     * @param resource $handle
+     * @param array $record
+     * @return int Returns the number of bytes written to the database
+     */
+    private function insertChunksFromFile($handle, $record)
+    {
+        $written = 0;
+        $offset = 0;
+        $i = 0;
+
+        $fileId = $record['_id'];
+        $chunkSize = $record['chunkSize'];
+
+        rewind($handle);
+        while (! feof($handle)) {
+            $data = stream_get_contents($handle, $chunkSize);
+            $this->insertChunk($fileId, $data, $i++);
+            $written += strlen($data);
+            $offset += $chunkSize;
+        }
+
+        return $written;
+    }
+
+    /**
+     * Writes a file record to the database
+     *
+     * @param $record
+     * @param array $options
+     * @return array
+     */
+    private function insertFile($record, array $options = [])
+    {
+        $record += [
+            '_id' => new MongoId(),
+            'uploadDate' => new MongoDate(),
+            'chunkSize' => self::DEFAULT_CHUNK_SIZE,
+        ];
+
+        $this->insert($record, $options);
+
+        return $record;
+    }
+
+    /**
+     * Returns the MD5 string for a file previously stored to the database
+     *
+     * @param $id
+     * @return string
+     */
+    private function getMd5ForFile($id)
+    {
+        $result = $this->db->command(['filemd5' => $id, 'root' => $this->prefix]);
+        return $result['md5'];
+    }
 }
