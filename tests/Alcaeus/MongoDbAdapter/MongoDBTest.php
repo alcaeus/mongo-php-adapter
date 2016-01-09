@@ -8,6 +8,20 @@ use MongoDB\Driver\ReadPreference;
  */
 class MongoDBTest extends TestCase
 {
+    public function testEmptyDatabaseName()
+    {
+        $this->setExpectedException('Exception', 'Database name cannot be empty');
+
+        new \MongoDB($this->getClient(), '');
+    }
+
+    public function testInvalidDatabaseName()
+    {
+        $this->setExpectedException('Exception', 'Database name contains invalid characters');
+
+        new \MongoDB($this->getClient(), '/');
+    }
+
     public function testGetCollection()
     {
         $db = $this->getDatabase();

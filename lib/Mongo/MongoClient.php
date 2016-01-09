@@ -14,6 +14,7 @@
  */
 
 use Alcaeus\MongoDbAdapter\Helper;
+use Alcaeus\MongoDbAdapter\ExceptionConverter;
 use MongoDB\Client;
 
 /**
@@ -182,8 +183,15 @@ class MongoClient
     {
         $this->forceConnect();
 
-        $servers = [];
-        foreach ($this->manager->getServers() as $server) {
+        $results = [];
+
+        try {
+            $servers = $this->manager->getServers();
+        } catch (\MongoDB\Driver\Exception\Exception $e) {
+            ExceptionConverter::toLegacy($e);
+        }
+
+        foreach ($servers as $server) {
             $key = sprintf('%s:%d', $server->getHost(), $server->getPort());
             $info = $server->getInfo();
 
@@ -198,7 +206,7 @@ class MongoClient
                     $state = 0;
             }
 
-            $servers[$key] = [
+            $results[$key] = [
                 'host' => $server->getHost(),
                 'port' => $server->getPort(),
                 'health' => (int) $info['ok'],
@@ -208,7 +216,7 @@ class MongoClient
             ];
         }
 
-        return $servers;
+        return $results;
     }
 
     /**
@@ -232,7 +240,11 @@ class MongoClient
      */
     public function listDBs()
     {
-        $databaseInfoIterator = $this->client->listDatabases();
+        try {
+            $databaseInfoIterator = $this->client->listDatabases();
+        } catch (\MongoDB\Driver\Exception\Exception $e) {
+            ExceptionConverter::toLegacy($e);
+        }
 
         $databases = [
             'databases' => [],

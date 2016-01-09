@@ -60,6 +60,14 @@ class ExceptionConverter
      */
     public static function toLegacy(Exception\Exception $e)
     {
+        self::isNoServerAvailable($e);
         throw self::convertException($e);
+    }
+
+    public static function isNoServerAvailable(Exception\Exception $e)
+    {
+        if (strpos($e->getMessage(), 'No suitable servers found') !== false) {
+            throw new \MongoConnectionException($e->getMessage(), $e->getCode(), $e);
+        }
     }
 }

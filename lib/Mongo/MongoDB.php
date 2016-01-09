@@ -59,6 +59,7 @@ class MongoDB
      */
     public function __construct(MongoClient $conn, $name)
     {
+        $this->checkDatabaseName($name);
         $this->connection = $conn;
         $this->name = $name;
 
@@ -494,5 +495,26 @@ class MongoDB
         } else {
             $this->db = $this->db->withOptions($options);
         }
+    }
+
+    private function checkDatabaseName($name)
+    {
+        if (empty($name)) {
+            throw new \Exception('Database name cannot be empty');
+        }
+        if (strlen($name) >= 64) {
+            throw new \Exception('Database name cannot exceed 63 characters');
+        }
+        if (strpos($name, chr(0)) !== false) {
+            throw new \Exception('Database name cannot contain null bytes');
+        }
+
+        $invalidCharacters = ['.', '$', '/', ' ', '\\'];
+        foreach ($invalidCharacters as $char) {
+            if (strchr($name, $char) !== false) {
+                throw new \Exception('Database name contains invalid characters');
+            }
+        }
+
     }
 }

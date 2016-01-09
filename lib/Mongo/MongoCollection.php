@@ -539,9 +539,6 @@ class MongoCollection
         try {
             $document = $this->collection->findOne(TypeConverter::fromLegacy($query), $options);
         } catch (\MongoDB\Driver\Exception\Exception $e) {
-            if (strpos($e->getMessage(), 'No suitable servers found') !== false) {
-                throw new MongoConnectionException($e->getMessage(), $e->getCode(), $e);
-            }
             ExceptionConverter::toLegacy($e);
         }
 
