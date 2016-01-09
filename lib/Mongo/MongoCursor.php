@@ -15,6 +15,7 @@
 
 use Alcaeus\MongoDbAdapter\AbstractCursor;
 use Alcaeus\MongoDbAdapter\TypeConverter;
+use Alcaeus\MongoDbAdapter\ExceptionConverter;
 use MongoDB\Driver\Cursor;
 use MongoDB\Driver\ReadPreference;
 use MongoDB\Operation\Find;
@@ -140,8 +141,14 @@ class MongoCursor extends AbstractCursor implements Iterator
         }
 
         $options = $this->getOptions($optionNames) + $this->options;
+        try {
+            $count = $this->collection->count(TypeConverter::fromLegacy($this->query), $options);
+        } catch (\MongoDB\Driver\Exception\ExecutionTimeoutException $e) {
+            throw new MongoCursorTimeoutException($e->getMessage(), $e->getCode(), $e);
+        } catch (\MongoDB\Driver\Exception\Exception $e) {
+            ExceptionConverter::toLegacy($e);
+        }
 
-        $count = $this->collection->count(TypeConverter::fromLegacy($this->query), $options);
         return $count;
     }
 
@@ -155,7 +162,13 @@ class MongoCursor extends AbstractCursor implements Iterator
     {
         $options = $this->getOptions() + $this->options;
 
-        $this->cursor = $this->collection->find(TypeConverter::fromLegacy($this->query), $options);
+        try {
+            $this->cursor = $this->collection->find(TypeConverter::fromLegacy($this->query), $options);
+        } catch (\MongoDB\Driver\Exception\ExecutionTimeoutException $e) {
+            throw new MongoCursorTimeoutException($e->getMessage(), $e->getCode(), $e);
+        } catch (\MongoDB\Driver\Exception\Exception $e) {
+            ExceptionConverter::toLegacy($e);
+        }
     }
 
     /**

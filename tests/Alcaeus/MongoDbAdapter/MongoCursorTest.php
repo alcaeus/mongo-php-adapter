@@ -39,6 +39,16 @@ class MongoCursorTest extends TestCase
         $this->assertSame(1, $cursor->count(true));
     }
 
+    public function testCountCannotConnect()
+    {
+        $client = $this->getClient([], 'mongodb://localhost:28888');
+        $cursor = $client->selectCollection('mongo-php-adapter', 'test')->find();
+
+        $this->setExpectedException('MongoConnectionException');
+
+        $cursor->count();
+    }
+
     /**
      * @dataProvider getCursorOptions
      */
