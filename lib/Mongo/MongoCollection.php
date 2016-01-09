@@ -285,7 +285,7 @@ class MongoCollection
     public function batchInsert(array $a, array $options = [])
     {
         $result = $this->collection->insertMany(
-            TypeConverter::fromLegacy($a),
+            TypeConverter::fromLegacy(array_values($a)),
             $this->convertWriteConcernOptions($options)
         );
 

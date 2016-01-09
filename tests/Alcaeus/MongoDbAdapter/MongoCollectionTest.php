@@ -61,6 +61,24 @@ class MongoCollectionTest extends TestCase
         $this->assertSame($expected, $this->getCollection()->batchInsert($documents));
     }
 
+    public function testInsertManyWithNonNumericKeys()
+    {
+        $expected = [
+            'connectionId' => 0,
+            'n' => 0,
+            'syncMillis' => 0,
+            'writtenTo' => null,
+            'err' => null,
+            'errmsg' => null
+        ];
+
+        $documents = [
+            'a' => ['foo' => 'bar'],
+            'b' => ['bar' => 'foo']
+        ];
+        $this->assertSame($expected, $this->getCollection()->batchInsert($documents));
+    }
+
     public function testUpdateOne()
     {
         $this->getCollection()->insert(['foo' => 'bar']);
