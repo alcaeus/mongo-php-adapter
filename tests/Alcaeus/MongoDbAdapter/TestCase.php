@@ -32,9 +32,9 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
      * @param array|null $options
      * @return \MongoClient
      */
-    protected function getClient($options = null)
+    protected function getClient($options = null, $uri = 'mongodb://localhost')
     {
-        $args = ['mongodb://localhost'];
+        $args = [$uri];
         if ($options !== null) {
             $args[] = $options;
         }
