@@ -201,8 +201,18 @@ class MongoGridFS extends MongoCollection
             'md5' => md5($bytes),
         ];
 
-        $file = $this->insertFile($record, $options);
-        $this->insertChunksFromBytes($bytes, $file);
+        try {
+            $file = $this->insertFile($record, $options);
+        } catch (MongoException $e) {
+            throw new MongoGridFSException('Cannot insert file record', 0, $e);
+        }
+
+        try {
+            $this->insertChunksFromBytes($bytes, $file);
+        } catch (MongoException $e) {
+            $this->delete($file['_id']);
+            throw new MongoGridFSException('Error while inserting chunks', 0, $e);
+        }
 
         return $file['_id'];
     }
@@ -241,8 +251,19 @@ class MongoGridFS extends MongoCollection
         }
 
         $md5 = null;
-        $file = $this->insertFile($record, $options);
-        $length = $this->insertChunksFromFile($handle, $file, $md5);
+        try {
+            $file = $this->insertFile($record, $options);
+        } catch (MongoException $e) {
+            throw new MongoGridFSException('Cannot insert file record', 0, $e);
+        }
+
+        try {
+            $length = $this->insertChunksFromFile($handle, $file, $md5);
+        } catch (MongoException $e) {
+            $this->delete($file['_id']);
+            throw new MongoGridFSException('Error while inserting chunks', 0, $e);
+        }
+
 
         // Add length and MD5 if they were not present before
         $update = [];
@@ -250,11 +271,24 @@ class MongoGridFS extends MongoCollection
             $update['length'] = $length;
         }
         if (! isset($record['md5'])) {
-            $update['md5'] = $md5;
+            try {
+                $update['md5'] = $md5;
+            } catch (MongoException $e) {
+                throw new MongoGridFSException('Error computing MD5 checksum', 0, $e);
+            }
         }
 
         if (count($update)) {
-            $this->update(['_id' => $file['_id']], ['$set' => $update]);
+            try {
+                $result = $this->update(['_id' => $file['_id']], ['$set' => $update]);
+                if (! $this->isOKResult($result)) {
+                    throw new MongoGridFSException('Error updating file record');
+                }
+            } catch (MongoException $e) {
+                $this->delete($file['_id']);
+                throw new MongoGridFSException('Error updating file record', 0, $e);
+            }
+
         }
 
         return $file['_id'];
@@ -300,7 +334,10 @@ class MongoGridFS extends MongoCollection
      */
     private function createChunksIndex()
     {
-        $this->chunks->createIndex(['files_id' => 1, 'n' => 1], ['unique' => true]);
+        try {
+            $this->chunks->createIndex(['files_id' => 1, 'n' => 1], ['unique' => true]);
+        } catch (MongoDuplicateKeyException $e) {}
+
     }
 
     /**
@@ -318,7 +355,14 @@ class MongoGridFS extends MongoCollection
             'n' => $chunkNumber,
             'data' => new MongoBinData($data),
         ];
-        return $this->chunks->insert($chunk);
+
+        $result = $this->chunks->insert($chunk);
+
+        if (! $this->isOKResult($result)) {
+            throw new \MongoException('error inserting chunk');
+        }
+
+        return $result;
     }
 
     /**
@@ -387,8 +431,18 @@ class MongoGridFS extends MongoCollection
             'chunkSize' => self::DEFAULT_CHUNK_SIZE,
         ];
 
-        $this->insert($record, $options);
+        $result = $this->insert($record, $options);
+
+        if (! $this->isOKResult($result)) {
+            throw new \MongoException('error inserting file');
+        }
 
         return $record;
+    }
+
+    private function isOKResult($result)
+    {
+        return (is_array($result) && $result['ok'] == 1.0) ||
+               (is_bool($result) && $result);
     }
 }
