@@ -15,62 +15,33 @@
 
 namespace Alcaeus\MongoDbAdapter\Helper;
 
-/**
- * @internal
- */
-trait WriteConcern
+trait WriteConcernRaw
 {
-    use WriteConcernRaw;
-
-    /**
-     * @var \MongoDB\Driver\WriteConcern
-     */
-    protected $writeConcern;
-
-    /**
-     * @param $wstring
-     * @param int $wtimeout
-     * @return bool
-     */
-    abstract public function setWriteConcern($wstring, $wtimeout = 0);
-
-    /**
-     * @return array
-     */
-    public function getWriteConcern()
-    {
-        if ($this->writeConcern === null) {
-            $this->writeConcern = new \MongoDB\Driver\WriteConcern(1);
-        }
-
-        return [
-            'w' => $this->writeConcern->getW(),
-            'wtimeout' => $this->writeConcern->getWtimeout(),
-        ];
-
-    }
-
     /**
      * @param string|int $wstring
      * @param int $wtimeout
-     * @return bool
+     * @return \MongoDB\Driver\WriteConcern
      */
-    protected function setWriteConcernFromParameters($wstring, $wtimeout = 0)
+    protected function createWriteConcernFromParameters($wstring, $wtimeout)
     {
-        $this->writeConcern = $this->createWriteConcernFromParameters($wstring, $wtimeout);
+        if (! is_string($wstring) && ! is_int($wstring)) {
+            trigger_error("w for WriteConcern must be a string or integer", E_WARNING);
+            return false;
+        }
 
-        return true;
+        // Ensure wtimeout is not < 0
+        return new \MongoDB\Driver\WriteConcern($wstring, max($wtimeout, 0));
     }
 
     /**
      * @param array $writeConcernArray
-     * @return bool
+     * @return \MongoDB\Driver\WriteConcern
      */
-    protected function setWriteConcernFromArray($writeConcernArray)
+    protected function createWriteConcernFromArray($writeConcernArray)
     {
-        $wstring = $writeConcernArray['w'];
+        $wstring = isset($writeConcernArray['w']) ? $writeConcernArray['w'] : 1;
         $wtimeout = isset($writeConcernArray['wtimeout']) ? $writeConcernArray['wtimeout'] : 0;
 
-        return $this->setWriteConcernFromParameters($wstring, $wtimeout);
+        return $this->createWriteConcernFromParameters($wstring, $wtimeout);
     }
 }
