@@ -294,6 +294,72 @@ class MongoGridFSTest extends TestCase
         $this->assertSame($numberOfChunks, $newChunksCollection->count());
     }
 
+    public function testStoreByteExceptionWhileInsertingRecord()
+    {
+        $id = new \MongoID();
+
+        $collection = $this->getGridFS();
+
+        $document = ['_id' => $id];
+        $collection->insert($document);
+
+        $this->setExpectedException('MongoGridFSException', 'Cannot insert file record');
+
+        $collection->storeBytes('foo', ['_id' => $id]);
+    }
+
+    public function testStoreByteExceptionWhileInsertingChunks()
+    {
+        $collection = $this->getGridFS();
+        $collection->chunks->createIndex(['n' => 1], ['unique' => true]);
+
+        $document = ['n' => 0];
+        $collection->chunks->insert($document);
+
+        $this->setExpectedException('MongoGridFSException', 'Error while inserting chunks');
+
+        $collection->storeBytes('foo');
+    }
+
+    public function testStoreFileExceptionWhileInsertingRecord()
+    {
+        $id = new \MongoID();
+
+        $collection = $this->getGridFS();
+        $document = ['_id' => $id];
+        $collection->insert($document);
+
+        $this->setExpectedException('MongoGridFSException', 'Cannot insert file record');
+
+        $collection->storeFile(__FILE__, ['_id' => $id]);
+    }
+
+    public function testStoreFileExceptionWhileInsertingChunks()
+    {
+        $collection = $this->getGridFS();
+        $collection->chunks->createIndex(['n' => 1], ['unique' => true]);
+
+        $document = ['n' => 0];
+        $collection->chunks->insert($document);
+
+        $this->setExpectedException('MongoGridFSException', 'Error while inserting chunks');
+
+        $collection->storeFile(__FILE__);
+    }
+
+    public function testStoreFileExceptionWhileUpdatingFileRecord()
+    {
+        $collection = $this->getGridFS();
+        $collection->createIndex(['length' => 1], ['unique' => true]);
+
+        $document = ['length' => filesize(__FILE__)];
+        $collection->insert($document);
+
+        $this->setExpectedException('MongoGridFSException', 'Error updating file record');
+
+        $collection->storeFile(fopen(__FILE__, 'r'));
+    }
+
     /**
      * @var \MongoID
      */
