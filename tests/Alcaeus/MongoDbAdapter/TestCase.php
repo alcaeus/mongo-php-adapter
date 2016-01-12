@@ -76,4 +76,23 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
 
         return $database->getGridFS($prefix);
     }
+
+    /**
+     * @return \MongoCollection
+     */
+    protected function prepareData()
+    {
+        $collection = $this->getCollection();
+
+        $document = ['foo' => 'bar'];
+        $collection->insert($document);
+
+        unset($document['_id']);
+        $collection->insert($document);
+
+        $document = ['foo' => 'foo'];
+        $collection->insert($document);
+
+        return $collection;
+    }
 }

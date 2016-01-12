@@ -9,8 +9,10 @@ class MongoDeleteBatchTest extends TestCase
         $collection = $this->getCollection();
         $batch = new \MongoDeleteBatch($collection);
 
-        $collection->insert(['foo' => 'bar']);
-        $collection->insert(['foo' => 'bar']);
+        $document = ['foo' => 'bar'];
+        $collection->insert($document);
+        unset($document['_id']);
+        $collection->insert($document);
 
         $this->assertTrue($batch->add(['q' => ['foo' => 'bar'], 'limit' => 1]));
 
@@ -34,8 +36,10 @@ class MongoDeleteBatchTest extends TestCase
         $collection = $this->getCollection();
         $batch = new \MongoDeleteBatch($collection);
 
-        $collection->insert(['foo' => 'bar']);
-        $collection->insert(['foo' => 'bar']);
+        $document = ['foo' => 'bar'];
+        $collection->insert($document);
+        unset($document['_id']);
+        $collection->insert($document);
 
         $this->assertTrue($batch->add(['q' => ['foo' => 'bar'], 'limit' => 0]));
 

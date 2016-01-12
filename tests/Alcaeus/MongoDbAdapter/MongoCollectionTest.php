@@ -16,7 +16,6 @@ class MongoCollectionTest extends TestCase
 
     public function testCreateRecord()
     {
-        $id = '54203e08d51d4a1f868b456e';
         $collection = $this->getCollection();
 
         $expected = [
@@ -25,7 +24,11 @@ class MongoCollectionTest extends TestCase
             'err' => null,
             'errmsg' => null,
         ];
-        $this->assertSame($expected, $collection->insert(['_id' => new \MongoId($id), 'foo' => 'bar']));
+        $document = ['foo' => 'bar'];
+        $this->assertSame($expected, $collection->insert($document));
+
+        $this->assertInstanceOf('MongoId', $document['_id']);
+        $id = (string) $document['_id'];
 
         $newCollection = $this->getCheckDatabase()->selectCollection('test');
         $this->assertSame(1, $newCollection->count());
@@ -40,7 +43,8 @@ class MongoCollectionTest extends TestCase
 
     public function testUnacknowledgedWrite()
     {
-        $this->assertTrue($this->getCollection()->insert(['foo' => 'bar'], ['w' => 0]));
+        $document = ['foo' => 'bar'];
+        $this->assertTrue($this->getCollection()->insert($document, ['w' => 0]));
     }
 
     public function testInsertMany()
@@ -59,6 +63,10 @@ class MongoCollectionTest extends TestCase
             ['bar' => 'foo']
         ];
         $this->assertSame($expected, $this->getCollection()->batchInsert($documents));
+
+        foreach ($documents as $document) {
+            $this->assertInstanceOf('MongoId', $document['_id']);
+        }
     }
 
     public function testInsertManyWithNonNumericKeys()
@@ -81,8 +89,13 @@ class MongoCollectionTest extends TestCase
 
     public function testUpdateOne()
     {
-        $this->getCollection()->insert(['foo' => 'bar']);
-        $this->getCollection()->insert(['foo' => 'bar']);
+        $document = ['foo' => 'bar'];
+        $this->getCollection()->insert($document);
+
+        // Unset ID to re-insert
+        unset($document['_id']);
+        $this->getCollection()->insert($document);
+
         $expected = [
             'ok' => 1.0,
             'nModified' => 1,
@@ -100,9 +113,14 @@ class MongoCollectionTest extends TestCase
 
     public function testUpdateMany()
     {
-        $this->getCollection()->insert(['change' => true, 'foo' => 'bar']);
-        $this->getCollection()->insert(['change' => true, 'foo' => 'bar']);
-        $this->getCollection()->insert(['change' => true, 'foo' => 'foo']);
+        $document = ['change' => true, 'foo' => 'bar'];
+        $this->getCollection()->insert($document);
+
+        unset($document['_id']);
+        $this->getCollection()->insert($document);
+
+        $document = ['change' => true, 'foo' => 'foo'];
+        $this->getCollection()->insert($document);
         $expected = [
             'ok' => 1.0,
             'nModified' => 2,
@@ -120,17 +138,24 @@ class MongoCollectionTest extends TestCase
 
     public function testUnacknowledgedUpdate()
     {
-        $this->getCollection()->insert(['foo' => 'bar']);
-        $this->getCollection()->insert(['foo' => 'bar']);
+        $document = ['foo' => 'bar'];
+        $this->getCollection()->insert($document);
+        unset($document['_id']);
+        $this->getCollection()->insert($document);
 
-        $this->assertTrue($this->getCollection()->update(['foo' => 'bar'], ['$set' => ['foo' => 'foo']], ['w' => 0]));
+        $this->assertTrue($this->getCollection()->update($document, ['$set' => ['foo' => 'foo']], ['w' => 0]));
     }
 
     public function testRemoveMultiple()
     {
-        $this->getCollection()->insert(['change' => true, 'foo' => 'bar']);
-        $this->getCollection()->insert(['change' => true, 'foo' => 'bar']);
-        $this->getCollection()->insert(['change' => true, 'foo' => 'foo']);
+        $document = ['change' => true, 'foo' => 'bar'];
+        $this->getCollection()->insert($document);
+
+        unset($document['_id']);
+        $this->getCollection()->insert($document);
+
+        $document = ['change' => true, 'foo' => 'foo'];
+        $this->getCollection()->insert($document);
         $expected = [
             'ok' => 1.0,
             'n' => 2,
@@ -146,9 +171,12 @@ class MongoCollectionTest extends TestCase
 
     public function testRemoveSingle()
     {
-        $this->getCollection()->insert(['change' => true, 'foo' => 'bar']);
-        $this->getCollection()->insert(['change' => true, 'foo' => 'bar']);
-        $this->getCollection()->insert(['change' => true, 'foo' => 'foo']);
+        $document = ['change' => true, 'foo' => 'bar'];
+        $this->getCollection()->insert($document);
+        unset($document['_id']);
+        $this->getCollection()->insert($document);
+        unset($document['_id']);
+        $this->getCollection()->insert($document);
         $expected = [
             'ok' => 1.0,
             'n' => 1,
@@ -164,9 +192,12 @@ class MongoCollectionTest extends TestCase
 
     public function testRemoveUnacknowledged()
     {
-        $this->getCollection()->insert(['change' => true, 'foo' => 'bar']);
-        $this->getCollection()->insert(['change' => true, 'foo' => 'bar']);
-        $this->getCollection()->insert(['change' => true, 'foo' => 'foo']);
+        $document = ['change' => true, 'foo' => 'bar'];
+        $this->getCollection()->insert($document);
+        unset($document['_id']);
+        $this->getCollection()->insert($document);
+        unset($document['_id']);
+        $this->getCollection()->insert($document);
 
         $this->assertTrue($this->getCollection()->remove(['foo' => 'bar'], ['w' => 0]));
     }
@@ -221,9 +252,7 @@ class MongoCollectionTest extends TestCase
     {
         $collection = $this->getCollection();
 
-        $collection->insert(['foo' => 'bar']);
-        $collection->insert(['foo' => 'bar']);
-        $collection->insert(['foo' => 'foo']);
+        $this->prepareData();
 
         $pipeline = [
             [
@@ -251,9 +280,7 @@ class MongoCollectionTest extends TestCase
     {
         $collection = $this->getCollection();
 
-        $collection->insert(['foo' => 'bar']);
-        $collection->insert(['foo' => 'bar']);
-        $collection->insert(['foo' => 'foo']);
+        $this->prepareData();
 
         $pipeline = [
             [
@@ -342,10 +369,13 @@ class MongoCollectionTest extends TestCase
 
     public function testSaveInsert()
     {
-        $id = '54203e08d51d4a1f868b456e';
         $collection = $this->getCollection();
 
-        $collection->save(['_id' => new \MongoId($id), 'foo' => 'bar']);
+        $document = ['foo' => 'bar'];
+        $collection->save($document);
+        $this->assertInstanceOf('MongoId', $document['_id']);
+        $id = (string) $document['_id'];
+
         $newCollection = $this->getCheckDatabase()->selectCollection('test');
         $this->assertSame(1, $newCollection->count());
         $object = $newCollection->findOne();
@@ -362,7 +392,8 @@ class MongoCollectionTest extends TestCase
         $id = '54203e08d51d4a1f868b456e';
         $collection = $this->getCollection();
 
-        $collection->insert(['_id' => new \MongoId($id), 'foo' => 'bar']);
+        $document = ['_id' => new \MongoId($id), 'foo' => 'bar'];
+        $collection->insert($document);
         $collection->remove(['_id' => new \MongoId($id)]);
 
         $newCollection = $this->getCheckDatabase()->selectCollection('test');
@@ -374,8 +405,10 @@ class MongoCollectionTest extends TestCase
         $id = '54203e08d51d4a1f868b456e';
         $collection = $this->getCollection();
 
-        $collection->insert(['_id' => new \MongoId($id), 'foo' => 'bar']);
-        $collection->save(['_id' => new \MongoId($id), 'foo' => 'foo']);
+        $insertDocument = ['_id' => new \MongoId($id), 'foo' => 'bar'];
+        $saveDocument = ['_id' => new \MongoId($id), 'foo' => 'foo'];
+        $collection->insert($insertDocument);
+        $collection->save($saveDocument);
 
         $newCollection = $this->getCheckDatabase()->selectCollection('test');
         $this->assertSame(1, $newCollection->count());
@@ -392,13 +425,14 @@ class MongoCollectionTest extends TestCase
     {
         $collection = $this->getCollection();
 
-        $collection->insert(['_id' => 1, 'foo' => 'bar']);
+        $insertDocument = ['_id' => 1, 'foo' => 'bar'];
+        $collection->insert($insertDocument);
 
         $document = $collection->getDBRef([
             '$ref' => 'test',
             '$id' => 1,
         ]);
-        $this->assertEquals(['_id' => 1, 'foo' => 'bar'], $document);
+        $this->assertEquals($insertDocument, $document);
     }
 
     public function testCreateDBRef()
@@ -516,7 +550,8 @@ class MongoCollectionTest extends TestCase
         $id = '54203e08d51d4a1f868b456e';
         $collection = $this->getCollection();
 
-        $collection->insert(['_id' => new \MongoId($id), 'foo' => 'bar']);
+        $document = ['_id' => new \MongoId($id), 'foo' => 'bar'];
+        $collection->insert($document);
         $document = $collection->findAndModify(
             ['_id' => new \MongoId($id)],
             ['$set' => ['foo' => 'foo']]
@@ -536,7 +571,8 @@ class MongoCollectionTest extends TestCase
         $id = '54203e08d51d4a1f868b456e';
         $collection = $this->getCollection();
 
-        $collection->insert(['_id' => new \MongoId($id), 'foo' => 'bar']);
+        $document = ['_id' => new \MongoId($id), 'foo' => 'bar'];
+        $collection->insert($document);
         $document = $collection->findAndModify(
             ['_id' => new \MongoId($id)],
             ['$set' => ['foo' => 'foo']],
@@ -551,11 +587,12 @@ class MongoCollectionTest extends TestCase
         $id = '54203e08d51d4a1f868b456e';
         $collection = $this->getCollection();
 
-        $collection->insert([
+        $document = [
             '_id' => new \MongoId($id),
             'foo' => 'bar',
             'bar' => 'foo',
-        ]);
+        ];
+        $collection->insert($document);
         $document = $collection->findAndModify(
             ['_id' => new \MongoId($id)],
             ['$set' => ['foo' => 'foo']],
@@ -569,9 +606,12 @@ class MongoCollectionTest extends TestCase
     {
         $collection = $this->getCollection();
 
-        $collection->insert(['a' => 2]);
-        $collection->insert(['b' => 5]);
-        $collection->insert(['a' => 1]);
+        $document1 = ['a' => 2];
+        $collection->insert($document1);
+        $document2 = ['b' => 5];
+        $collection->insert($document2);
+        $document3 = ['a' => 1];
+        $collection->insert($document3);
         $keys = [];
         $initial = ["count" => 0];
         $reduce = "function (obj, prev) { prev.count++; }";
@@ -595,7 +635,8 @@ class MongoCollectionTest extends TestCase
         $id = '54203e08d51d4a1f868b456e';
         $collection = $this->getCollection();
 
-        $collection->insert(['_id' => new \MongoId($id), 'foo' => 'bar']);
+        $document = ['_id' => new \MongoId($id), 'foo' => 'bar'];
+        $collection->insert($document);
         $document = $collection->findAndModify(
             ['_id' => new \MongoId($id)],
             null,
@@ -612,7 +653,8 @@ class MongoCollectionTest extends TestCase
     public function testValidate()
     {
         $collection = $this->getCollection();
-        $collection->insert(['foo' => 'bar']);
+        $document = ['foo' => 'bar'];
+        $collection->insert($document);
         $result = $collection->validate();
 
         $this->assertArraySubset(
@@ -632,25 +674,13 @@ class MongoCollectionTest extends TestCase
 
     public function testDrop()
     {
-        $this->getCollection()->insert(['foo' => 'bar']);
+        $document = ['foo' => 'bar'];
+        $this->getCollection()->insert($document);
         $expected = [
             'ns' => (string) $this->getCollection(),
             'nIndexesWas' => 1,
             'ok' => 1.0
         ];
         $this->assertSame($expected, $this->getCollection()->drop());
-    }
-
-    /**
-     * @return \MongoCollection
-     */
-    protected function prepareData()
-    {
-        $collection = $this->getCollection();
-
-        $collection->insert(['foo' => 'bar']);
-        $collection->insert(['foo' => 'bar']);
-        $collection->insert(['foo' => 'foo']);
-        return $collection;
     }
 }

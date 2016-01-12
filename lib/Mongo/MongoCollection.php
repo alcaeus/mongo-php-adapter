@@ -254,8 +254,13 @@ class MongoCollection
      * @throws MongoCursorTimeoutException if the "w" option is set to a value greater than one and the operation takes longer than MongoCursor::$timeout milliseconds to complete. This does not kill the operation on the server, it is a client-side timeout. The operation in MongoCollection::$wtimeout is milliseconds.
      * @return bool|array Returns an array containing the status of the insertion if the "w" option is set.
      */
-    public function insert($a, array $options = [])
+    public function insert(&$a, array $options = [])
     {
+        if (! $this->ensureDocumentHasMongoId($a)) {
+            trigger_error(sprintf('%s expects parameter %d to be an array or object, %s given', __METHOD__, 1, gettype($a)), E_WARNING);
+            return;
+        }
+
         $result = $this->collection->insertOne(
             TypeConverter::fromLegacy($a),
             $this->convertWriteConcernOptions($options)
@@ -282,8 +287,12 @@ class MongoCollection
      * @throws MongoCursorException
      * @return mixed If "safe" is set, returns an associative array with the status of the inserts ("ok") and any error that may have occured ("err"). Otherwise, returns TRUE if the batch insert was successfully sent, FALSE otherwise.
      */
-    public function batchInsert(array $a, array $options = [])
+    public function batchInsert(array &$a, array $options = [])
     {
+        foreach ($a as $key => $item) {
+            $this->ensureDocumentHasMongoId($a[$key]);
+        }
+
         $result = $this->collection->insertMany(
             TypeConverter::fromLegacy(array_values($a)),
             $this->convertWriteConcernOptions($options)
@@ -576,21 +585,16 @@ class MongoCollection
      * @return array|boolean If w was set, returns an array containing the status of the save.
      * Otherwise, returns a boolean representing if the array was not empty (an empty array will not be inserted).
      */
-    public function save($a, array $options = [])
+    public function save(&$a, array $options = [])
     {
-        if (is_object($a)) {
-            $a = (array) $a;
-        }
+        $id = $this->ensureDocumentHasMongoId($a);
 
-        if ( ! array_key_exists('_id', $a)) {
-            $id = new \MongoId();
-        } else {
-            $id = $a['_id'];
-            unset($a['_id']);
-        }
+        $document = (array) $a;
+        unset($document['_id']);
+
         $options['upsert'] = true;
 
-        return $this->update(['_id' => $id], ['$set' => $a], $options);
+        return $this->update(['_id' => $id], ['$set' => $document], $options);
     }
 
     /**
@@ -744,6 +748,29 @@ class MongoCollection
         unset($options['wTimeoutMS']);
 
         return $options;
+    }
+
+    /**
+     * @param array|object $document
+     * @return MongoId
+     */
+    private function ensureDocumentHasMongoId(&$document)
+    {
+        if (is_array($document)) {
+            if (! isset($document['_id'])) {
+                $document['_id'] = new \MongoId();
+            }
+
+            return $document['_id'];
+        } elseif (is_object($document)) {
+            if (! isset($document->_id)) {
+                $document->_id = new \MongoId();
+            }
+
+            return $document->_id;
+        }
+
+        return null;
     }
 }
 
