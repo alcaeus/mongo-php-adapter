@@ -32,14 +32,6 @@ root:
 
     $ composer require "alcaeus/mongo-php-adapter=dev-master" "mongodb/mongodb=@beta"
 
-If your project includes a library that requires `ext-mongo` you need to also
-specify a `provide` option in your composer.json:
-    "provide": {
-        "ext-mongo": "1.6.12"
-    }
-
-Due to a limitation in composer you need to specify this in the root package.
-
 # Known issues
 
 ## Mongo
