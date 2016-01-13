@@ -255,17 +255,4 @@ class MongoCursorTest extends TestCase
     {
         return $this->getMock('MongoDB\Collection', [], [], '', false);
     }
-
-    /**
-     * @return \MongoCollection
-     */
-    protected function prepareData()
-    {
-        $collection = $this->getCollection();
-
-        $collection->insert(['foo' => 'bar']);
-        $collection->insert(['foo' => 'bar']);
-        $collection->insert(['foo' => 'foo']);
-        return $collection;
-    }
 }

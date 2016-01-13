@@ -125,19 +125,22 @@ class MongoDBTest extends TestCase
     public function testExecute()
     {
         $db = $this->getDatabase();
-        $this->getCollection()->insert(['foo' => 'bar']);
+        $document = ['foo' => 'bar'];
+        $this->getCollection()->insert($document);
         $this->assertEquals(['ok' => 1, 'retval' => 1], $db->execute("return db.test.count();"));
     }
 
     public function testGetCollectionNames()
     {
-        $this->getCollection()->insert(['foo' => 'bar']);
+        $document = ['foo' => 'bar'];
+        $this->getCollection()->insert($document);
         $this->assertContains('test', $this->getDatabase()->getCollectionNames());
     }
 
     public function testGetCollectionInfo()
     {
-        $this->getCollection()->insert(['foo' => 'bar']);
+        $document = ['foo' => 'bar'];
+        $this->getCollection()->insert($document);
 
         foreach ($this->getDatabase()->getCollectionInfo() as $collectionInfo) {
             if ($collectionInfo['name'] === 'test') {
@@ -151,7 +154,8 @@ class MongoDBTest extends TestCase
 
     public function testListCollections()
     {
-        $this->getCollection()->insert(['foo' => 'bar']);
+        $document = ['foo' => 'bar'];
+        $this->getCollection()->insert($document);
         foreach ($this->getDatabase()->listCollections() as $collection) {
             $this->assertInstanceOf('MongoCollection', $collection);
 
@@ -165,13 +169,15 @@ class MongoDBTest extends TestCase
 
     public function testDrop()
     {
-        $this->getCollection()->insert(['foo' => 'bar']);
+        $document = ['foo' => 'bar'];
+        $this->getCollection()->insert($document);
         $this->assertSame(['dropped' => 'mongo-php-adapter', 'ok' => 1.0], $this->getDatabase()->drop());
     }
 
     public function testDropCollection()
     {
-        $this->getCollection()->insert(['foo' => 'bar']);
+        $document = ['foo' => 'bar'];
+        $this->getCollection()->insert($document);
         $expected = [
             'ns' => (string) $this->getCollection(),
             'nIndexesWas' => 1,

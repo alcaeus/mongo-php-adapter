@@ -47,48 +47,56 @@ root:
 
 ## MongoClient
 
- - The [MongoClient::connect](https://php.net/manual/de/mongoclient.connect.php)
- and [MongoClient::close](https://secure.php.net/manual/de/mongoclient.close.php)
- methods are not implemented because the underlying driver connects lazily and
- does not offer methods for connecting disconnecting.
- - The [MongoClient::getConnections](https://secure.php.net/manual/de/mongoclient.getconnections.php)
+ - The [connect](https://php.net/manual/en/mongoclient.connect.php) and
+ [close](https://secure.php.net/manual/en/mongoclient.close.php) methods are not
+ implemented because the underlying driver connects lazily and does not offer
+ methods for connecting disconnecting.
+ - The [getConnections](https://secure.php.net/manual/en/mongoclient.getconnections.php)
  method is not implemented because the underlying driver does not offer a method
  to retrieve this data.
- - The [MongoClient::killCursor](https://php.net/manual/de/mongoclient.killcursor.php)
- method is not yet implemented.
+ - The [killCursor](https://php.net/manual/en/mongoclient.killcursor.php) method
+ is not yet implemented.
 
 ## MongoDB
- - The [MongoDB::authenticate](https://secure.php.net/manual/de/mongodb.authenticate.php)
+ - The [authenticate](https://secure.php.net/manual/en/mongodb.authenticate.php)
  method is not supported. To connect to a database with authentication, please
  supply the credentials using the connection string.
- - The `includeSystemCollections` parameter used in the [MongoDB::getCollectionInfo](https://php.net/manual/de/mongodb.getcollectioninfo.php]),
- [MongoDB::getCollectionNames](https://php.net/manual/de/mongodb.getcollectionnames.php]),
- and [MongoDB::listCollections](https://php.net/manual/de/mongodb.listcollections.php)
+ - The `includeSystemCollections` parameter used in the [getCollectionInfo](https://php.net/manual/en/mongodb.getcollectioninfo.php]),
+ [getCollectionNames](https://php.net/manual/en/mongodb.getcollectionnames.php]),
+ and [listCollections](https://php.net/manual/en/mongodb.listcollections.php)
  methods is ignored. These methods do not return information about system
  collections.
- - The [MongoDB::repair](https://secure.php.net/manual/de/mongodb.repair.php)
+ - The [repair](https://secure.php.net/manual/en/mongodb.repair.php)
  method is not yet implemented.
 
 ## MongoCollection
 
- - The [MongoCollection::createIndex](https://secure.php.net/manual/de/mongocollection.createindex.php)
+ - The [createIndex](https://secure.php.net/manual/en/mongocollection.createindex.php)
  method does not yet return the same result as the original method. Instead, it
  always returns the name of the index created.
+ - The [insert](https://php.net/manual/en/mongocollection.insert.php),
+ [batchInsert](https://php.net/manual/en/mongocollection.batchinsert.php),
+ and [save](https://php.net/manual/en/mongocollection.save.php)
+ methods take the first argument by reference. While the original API does not
+ explicitely specify by-reference arguments it does add an ID field to the
+ objects and documents given.
+ - The [parallelCollectionScan](https://php.net/manual/en/mongocollection.parallelcollectionscan.php)
+ method is not yet implemented.
 
 ## MongoCursor
- - The [MongoCursor::explain](https://php.net/manual/de/mongocursor.explain.php)
+ - The [explain](https://php.net/manual/en/mongocursor.explain.php)
  method is not yet implemented.
- - The [MongoCursor::hasNext](https://php.net/manual/de/mongocursor.hasnext.php)
+ - The [hasNext](https://php.net/manual/en/mongocursor.hasnext.php)
  method is not yet implemented.
- - The [MongoCursor::setFlag](https://php.net/manual/de/mongocursor.setflag.php)
+ - The [setFlag](https://php.net/manual/en/mongocursor.setflag.php)
  method is not yet implemented.
 
 ## MongoCommandCursor
- - The [MongoCommandCursor::createFromDocument](https://php.net/manual/de/mongocommandcursor.createfromdocument.php)
+ - The [createFromDocument](https://php.net/manual/en/mongocommandcursor.createfromdocument.php)
  method is not yet implemented.
 
 ## Types
 
- - Return values containing objects of the [MongoDB\BSON\Javascript](https://secure.php.net/manual/de/class.mongodb-bson-javascript.php)
- class cannot be converted to full [MongoCode](https://secure.php.net/manual/de/class.mongocode.php)
+ - Return values containing objects of the [MongoDB\BSON\Javascript](https://secure.php.net/manual/en/class.mongodb-bson-javascript.php)
+ class cannot be converted to full [MongoCode](https://secure.php.net/manual/en/class.mongocode.php)
  objects because there are no accessors for the code and scope properties.

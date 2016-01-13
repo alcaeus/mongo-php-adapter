@@ -82,7 +82,8 @@ class MongoClientTest extends TestCase
 
     public function testListDBs()
     {
-        $this->getCollection()->insert(['foo' => 'bar']);
+        $document = ['foo' => 'bar'];
+        $this->getCollection()->insert($document);
         $databases = $this->getClient()->listDBs();
 
         $this->assertSame(1.0, $databases['ok']);

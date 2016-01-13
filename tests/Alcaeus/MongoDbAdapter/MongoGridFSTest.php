@@ -23,8 +23,10 @@ class MongoGridFSTest extends TestCase
     {
         $collection = $this->getGridFS();
 
-        $collection->insert(['foo' => 'bar']);
-        $collection->chunks->insert(['foo' => 'bar']);
+        $document = ['foo' => 'bar'];
+        $collection->insert($document);
+        unset($document['_id']);
+        $collection->chunks->insert($document);
 
         $collection->drop();
 
@@ -303,18 +305,5 @@ class MongoGridFSTest extends TestCase
         $extra += ['chunkSize' => 2];
 
         return $collection->storeBytes($data, $extra);
-    }
-
-    /**
-     * @return \MongoCollection
-     */
-    protected function prepareData()
-    {
-        $collection = $this->getGridFS();
-
-        $collection->insert(['foo' => 'bar']);
-        $collection->insert(['foo' => 'bar']);
-        $collection->insert(['foo' => 'foo']);
-        return $collection;
     }
 }

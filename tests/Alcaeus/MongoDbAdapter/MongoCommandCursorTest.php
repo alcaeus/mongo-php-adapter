@@ -50,17 +50,4 @@ class MongoCommandCursorTest extends TestCase
 
         $this->assertEquals($expected, $cursor->info());
     }
-
-    /**
-     * @return \MongoCollection
-     */
-    protected function prepareData()
-    {
-        $collection = $this->getCollection();
-
-        $collection->insert(['foo' => 'bar']);
-        $collection->insert(['foo' => 'bar']);
-        $collection->insert(['foo' => 'foo']);
-        return $collection;
-    }
 }

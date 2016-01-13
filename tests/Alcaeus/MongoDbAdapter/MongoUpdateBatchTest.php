@@ -11,7 +11,8 @@ class MongoUpdateBatchTest extends TestCase
         $collection = $this->getCollection();
         $batch = new \MongoUpdateBatch($collection);
 
-        $collection->insert(['foo' => 'bar']);
+        $document = ['foo' => 'bar'];
+        $collection->insert($document);
 
         $this->assertTrue($batch->add(['q' => ['foo' => 'bar'], 'u' => ['$set' => ['foo' => 'foo']]]));
 
@@ -39,8 +40,10 @@ class MongoUpdateBatchTest extends TestCase
         $collection = $this->getCollection();
         $batch = new \MongoUpdateBatch($collection);
 
-        $collection->insert(['foo' => 'bar']);
-        $collection->insert(['foo' => 'bar']);
+        $document = ['foo' => 'bar'];
+        $collection->insert($document);
+        unset($document['_id']);
+        $collection->insert($document);
 
 
         $this->assertTrue($batch->add(['q' => ['foo' => 'bar'], 'u' => ['$set' => ['foo' => 'foo']], 'multi' => true]));
