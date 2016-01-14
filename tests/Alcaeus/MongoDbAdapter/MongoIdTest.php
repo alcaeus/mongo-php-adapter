@@ -43,8 +43,10 @@ class MongoIdTest extends TestCase
         new \MongoId('invalid');
     }
 
-    public function testCreateWithObjetId()
+    public function testCreateWithObjectId()
     {
+        $this->skipTestIf(extension_loaded('mongo'));
+
         $original = '54203e08d51d4a1f868b456e';
         $objectId = new \MongoDB\BSON\ObjectID($original);
 

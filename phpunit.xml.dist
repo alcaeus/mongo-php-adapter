@@ -9,6 +9,12 @@
          stopOnFailure="false"
          syntaxCheck="false"
 >
+    <php>
+        <!-- Disable deprecation warnings -->
+        <!-- php -r 'echo -1 & ~E_USER_DEPRECATED & ~E_DEPRECATED;' -->
+        <ini name="error_reporting" value="-24577"/>
+    </php>
+
     <testsuites>
         <testsuite name="Mongo driver adapter test suite">
             <directory>./tests/Alcaeus/MongoDbAdapter/</directory>

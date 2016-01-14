@@ -122,6 +122,8 @@ class MongoCursorTest extends TestCase
      */
     public function testCursorAppliesOptions($checkOptionCallback, \Closure $applyOptionCallback = null)
     {
+        $this->skipTestIf(extension_loaded('mongo'));
+
         $query = ['foo' => 'bar'];
         $projection = ['_id' => false, 'foo' => true];
 
@@ -320,10 +322,10 @@ class MongoCursorTest extends TestCase
     public function testReadPreferenceIsInherited()
     {
         $collection = $this->getCollection();
-        $collection->setReadPreference(\MongoClient::RP_SECONDARY, ['a' => 'b']);
+        $collection->setReadPreference(\MongoClient::RP_SECONDARY, [['a' => 'b']]);
 
         $cursor = $collection->find(['foo' => 'bar']);
-        $this->assertSame(['type' => \MongoClient::RP_SECONDARY, 'tagsets' => ['a' => 'b']], $cursor->getReadPreference());
+        $this->assertSame(['type' => \MongoClient::RP_SECONDARY, 'tagsets' => [['a' => 'b']]], $cursor->getReadPreference());
     }
 
     /**
