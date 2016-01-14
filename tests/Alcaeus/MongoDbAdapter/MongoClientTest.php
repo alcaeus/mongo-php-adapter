@@ -67,8 +67,8 @@ class MongoClientTest extends TestCase
         $client = $this->getClient();
         $this->assertSame(['type' => \MongoClient::RP_PRIMARY], $client->getReadPreference());
 
-        $this->assertTrue($client->setReadPreference(\MongoClient::RP_SECONDARY, ['a' => 'b']));
-        $this->assertSame(['type' => \MongoClient::RP_SECONDARY, 'tagsets' => ['a' => 'b']], $client->getReadPreference());
+        $this->assertTrue($client->setReadPreference(\MongoClient::RP_SECONDARY, [['a' => 'b']]));
+        $this->assertSame(['type' => \MongoClient::RP_SECONDARY, 'tagsets' => [['a' => 'b']]], $client->getReadPreference());
     }
 
     public function testWriteConcern()

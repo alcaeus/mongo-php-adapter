@@ -147,11 +147,19 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @param $condition
+     * @param bool $condition
      */
     protected function skipTestUnless($condition)
     {
-        if (!$condition) {
+        $this->skipTestIf(! $condition);
+    }
+
+    /**
+     * @param bool $condition
+     */
+    protected function skipTestIf($condition)
+    {
+        if ($condition) {
             $this->markTestSkipped('Test only applies when running against mongo-php-adapter');
         }
     }

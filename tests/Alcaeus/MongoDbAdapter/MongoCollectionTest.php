@@ -489,15 +489,9 @@ class MongoCollectionTest extends TestCase
         $this->assertSame(['type' => \MongoClient::RP_PRIMARY], $collection->getReadPreference());
         $this->assertFalse($collection->getSlaveOkay());
 
-        $this->assertTrue($collection->setReadPreference(\MongoClient::RP_SECONDARY, ['a' => 'b']));
-        $this->assertSame(['type' => \MongoClient::RP_SECONDARY, 'tagsets' => ['a' => 'b']], $collection->getReadPreference());
+        $this->assertTrue($collection->setReadPreference(\MongoClient::RP_SECONDARY, [['a' => 'b']]));
+        $this->assertSame(['type' => \MongoClient::RP_SECONDARY, 'tagsets' => [['a' => 'b']]], $collection->getReadPreference());
         $this->assertTrue($collection->getSlaveOkay());
-
-        // Only way to check whether options are passed down is through debugInfo
-        $writeConcern = $collection->getCollection()->__debugInfo()['readPreference'];
-
-        $this->assertSame(ReadPreference::RP_SECONDARY, $writeConcern->getMode());
-        $this->assertSame(['a' => 'b'], $writeConcern->getTagSets());
 
         $this->assertTrue($collection->setSlaveOkay(true));
         $this->assertSame(['type' => \MongoClient::RP_SECONDARY_PREFERRED, 'tagsets' => ['a' => 'b']], $collection->getReadPreference());
@@ -506,13 +500,28 @@ class MongoCollectionTest extends TestCase
         $this->assertSame(['type' => \MongoClient::RP_PRIMARY], $collection->getReadPreference());
     }
 
+    public function testReadPreferenceIsSetInDriver()
+    {
+        $this->skipTestIf(extension_loaded('mongo'));
+
+        $collection = $this->getCollection();
+
+        $this->assertTrue($collection->setReadPreference(\MongoClient::RP_SECONDARY, [['a' => 'b']]));
+
+        // Only way to check whether options are passed down is through debugInfo
+        $readPreference = $collection->getCollection()->__debugInfo()['readPreference'];
+
+        $this->assertSame(ReadPreference::RP_SECONDARY, $readPreference->getMode());
+        $this->assertSame(['a' => 'b'], $readPreference->getTagSets());
+    }
+
     public function testReadPreferenceIsInherited()
     {
         $database = $this->getDatabase();
-        $database->setReadPreference(\MongoClient::RP_SECONDARY, ['a' => 'b']);
+        $database->setReadPreference(\MongoClient::RP_SECONDARY, [['a' => 'b']]);
 
         $collection = $database->selectCollection('test');
-        $this->assertSame(['type' => \MongoClient::RP_SECONDARY, 'tagsets' => ['a' => 'b']], $collection->getReadPreference());
+        $this->assertSame(['type' => \MongoClient::RP_SECONDARY, 'tagsets' => [['a' => 'b']]], $collection->getReadPreference());
     }
 
     public function testWriteConcern()
@@ -530,12 +539,20 @@ class MongoCollectionTest extends TestCase
 
         $collection->wtimeout = -1;
         $this->assertSame(['w' => 2, 'wtimeout' => 0], $collection->getWriteConcern());
+    }
+
+    public function testWriteConcernIsSetInDriver()
+    {
+        $this->skipTestIf(extension_loaded('mongo'));
+
+        $collection = $this->getCollection();
+        $this->assertTrue($collection->setWriteConcern(2, 100));
 
         // Only way to check whether options are passed down is through debugInfo
         $writeConcern = $collection->getCollection()->__debugInfo()['writeConcern'];
 
         $this->assertSame(2, $writeConcern->getW());
-        $this->assertSame(0, $writeConcern->getWtimeout());
+        $this->assertSame(100, $writeConcern->getWtimeout());
     }
 
     public function testWriteConcernIsInherited()
