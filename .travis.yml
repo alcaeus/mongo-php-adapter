@@ -8,7 +8,8 @@ php:
 
 env:
   matrix:
-    - DRIVER_VERSION=1.1.1
+    - DRIVER_VERSION=1.1.1 LEGACY_DRIVER_VERSION=""
+    - DRIVER_VERSION=1.1.1 LEGACY_DRIVER_VERSION=1.6.12
 
 addons:
   apt:
@@ -19,6 +20,7 @@ addons:
 
 before_script:
   - pecl install -f mongodb-${DRIVER_VERSION}
+  - if [ "x$LEGACY_DRIVER_VERSION" != "x" ]; then yes '' | pecl -q install -f mongo-${LEGACY_DRIVER_VERSION}; fi
   - composer install
 
 script:
