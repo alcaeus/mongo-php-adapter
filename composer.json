@@ -10,6 +10,7 @@
     ],
     "require": {
         "php": "^5.5 || ^7.0",
+        "ext-hash": "*",
         "mongodb/mongodb": "1.0.0-beta2"
     },
     "require-dev": {

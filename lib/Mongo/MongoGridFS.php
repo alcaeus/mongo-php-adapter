@@ -240,8 +240,9 @@ class MongoGridFS extends MongoCollection
             $handle = $filename;
         }
 
+        $md5 = null;
         $file = $this->insertFile($record, $options);
-        $length = $this->insertChunksFromFile($handle, $file);
+        $length = $this->insertChunksFromFile($handle, $file, $md5);
 
         // Add length and MD5 if they were not present before
         $update = [];
@@ -249,7 +250,7 @@ class MongoGridFS extends MongoCollection
             $update['length'] = $length;
         }
         if (! isset($record['md5'])) {
-            $update['md5'] = $this->getMd5ForFile($file['_id']);
+            $update['md5'] = $md5;
         }
 
         if (count($update)) {
@@ -343,9 +344,10 @@ class MongoGridFS extends MongoCollection
      *
      * @param resource $handle
      * @param array $record
+     * @param string $md5
      * @return int Returns the number of bytes written to the database
      */
-    private function insertChunksFromFile($handle, $record)
+    private function insertChunksFromFile($handle, $record, &$md5)
     {
         $written = 0;
         $offset = 0;
@@ -354,13 +356,18 @@ class MongoGridFS extends MongoCollection
         $fileId = $record['_id'];
         $chunkSize = $record['chunkSize'];
 
+        $hash = hash_init('md5');
+
         rewind($handle);
         while (! feof($handle)) {
             $data = stream_get_contents($handle, $chunkSize);
+            hash_update($hash, $data);
             $this->insertChunk($fileId, $data, $i++);
             $written += strlen($data);
             $offset += $chunkSize;
         }
+
+        $md5 = hash_final($hash);
 
         return $written;
     }
@@ -383,17 +390,5 @@ class MongoGridFS extends MongoCollection
         $this->insert($record, $options);
 
         return $record;
-    }
-
-    /**
-     * Returns the MD5 string for a file previously stored to the database
-     *
-     * @param $id
-     * @return string
-     */
-    private function getMd5ForFile($id)
-    {
-        $result = $this->db->command(['filemd5' => $id, 'root' => $this->prefix]);
-        return $result['md5'];
     }
 }
