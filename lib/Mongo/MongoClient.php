@@ -253,7 +253,11 @@ class MongoClient
         ];
 
         foreach ($databaseInfoIterator as $databaseInfo) {
-            $databases['databases'][] = $databaseInfo->getName();
+            $databases['databases'][] = [
+                'name' => $databaseInfo->getName(),
+                'empty' => $databaseInfo->isEmpty(),
+                'sizeOnDisk' => $databaseInfo->getSizeOnDisk(),
+            ];
             $databases['totalSize'] += $databaseInfo->getSizeOnDisk();
         }
 

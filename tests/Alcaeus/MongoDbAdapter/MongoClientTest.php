@@ -74,7 +74,6 @@ class MongoClientTest extends TestCase
     public function testWriteConcern()
     {
         $client = $this->getClient();
-        $this->assertSame(['w' => 1, 'wtimeout' => 0], $client->getWriteConcern());
 
         $this->assertTrue($client->setWriteConcern('majority', 100));
         $this->assertSame(['w' => 'majority', 'wtimeout' => 100], $client->getWriteConcern());
@@ -89,6 +88,18 @@ class MongoClientTest extends TestCase
         $this->assertSame(1.0, $databases['ok']);
         $this->assertArrayHasKey('totalSize', $databases);
         $this->assertArrayHasKey('databases', $databases);
-        $this->assertContains('mongo-php-adapter', $databases['databases']);
+
+        foreach ($databases['databases'] as $database) {
+            $this->assertArrayHasKey('name', $database);
+            $this->assertArrayHasKey('empty', $database);
+            $this->assertArrayHasKey('sizeOnDisk', $database);
+
+            if ($database['name'] == 'mongo-php-adapter') {
+                $this->assertFalse($database['empty']);
+                return;
+            }
+        }
+
+        $this->fail('Could not find mongo-php-adapter database in list');
     }
 }
