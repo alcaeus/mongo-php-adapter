@@ -144,7 +144,7 @@ class MongoDBTest extends TestCase
         $readPreference = $database->getDb()->__debugInfo()['readPreference'];
 
         $this->assertSame(ReadPreference::RP_SECONDARY, $readPreference->getMode());
-        $this->assertSame(['a' => 'b'], $readPreference->getTagSets());
+        $this->assertSame([['a' => 'b']], $readPreference->getTagSets());
 
     }
 
