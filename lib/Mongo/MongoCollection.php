@@ -287,7 +287,7 @@ class MongoCollection
                 'errmsg' => $writeError->getMessage(),
             ];
         } catch (\MongoDB\Driver\Exception\Exception $e) {
-            ExceptionConverter::toLegacy($e);
+            throw ExceptionConverter::toLegacy($e);
         }
 
         if (! $result->isAcknowledged()) {
@@ -342,7 +342,7 @@ class MongoCollection
                 $this->convertWriteConcernOptions($options)
             );
         } catch (\MongoDB\Driver\Exception\Exception $e) {
-            ExceptionConverter::toLegacy($e);
+            throw ExceptionConverter::toLegacy($e);
         }
 
         if (! $result->isAcknowledged()) {
@@ -394,7 +394,7 @@ class MongoCollection
                 'updatedExisting' => $writeResult->getUpsertedCount() == 0,
             ];
         } catch (\MongoDB\Driver\Exception\Exception $e) {
-            ExceptionConverter::toLegacy($e);
+            throw ExceptionConverter::toLegacy($e);
         }
 
         if (! $result->isAcknowledged()) {
@@ -434,7 +434,7 @@ class MongoCollection
                 $this->convertWriteConcernOptions($options)
             );
         } catch (\MongoDB\Driver\Exception\Exception $e) {
-            ExceptionConverter::toLegacy($e);
+            throw ExceptionConverter::toLegacy($e);
         }
 
         if (! $result->isAcknowledged()) {
@@ -514,7 +514,7 @@ class MongoCollection
         } catch (\MongoDB\Driver\Exception\ConnectionException $e) {
             throw new MongoResultException($e->getMessage(), $e->getCode(), $e);
         } catch (\MongoDB\Driver\Exception\Exception $e) {
-            ExceptionConverter::toLegacy($e, 'MongoResultException');
+            throw ExceptionConverter::toLegacy($e, 'MongoResultException');
         }
 
         if ($document) {
@@ -539,7 +539,7 @@ class MongoCollection
         try {
             $document = $this->collection->findOne(TypeConverter::fromLegacy($query), $options);
         } catch (\MongoDB\Driver\Exception\Exception $e) {
-            ExceptionConverter::toLegacy($e);
+            throw ExceptionConverter::toLegacy($e);
         }
 
         if ($document !== null) {
@@ -607,7 +607,7 @@ class MongoCollection
         try {
             $this->collection->createIndex($keys, $this->convertWriteConcernOptions($options));
         } catch (\MongoDB\Driver\Exception\Exception $e) {
-            ExceptionConverter::toLegacy($e);
+            throw ExceptionConverter::toLegacy($e);
         }
 
         return [
@@ -698,7 +698,7 @@ class MongoCollection
         try {
             return $this->collection->count(TypeConverter::fromLegacy($query), $options);
         } catch (\MongoDB\Driver\Exception\Exception $e) {
-            ExceptionConverter::toLegacy($e);
+            throw ExceptionConverter::toLegacy($e);
         }
     }
 

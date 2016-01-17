@@ -135,7 +135,7 @@ class MongoDB
         try {
             $collections = $this->db->listCollections($options);
         } catch (\MongoDB\Driver\Exception\Exception $e) {
-            ExceptionConverter::toLegacy($e);
+            throw ExceptionConverter::toLegacy($e);
         }
 
         $getCollectionInfo = function (CollectionInfo $collectionInfo) {
@@ -165,7 +165,7 @@ class MongoDB
         try {
             $collections = $this->db->listCollections($options);
         } catch (\MongoDB\Driver\Exception\Exception $e) {
-            ExceptionConverter::toLegacy($e);
+            throw ExceptionConverter::toLegacy($e);
         }
 
         $getCollectionName = function (CollectionInfo $collectionInfo) {
@@ -389,8 +389,8 @@ class MongoDB
                 'errmsg' => $e->getMessage(),
                 'code' => $e->getCode(),
             ];
-        } catch (\MongoDB\Driver\Exception\Excepiton $e) {
-            ExceptionConverter::toLegacy($e);
+        } catch (\MongoDB\Driver\Exception\Exception $e) {
+            throw ExceptionConverter::toLegacy($e);
         }
     }
 

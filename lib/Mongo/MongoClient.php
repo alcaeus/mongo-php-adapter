@@ -188,7 +188,7 @@ class MongoClient
         try {
             $servers = $this->manager->getServers();
         } catch (\MongoDB\Driver\Exception\Exception $e) {
-            ExceptionConverter::toLegacy($e);
+            throw ExceptionConverter::toLegacy($e);
         }
 
         foreach ($servers as $server) {
@@ -243,7 +243,7 @@ class MongoClient
         try {
             $databaseInfoIterator = $this->client->listDatabases();
         } catch (\MongoDB\Driver\Exception\Exception $e) {
-            ExceptionConverter::toLegacy($e);
+            throw ExceptionConverter::toLegacy($e);
         }
 
         $databases = [

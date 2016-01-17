@@ -7,18 +7,12 @@ use Alcaeus\MongoDbAdapter\ExceptionConverter;
 
 class ExceptionConverterTest extends \PHPUnit_Framework_TestCase
 {
-    public function testThrowException()
-    {
-        $this->setExpectedException('MongoException');
-        ExceptionConverter::toLegacy(new Exception\InvalidArgumentException());
-    }
-
     /**
      * @dataProvider exceptionProvider
      */
     public function testConvertException($e, $expectedClass)
     {
-        $exception = ExceptionConverter::convertException($e);
+        $exception = ExceptionConverter::toLegacy($e);
         $this->assertInstanceOf($expectedClass, $exception);
         $this->assertSame($e->getMessage(), $exception->getMessage());
         $this->assertSame($e->getCode(), $exception->getCode());
