@@ -15,8 +15,6 @@
 
 class MongoGridFS extends MongoCollection
 {
-    const DEFAULT_CHUNK_SIZE = 262144; // 256 kb
-
     const ASCENDING = 1;
     const DESCENDING = -1;
 
@@ -44,6 +42,8 @@ class MongoGridFS extends MongoCollection
     private $database;
 
     private $prefix;
+
+    private $defaultChunkSize = 261120;
 
     /**
      * Files as stored across two collections, the first containing file meta
@@ -428,7 +428,7 @@ class MongoGridFS extends MongoCollection
         $record += [
             '_id' => new MongoId(),
             'uploadDate' => new MongoDate(),
-            'chunkSize' => self::DEFAULT_CHUNK_SIZE,
+            'chunkSize' => $this->defaultChunkSize,
         ];
 
         $result = $this->insert($record, $options);
