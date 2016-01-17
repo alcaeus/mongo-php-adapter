@@ -513,10 +513,8 @@ class MongoCollection
             }
         } catch (\MongoDB\Driver\Exception\ConnectionException $e) {
             throw new MongoResultException($e->getMessage(), $e->getCode(), $e);
-        } catch (\MongoDB\Driver\Exception\RuntimeException $e) {
-            throw new MongoResultException($e->getMessage(), $e->getCode(), $e);
         } catch (\MongoDB\Driver\Exception\Exception $e) {
-            ExceptionConverter::toLegacy($e);
+            ExceptionConverter::toLegacy($e, 'MongoResultException');
         }
 
         if ($document) {

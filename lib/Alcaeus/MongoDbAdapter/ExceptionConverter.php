@@ -23,9 +23,12 @@ use MongoDB\Driver\Exception;
 class ExceptionConverter
 {
     /**
+     * @param Exception\Exception $e
+     * @param string $fallbackClass
+     *
      * @return \MongoException
      */
-    public static function convertException(Exception\Exception $e)
+    public static function convertException(Exception\Exception $e, $fallbackClass = 'MongoException')
     {
         switch (get_class($e)) {
             case Exception\AuthenticationException::class:
@@ -45,7 +48,7 @@ class ExceptionConverter
                 break;
 
             default:
-                $class = 'MongoException';
+                $class = $fallbackClass;
         }
 
         if (strpos($e->getMessage(), 'No suitable servers found') !== false) {
@@ -58,8 +61,8 @@ class ExceptionConverter
     /**
      * @throws \MongoException
      */
-    public static function toLegacy(Exception\Exception $e)
+    public static function toLegacy(Exception\Exception $e, $fallbackClass = 'MongoException')
     {
-        throw self::convertException($e);
+        throw self::convertException($e, $fallbackClass);
     }
 }
