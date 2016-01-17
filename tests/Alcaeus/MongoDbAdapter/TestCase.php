@@ -12,11 +12,19 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * @return \MongoDB\Client
+     */
+    protected function getCheckClient()
+    {
+        return new Client('mongodb://localhost', ['connect' => true]);
+    }
+
+    /**
      * @return \MongoDB\Database
      */
     protected function getCheckDatabase()
     {
-        $client = new Client('mongodb://localhost', ['connect' => true]);
+        $client = $this->getCheckClient();
         return $client->selectDatabase('mongo-php-adapter');
     }
 
@@ -24,9 +32,9 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
      * @param array|null $options
      * @return \MongoClient
      */
-    protected function getClient($options = null)
+    protected function getClient($options = null, $uri = 'mongodb://localhost')
     {
-        $args = ['mongodb://localhost'];
+        $args = [$uri];
         if ($options !== null) {
             $args[] = $options;
         }
@@ -94,5 +102,47 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
         $collection->insert($document);
 
         return $collection;
+    }
+
+    protected function configureFailPoint($failPoint, $mode, $data = [])
+    {
+        $this->checkFailPoint();
+
+        $doc = array(
+            "configureFailPoint" => $failPoint,
+            "mode"               => $mode,
+        );
+        if ($data) {
+            $doc["data"] = $data;
+        }
+
+        $adminDb = $this->getCheckClient()->selectDatabase('admin');
+        $result = $adminDb->command($doc);
+        $arr = current($result->toArray());
+        if (empty($arr->ok)) {
+            throw new RuntimeException("Failpoint failed");
+        }
+
+        return true;
+    }
+
+    protected function checkFailPoint()
+    {
+        $database = $this->getCheckClient()->selectDatabase('test');
+        try {
+            $database->command(['configureFailPoint' => 1]);
+        } catch (\MongoDB\Driver\Exception\Exception $e) {
+            /* command not found */
+            if ($e->getCode() == 59) {
+                $this->markTestSkipped(
+                  'This test require the mongo daemon to be started with the test flag: --setParameter enableTestCommands=1'
+                );
+            }
+        }
+    }
+
+    protected function failMaxTimeMS()
+    {
+        return $this->configureFailPoint("maxTimeAlwaysTimeOut", array("times" => 1));
     }
 }

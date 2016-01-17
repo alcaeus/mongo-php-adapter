@@ -15,6 +15,7 @@
 
 use Alcaeus\MongoDbAdapter\Helper;
 use Alcaeus\MongoDbAdapter\TypeConverter;
+use Alcaeus\MongoDbAdapter\ExceptionConverter;
 
 /**
  * Represents a database collection.
@@ -55,6 +56,7 @@ class MongoCollection
      */
     public function __construct(MongoDB $db, $name)
     {
+        $this->checkCollectionName($name);
         $this->db = $db;
         $this->name = $name;
 
@@ -150,7 +152,12 @@ class MongoCollection
 
         $command += $options;
 
-        return $this->db->command($command);
+        try {
+            return $this->db->command($command);
+        } catch (MongoCursorTimeoutException $e) {
+            throw new MongoExecutionTimeoutException($e->getMessage(), $e->getCode(), $e);
+        }
+
     }
 
     /**
@@ -257,14 +264,31 @@ class MongoCollection
     public function insert(&$a, array $options = [])
     {
         if (! $this->ensureDocumentHasMongoId($a)) {
-            trigger_error(sprintf('%s expects parameter %d to be an array or object, %s given', __METHOD__, 1, gettype($a)), E_WARNING);
+            trigger_error(sprintf('%s expects parameter %d to be an array or object, %s given', __METHOD__, 1, gettype($a)), E_USER_WARNING);
             return;
         }
 
-        $result = $this->collection->insertOne(
-            TypeConverter::fromLegacy($a),
-            $this->convertWriteConcernOptions($options)
-        );
+        if (! count((array)$a)) {
+            throw new \MongoException('document must be an array or object');
+        }
+
+        try {
+            $result = $this->collection->insertOne(
+                TypeConverter::fromLegacy($a),
+                $this->convertWriteConcernOptions($options)
+            );
+        } catch (\MongoDB\Driver\Exception\BulkWriteException $e) {
+            $writeResult = $e->getWriteResult();
+            $writeError = $writeResult->getWriteErrors()[0];
+            return [
+                'ok' => 0.0,
+                'n' => 0,
+                'err' => $writeError->getCode(),
+                'errmsg' => $writeError->getMessage(),
+            ];
+        } catch (\MongoDB\Driver\Exception\Exception $e) {
+            ExceptionConverter::toLegacy($e);
+        }
 
         if (! $result->isAcknowledged()) {
             return true;
@@ -289,14 +313,37 @@ class MongoCollection
      */
     public function batchInsert(array &$a, array $options = [])
     {
-        foreach ($a as $key => $item) {
-            $this->ensureDocumentHasMongoId($a[$key]);
+        if (empty($a)) {
+            throw new \MongoException('No write ops were included in the batch');
         }
 
-        $result = $this->collection->insertMany(
-            TypeConverter::fromLegacy(array_values($a)),
-            $this->convertWriteConcernOptions($options)
-        );
+        $continueOnError = isset($options['continueOnError']) && $options['continueOnError'];
+
+        foreach ($a as $key => $item) {
+            try {
+                if (! $this->ensureDocumentHasMongoId($a[$key])) {
+                    if ($continueOnError) {
+                        unset($a[$key]);
+                    } else {
+                        trigger_error(sprintf('%s expects parameter %d to be an array or object, %s given', __METHOD__, 1, gettype($a)), E_USER_WARNING);
+                        return;
+                    }
+                }
+            } catch (MongoException $e) {
+                if ( ! $continueOnError) {
+                    throw $e;
+                }
+            }
+        }
+
+        try {
+            $result = $this->collection->insertMany(
+                TypeConverter::fromLegacy(array_values($a)),
+                $this->convertWriteConcernOptions($options)
+            );
+        } catch (\MongoDB\Driver\Exception\Exception $e) {
+            ExceptionConverter::toLegacy($e);
+        }
 
         if (! $result->isAcknowledged()) {
             return true;
@@ -328,12 +375,27 @@ class MongoCollection
         $method = $multiple ? 'updateMany' : 'updateOne';
         unset($options['multiple']);
 
-        /** @var \MongoDB\UpdateResult $result */
-        $result = $this->collection->$method(
-            TypeConverter::fromLegacy($criteria),
-            TypeConverter::fromLegacy($newobj),
-            $this->convertWriteConcernOptions($options)
-        );
+        try {
+            /** @var \MongoDB\UpdateResult $result */
+            $result = $this->collection->$method(
+                TypeConverter::fromLegacy($criteria),
+                TypeConverter::fromLegacy($newobj),
+                $this->convertWriteConcernOptions($options)
+            );
+        } catch (\MongoDB\Driver\Exception\BulkWriteException $e) {
+            $writeResult = $e->getWriteResult();
+            $writeError = $writeResult->getWriteErrors()[0];
+            return [
+                'ok' => 0.0,
+                'nModified' => $writeResult->getModifiedCount(),
+                'n' => $writeResult->getMatchedCount(),
+                'err' => $writeError->getCode(),
+                'errmsg' => $writeError->getMessage(),
+                'updatedExisting' => $writeResult->getUpsertedCount() == 0,
+            ];
+        } catch (\MongoDB\Driver\Exception\Exception $e) {
+            ExceptionConverter::toLegacy($e);
+        }
 
         if (! $result->isAcknowledged()) {
             return true;
@@ -365,11 +427,15 @@ class MongoCollection
         $multiple = isset($options['justOne']) ? !$options['justOne'] : true;
         $method = $multiple ? 'deleteMany' : 'deleteOne';
 
-        /** @var \MongoDB\DeleteResult $result */
-        $result = $this->collection->$method(
-            TypeConverter::fromLegacy($criteria),
-            $this->convertWriteConcernOptions($options)
-        );
+        try {
+            /** @var \MongoDB\DeleteResult $result */
+            $result = $this->collection->$method(
+                TypeConverter::fromLegacy($criteria),
+                $this->convertWriteConcernOptions($options)
+            );
+        } catch (\MongoDB\Driver\Exception\Exception $e) {
+            ExceptionConverter::toLegacy($e);
+        }
 
         if (! $result->isAcknowledged()) {
             return true;
@@ -409,7 +475,11 @@ class MongoCollection
      */
     public function distinct($key, array $query = [])
     {
-        return array_map([TypeConverter::class, 'toLegacy'], $this->collection->distinct($key, $query));
+        try {
+            return array_map([TypeConverter::class, 'toLegacy'], $this->collection->distinct($key, $query));
+        } catch (\MongoDB\Driver\Exception\Exception $e) {
+            return false;
+        }
     }
 
     /**
@@ -425,21 +495,28 @@ class MongoCollection
     public function findAndModify(array $query, array $update = null, array $fields = null, array $options = [])
     {
         $query = TypeConverter::fromLegacy($query);
+        try {
+            if (isset($options['remove'])) {
+                unset($options['remove']);
+                $document = $this->collection->findOneAndDelete($query, $options);
+            } else {
+                $update = is_array($update) ? TypeConverter::fromLegacy($update) : [];
 
-        if (isset($options['remove'])) {
-            unset($options['remove']);
-            $document = $this->collection->findOneAndDelete($query, $options);
-        } else {
-            $update = is_array($update) ? TypeConverter::fromLegacy($update) : [];
+                if (isset($options['new'])) {
+                    $options['returnDocument'] = \MongoDB\Operation\FindOneAndUpdate::RETURN_DOCUMENT_AFTER;
+                    unset($options['new']);
+                }
 
-            if (isset($options['new'])) {
-                $options['returnDocument'] = \MongoDB\Operation\FindOneAndUpdate::RETURN_DOCUMENT_AFTER;
-                unset($options['new']);
+                $options['projection'] = is_array($fields) ? TypeConverter::fromLegacy($fields) : [];
+
+                $document = $this->collection->findOneAndUpdate($query, $update, $options);
             }
-
-            $options['projection'] = is_array($fields) ? TypeConverter::fromLegacy($fields) : [];
-
-            $document = $this->collection->findOneAndUpdate($query, $update, $options);
+        } catch (\MongoDB\Driver\Exception\ConnectionException $e) {
+            throw new MongoResultException($e->getMessage(), $e->getCode(), $e);
+        } catch (\MongoDB\Driver\Exception\RuntimeException $e) {
+            throw new MongoResultException($e->getMessage(), $e->getCode(), $e);
+        } catch (\MongoDB\Driver\Exception\Exception $e) {
+            ExceptionConverter::toLegacy($e);
         }
 
         if ($document) {
@@ -461,8 +538,12 @@ class MongoCollection
     public function findOne(array $query = [], array $fields = [], array $options = [])
     {
         $options = ['projection' => $fields] + $options;
+        try {
+            $document = $this->collection->findOne(TypeConverter::fromLegacy($query), $options);
+        } catch (\MongoDB\Driver\Exception\Exception $e) {
+            ExceptionConverter::toLegacy($e);
+        }
 
-        $document = $this->collection->findOne(TypeConverter::fromLegacy($query), $options);
         if ($document !== null) {
             $document = TypeConverter::toLegacy($document);
         }
@@ -480,17 +561,63 @@ class MongoCollection
      *
      * @todo This method does not yet return the correct result
      */
-    public function createIndex(array $keys, array $options = [])
+    public function createIndex($keys, array $options = [])
     {
-        // Note: this is what the result array should look like
-//        $expected = [
-//            'createdCollectionAutomatically' => true,
-//            'numIndexesBefore' => 1,
-//            'numIndexesAfter' => 2,
-//            'ok' => 1.0
-//        ];
+        if (is_string($keys)) {
+            if (empty($keys)) {
+                throw new MongoException('empty string passed as key field');
+            }
+            $keys = [$keys => 1];
+        }
 
-        return $this->collection->createIndex($keys, $options);
+        if (is_object($keys)) {
+            $keys = (array) $keys;
+        }
+
+        if (! is_array($keys) || ! count($keys)) {
+            throw new MongoException('keys cannot be empty');
+        }
+
+        // duplicate
+        $neededOptions = ['unique' => 1, 'sparse' => 1, 'expireAfterSeconds' => 1, 'background' => 1, 'dropDups' => 1];
+        $indexOptions = array_intersect_key($options, $neededOptions);
+        $indexes = $this->collection->listIndexes();
+        foreach ($indexes as $index) {
+
+            if (! empty($options['name']) && $index->getName() === $options['name']) {
+                throw new \MongoResultException(sprintf('index with name: %s already exists', $index->getName()));
+            }
+
+            if ($index->getKey() == $keys) {
+                $currentIndexOptions = array_intersect_key($index->__debugInfo(), $neededOptions);
+
+                unset($currentIndexOptions['name']);
+                if ($currentIndexOptions != $indexOptions) {
+                    throw new \MongoResultException('Index with same keys but different options already exists');
+                }
+
+                return [
+                    'createdCollectionAutomatically' => false,
+                    'numIndexesBefore' => count($indexes),
+                    'numIndexesAfter' => count($indexes),
+                    'note' => 'all indexes already exist',
+                    'ok' => 1.0
+                ];
+            }
+        }
+
+        try {
+            $this->collection->createIndex($keys, $this->convertWriteConcernOptions($options));
+        } catch (\MongoDB\Driver\Exception\Exception $e) {
+            ExceptionConverter::toLegacy($e);
+        }
+
+        return [
+            'createdCollectionAutomatically' => true,
+            'numIndexesBefore' => count($indexes),
+            'numIndexesAfter' => count($indexes) + 1,
+            'ok' => 1.0
+        ];
     }
 
     /**
@@ -570,7 +697,11 @@ class MongoCollection
      */
     public function count($query = [], array $options = [])
     {
-        return $this->collection->count(TypeConverter::fromLegacy($query), $options);
+        try {
+            return $this->collection->count(TypeConverter::fromLegacy($query), $options);
+        } catch (\MongoDB\Driver\Exception\Exception $e) {
+            ExceptionConverter::toLegacy($e);
+        }
     }
 
     /**
@@ -594,7 +725,12 @@ class MongoCollection
 
         $options['upsert'] = true;
 
-        return $this->update(['_id' => $id], ['$set' => $document], $options);
+        $result = $this->update(['_id' => $id], ['$set' => $a], $options);
+        if ($result['ok'] == 0.0) {
+            throw new \MongoCursorException();
+        }
+
+        return $result;
     }
 
     /**
@@ -756,21 +892,48 @@ class MongoCollection
      */
     private function ensureDocumentHasMongoId(&$document)
     {
+        $checkKeys = function($array) {
+            foreach (array_keys($array) as $key) {
+                if (is_int($key) || empty($key) || strpos($key, '*') === 1) {
+                    throw new \MongoException('document contain invalid key');
+                }
+            }
+        };
+
         if (is_array($document)) {
+            if (empty($document)) {
+                throw new \MongoException('document cannot be empty');
+            }
             if (! isset($document['_id'])) {
                 $document['_id'] = new \MongoId();
             }
 
+            $checkKeys($document);
+
             return $document['_id'];
         } elseif (is_object($document)) {
+            if (empty((array) $document)) {
+                throw new \MongoException('document cannot be empty');
+            }
             if (! isset($document->_id)) {
                 $document->_id = new \MongoId();
             }
+
+            $checkKeys((array) $document);
 
             return $document->_id;
         }
 
         return null;
+    }
+
+    private function checkCollectionName($name)
+    {
+        if (empty($name)) {
+            throw new Exception('Collection name cannot be empty');
+        } elseif (strpos($name, chr(0)) !== false) {
+            throw new Exception('Collection name cannot contain null bytes');
+        }
     }
 }
 

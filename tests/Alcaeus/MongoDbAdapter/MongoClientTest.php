@@ -30,6 +30,20 @@ class MongoClientTest extends TestCase
         $this->assertSame('mongo-php-adapter', (string) $db);
     }
 
+    public function testSelectDBWithEmptyName()
+    {
+        $this->setExpectedException('Exception', 'Database name cannot be empty');
+
+        $this->getClient()->selectDB('');
+    }
+
+    public function testSelectDBWithInvalidName()
+    {
+        $this->setExpectedException('Exception', 'Database name contains invalid characters');
+
+        $this->getClient()->selectDB('/');
+    }
+
     public function testGetDbProperty()
     {
         $client = $this->getClient();

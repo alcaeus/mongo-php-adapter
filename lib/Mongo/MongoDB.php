@@ -15,6 +15,7 @@
 
 use Alcaeus\MongoDbAdapter\Helper;
 use Alcaeus\MongoDbAdapter\TypeConverter;
+use Alcaeus\MongoDbAdapter\ExceptionConverter;
 use MongoDB\Model\CollectionInfo;
 
 /**
@@ -58,6 +59,7 @@ class MongoDB
      */
     public function __construct(MongoClient $conn, $name)
     {
+        $this->checkDatabaseName($name);
         $this->connection = $conn;
         $this->name = $name;
 
@@ -130,7 +132,11 @@ class MongoDB
             unset($options['includeSystemCollections']);
         }
 
-        $collections = $this->db->listCollections($options);
+        try {
+            $collections = $this->db->listCollections($options);
+        } catch (\MongoDB\Driver\Exception\Exception $e) {
+            ExceptionConverter::toLegacy($e);
+        }
 
         $getCollectionInfo = function (CollectionInfo $collectionInfo) {
             return [
@@ -156,7 +162,11 @@ class MongoDB
             unset($options['includeSystemCollections']);
         }
 
-        $collections = $this->db->listCollections($options);
+        try {
+            $collections = $this->db->listCollections($options);
+        } catch (\MongoDB\Driver\Exception\Exception $e) {
+            ExceptionConverter::toLegacy($e);
+        }
 
         $getCollectionName = function (CollectionInfo $collectionInfo) {
             return $collectionInfo->getName();
@@ -260,7 +270,12 @@ class MongoDB
      */
     public function createCollection($name, $options)
     {
-        $this->db->createCollection($name, $options);
+        try {
+            $this->db->createCollection($name, $options);
+        } catch (\MongoDB\Driver\Exception\Exception $e) {
+            return false;
+        }
+
         return $this->selectCollection($name);
     }
 
@@ -366,12 +381,16 @@ class MongoDB
             $cursor->setReadPreference($this->getReadPreference());
 
             return iterator_to_array($cursor)[0];
+        } catch (\MongoDB\Driver\Exception\ExecutionTimeoutException $e) {
+            throw new MongoCursorTimeoutException($e->getMessage(), $e->getCode(), $e);
         } catch (\MongoDB\Driver\Exception\RuntimeException $e) {
             return [
                 'ok' => 0,
                 'errmsg' => $e->getMessage(),
                 'code' => $e->getCode(),
             ];
+        } catch (\MongoDB\Driver\Exception\Excepiton $e) {
+            ExceptionConverter::toLegacy($e);
         }
     }
 
@@ -476,5 +495,26 @@ class MongoDB
         } else {
             $this->db = $this->db->withOptions($options);
         }
+    }
+
+    private function checkDatabaseName($name)
+    {
+        if (empty($name)) {
+            throw new \Exception('Database name cannot be empty');
+        }
+        if (strlen($name) >= 64) {
+            throw new \Exception('Database name cannot exceed 63 characters');
+        }
+        if (strpos($name, chr(0)) !== false) {
+            throw new \Exception('Database name cannot contain null bytes');
+        }
+
+        $invalidCharacters = ['.', '$', '/', ' ', '\\'];
+        foreach ($invalidCharacters as $char) {
+            if (strchr($name, $char) !== false) {
+                throw new \Exception('Database name contains invalid characters');
+            }
+        }
+
     }
 }

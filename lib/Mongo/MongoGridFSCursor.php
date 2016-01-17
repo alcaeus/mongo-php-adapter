@@ -65,6 +65,6 @@ class MongoGridFSCursor extends MongoCursor
     public function key()
     {
         $file = $this->current();
-        return ($file !== null) ? $file->getFilename() : null;
+        return ($file !== null) ? (string)$file->file['_id'] : null;
     }
 }
