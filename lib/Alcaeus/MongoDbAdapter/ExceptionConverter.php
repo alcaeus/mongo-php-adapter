@@ -28,7 +28,7 @@ class ExceptionConverter
      *
      * @return \MongoException
      */
-    public static function convertException(Exception\Exception $e, $fallbackClass = 'MongoException')
+    public static function toLegacy(Exception\Exception $e, $fallbackClass = 'MongoException')
     {
         switch (get_class($e)) {
             case Exception\AuthenticationException::class:
@@ -56,13 +56,5 @@ class ExceptionConverter
         }
 
         return new $class($e->getMessage(), $e->getCode(), $e);
-    }
-
-    /**
-     * @throws \MongoException
-     */
-    public static function toLegacy(Exception\Exception $e, $fallbackClass = 'MongoException')
-    {
-        throw self::convertException($e, $fallbackClass);
     }
 }

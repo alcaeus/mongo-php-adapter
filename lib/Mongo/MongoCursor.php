@@ -146,7 +146,7 @@ class MongoCursor extends AbstractCursor implements Iterator
         } catch (\MongoDB\Driver\Exception\ExecutionTimeoutException $e) {
             throw new MongoCursorTimeoutException($e->getMessage(), $e->getCode(), $e);
         } catch (\MongoDB\Driver\Exception\Exception $e) {
-            ExceptionConverter::toLegacy($e);
+            throw ExceptionConverter::toLegacy($e);
         }
 
         return $count;
@@ -167,7 +167,7 @@ class MongoCursor extends AbstractCursor implements Iterator
         } catch (\MongoDB\Driver\Exception\ExecutionTimeoutException $e) {
             throw new MongoCursorTimeoutException($e->getMessage(), $e->getCode(), $e);
         } catch (\MongoDB\Driver\Exception\Exception $e) {
-            ExceptionConverter::toLegacy($e);
+            throw ExceptionConverter::toLegacy($e);
         }
     }
 
