@@ -923,15 +923,14 @@ class MongoCollectionTest extends TestCase
 
     public function testFindAndModifyResultException()
     {
-        $id = '54203e08d51d4a1f868b456e';
         $collection = $this->getCollection();
 
         $this->setExpectedException('MongoResultException');
 
-        $document = $collection->findAndModify(
+        $collection->findAndModify(
             array("inprogress" => false, "name" => "Next promo"),
-            array('$pop' => array("tasks" => -1)),
-            array("tasks" => array('$pop' => array("stuff"))),
+            array('$unsupportedOperator' => array("tasks" => -1)),
+            array("tasks" => true),
             array("new" => true)
         );
     }
