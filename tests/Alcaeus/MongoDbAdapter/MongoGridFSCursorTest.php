@@ -19,7 +19,7 @@ class MongoGridFSCursorTest extends TestCase
 
             $this->assertArraySubset([
                 'filename' => 'foo.txt',
-                'chunkSize' => \MongoGridFS::DEFAULT_CHUNK_SIZE,
+                'chunkSize' => 261120,
                 'length' => 3,
                 'md5' => 'acbd18db4cc2f85cedef654fccc4a4d8'
             ], $value->file);
