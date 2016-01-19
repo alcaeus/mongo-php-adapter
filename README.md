@@ -1,5 +1,9 @@
 # Mongo PHP Adapter
 
+[![Build Status](https://travis-ci.org/alcaeus/mongo-php-adapter.svg?branch=master)](https://travis-ci.org/alcaeus/mongo-php-adapter)
+[![Code Coverage](https://scrutinizer-ci.com/g/alcaeus/mongo-php-adapter/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/alcaeus/mongo-php-adapter/?branch=master)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/alcaeus/mongo-php-adapter/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/alcaeus/mongo-php-adapter/?branch=master)
+
 The Mongo PHP Adapter is a userland library designed to act as an adapter
 between applications relying on ext-mongo and the new driver (ext-mongodb).
 
