@@ -70,7 +70,7 @@ class MongoGridFSFileTest extends TestCase
 
     public function testGetResource()
     {
-        $id = $this->prepareFile();
+        $id = $this->prepareFile(str_repeat('a', 300 * 1024));
         $file = $this->getFile(['_id' => $id, 'length' => 4]);
 
         $result = $file->getResource();
@@ -100,9 +100,6 @@ class MongoGridFSFileTest extends TestCase
     protected function prepareFile($data = 'abcd', $extra = [])
     {
         $collection = $this->getGridFS();
-
-        // to make sure we have multiple chunks
-        $extra += ['chunkSize' => 2];
 
         return $collection->storeBytes($data, $extra);
     }

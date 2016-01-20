@@ -17,12 +17,10 @@ class MongoUpdateBatchTest extends TestCase
         $this->assertTrue($batch->add(['q' => ['foo' => 'bar'], 'u' => ['$set' => ['foo' => 'foo']]]));
 
         $expected = [
-            'ok' => 1.0,
-            'nInserted' => 0,
             'nMatched' => 1,
             'nModified' => 1,
             'nUpserted' => 0,
-            'nRemoved' => 0,
+            'ok' => true,
         ];
 
         $this->assertSame($expected, $batch->execute());
@@ -49,12 +47,10 @@ class MongoUpdateBatchTest extends TestCase
         $this->assertTrue($batch->add(['q' => ['foo' => 'bar'], 'u' => ['$set' => ['foo' => 'foo']], 'multi' => true]));
 
         $expected = [
-            'ok' => 1.0,
-            'nInserted' => 0,
             'nMatched' => 2,
             'nModified' => 2,
             'nUpserted' => 0,
-            'nRemoved' => 0,
+            'ok' => true,
         ];
 
         $this->assertSame($expected, $batch->execute());
@@ -74,15 +70,21 @@ class MongoUpdateBatchTest extends TestCase
         $this->assertTrue($batch->add(['q' => [], 'u' => ['$set' => ['foo' => 'bar']], 'upsert' => true]));
 
         $expected = [
-            'ok' => 1.0,
-            'nInserted' => 0,
+            'upserted' => [
+                [
+                    'index' => 0,
+                ]
+            ],
             'nMatched' => 0,
             'nModified' => 0,
             'nUpserted' => 1,
-            'nRemoved' => 0,
+            'ok' => true,
         ];
 
-        $this->assertSame($expected, $batch->execute());
+        $result = $batch->execute();
+        $this->assertArraySubset($expected, $result);
+
+        $this->assertInstanceOf('MongoId', $result['upserted'][0]['_id']);
 
         $newCollection = $this->getCheckDatabase()->selectCollection('test');
         $this->assertSame(1, $newCollection->count());
@@ -97,7 +99,7 @@ class MongoUpdateBatchTest extends TestCase
         $collection = $this->getCollection();
         $batch = new \MongoUpdateBatch($collection);
 
-        $this->setExpectedException('Exception', 'invalid item');
+        $this->setExpectedException('Exception', "Expected \$item to contain 'q' key");
 
         $batch->add([]);
     }

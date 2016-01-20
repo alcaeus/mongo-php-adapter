@@ -263,7 +263,7 @@ class MongoCollection
     public function insert(&$a, array $options = [])
     {
         if (! $this->ensureDocumentHasMongoId($a)) {
-            trigger_error(sprintf('%s expects parameter %d to be an array or object, %s given', __METHOD__, 1, gettype($a)), E_USER_WARNING);
+            trigger_error(sprintf('%s(): expects parameter %d to be an array or object, %s given', __METHOD__, 1, gettype($a)), E_USER_WARNING);
             return;
         }
 
@@ -354,7 +354,6 @@ class MongoCollection
             'syncMillis' => 0,
             'writtenTo' => null,
             'err' => null,
-            'errmsg' => null,
         ];
     }
 
@@ -907,16 +906,13 @@ class MongoCollection
     {
         $checkKeys = function($array) {
             foreach (array_keys($array) as $key) {
-                if (is_int($key) || empty($key) || strpos($key, '*') === 1) {
+                if (empty($key) || strpos($key, '*') === 1) {
                     throw new \MongoException('document contain invalid key');
                 }
             }
         };
 
         if (is_array($document)) {
-            if (empty($document)) {
-                throw new \MongoException('document cannot be empty');
-            }
             if (! isset($document['_id'])) {
                 $document['_id'] = new \MongoId();
             }
@@ -925,9 +921,6 @@ class MongoCollection
 
             return $document['_id'];
         } elseif (is_object($document)) {
-            if (empty((array) $document)) {
-                throw new \MongoException('document cannot be empty');
-            }
             if (! isset($document->_id)) {
                 $document->_id = new \MongoId();
             }

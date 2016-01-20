@@ -42,7 +42,7 @@ class MongoCursorTest extends TestCase
 
     public function testCountCannotConnect()
     {
-        $client = $this->getClient([], 'mongodb://localhost:28888');
+        $client = $this->getClient(['connect' => false], 'mongodb://localhost:28888');
         $cursor = $client->selectCollection('mongo-php-adapter', 'test')->find();
 
         $this->setExpectedException('MongoConnectionException');
@@ -292,7 +292,7 @@ class MongoCursorTest extends TestCase
         $expected = [
             'ns' => 'mongo-php-adapter.test',
             'limit' => 3,
-            'batchSize' => null,
+            'batchSize' => 0,
             'skip' => 1,
             'flags' => 0,
             'query' => ['foo' => 'bar'],
@@ -300,23 +300,23 @@ class MongoCursorTest extends TestCase
             'started_iterating' => false,
         ];
 
-        $this->assertSame($expected, $cursor->info());
+        $this->assertEquals($expected, $cursor->info());
 
         // Ensure cursor started iterating
         iterator_to_array($cursor);
 
         $expected['started_iterating'] = true;
         $expected += [
-            'id' => '0',
-            'at' => null,
-            'numReturned' => null,
+            'id' => 0,
+            'at' => 1,
+            'numReturned' => 1,
             'server' => 'localhost:27017;-;.;' . getmypid(),
             'host' => 'localhost',
             'port' => 27017,
             'connection_type_desc' => 'STANDALONE'
         ];
 
-        $this->assertSame($expected, $cursor->info());
+        $this->assertEquals($expected, $cursor->info());
     }
 
     public function testReadPreferenceIsInherited()
