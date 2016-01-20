@@ -12,12 +12,8 @@ class MongoInsertBatchTest extends TestCase
         $this->assertTrue($batch->add(['bar' => 'foo']));
 
         $expected = [
-            'ok' => 1.0,
             'nInserted' => 2,
-            'nMatched' => 0,
-            'nModified' => 0,
-            'nUpserted' => 0,
-            'nRemoved' => 0,
+            'ok' => true,
         ];
 
         $this->assertSame($expected, $batch->execute());
@@ -40,14 +36,22 @@ class MongoInsertBatchTest extends TestCase
         $this->assertTrue($batch->add(['foo' => 'bar']));
 
         $expected = [
-            'ok' => 0.0,
+            'writeErrors' => [
+                [
+                    'index' => 1,
+                    'code' => 11000,
+                    'errmsg' => 'E11000 duplicate key error collection: mongo-php-adapter.test index: foo_1 dup key: { : "bar" }',
+                ]
+            ],
             'nInserted' => 1,
-            'nMatched' => 0,
-            'nModified' => 0,
-            'nUpserted' => 0,
-            'nRemoved' => 0,
+            'ok' => true,
         ];
 
-        $this->assertSame($expected, $batch->execute());
+        try {
+            $batch->execute();
+        } catch (\MongoWriteConcernException $e) {
+            $this->assertSame('Failed write', $e->getMessage());
+            $this->assertSame($expected, $e->getDocument());
+        }
     }
 }

@@ -17,12 +17,8 @@ class MongoDeleteBatchTest extends TestCase
         $this->assertTrue($batch->add(['q' => ['foo' => 'bar'], 'limit' => 1]));
 
         $expected = [
-            'ok' => 1.0,
-            'nInserted' => 0,
-            'nMatched' => 0,
-            'nModified' => 0,
-            'nUpserted' => 0,
             'nRemoved' => 1,
+            'ok' => true,
         ];
 
         $this->assertSame($expected, $batch->execute());
@@ -44,12 +40,8 @@ class MongoDeleteBatchTest extends TestCase
         $this->assertTrue($batch->add(['q' => ['foo' => 'bar'], 'limit' => 0]));
 
         $expected = [
-            'ok' => 1.0,
-            'nInserted' => 0,
-            'nMatched' => 0,
-            'nModified' => 0,
-            'nUpserted' => 0,
             'nRemoved' => 2,
+            'ok' => true,
         ];
 
         $this->assertSame($expected, $batch->execute());
@@ -64,7 +56,7 @@ class MongoDeleteBatchTest extends TestCase
         $collection = $this->getCollection();
         $batch = new \MongoDeleteBatch($collection);
 
-        $this->setExpectedException('Exception', 'invalid item');
+        $this->setExpectedException('Exception', "Expected \$item to contain 'q' key");
 
         $batch->add([]);
     }

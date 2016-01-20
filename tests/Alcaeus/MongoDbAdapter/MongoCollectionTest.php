@@ -43,7 +43,7 @@ class MongoCollectionTest extends TestCase
 
     public function testInsertInvalidData()
     {
-        $this->setExpectedException('PHPUnit_Framework_Error_Warning', 'ongoCollection::insert expects parameter 1 to be an array or object, integer given');
+        $this->setExpectedException('PHPUnit_Framework_Error_Warning', 'MongoCollection::insert(): expects parameter 1 to be an array or object, integer given');
 
         $document = 8;
         $this->getCollection()->insert($document);
@@ -51,33 +51,33 @@ class MongoCollectionTest extends TestCase
 
     public function testInsertEmptyArray()
     {
-        $this->setExpectedException('MongoException', 'document cannot be empty');
-
         $document = [];
         $this->getCollection()->insert($document);
+
+        $this->assertSame(1, $this->getCollection()->count());
     }
 
     public function testInsertArrayWithNumericKeys()
     {
-        $this->setExpectedException('MongoException', 'document contain invalid key');
-
         $document = [1 => 'foo'];
         $this->getCollection()->insert($document);
+
+        $this->assertSame(1, $this->getCollection()->count(['_id' => $document['_id']]));
     }
 
     public function testInsertEmptyObject()
     {
-        $this->setExpectedException('MongoException', 'document cannot be empty');
-
         $document = (object) [];
         $this->getCollection()->insert($document);
+
+        $this->assertSame(1, $this->getCollection()->count());
     }
 
     public function testInsertObjectWithPrivateProperties()
     {
-        $this->setExpectedException('MongoException', 'document contain invalid key');
+        $this->setExpectedException('MongoException', 'zero-length keys are not allowed, did you use $ with double quotes?');
 
-        $document = $this->getCollection();
+        $document = new PrivatePropertiesStub();
         $this->getCollection()->insert($document);
     }
 
@@ -91,14 +91,8 @@ class MongoCollectionTest extends TestCase
         $collection->insert($document);
 
         unset($document['_id']);
-        $this->assertArraySubset(
-            [
-                'ok' => 0.0,
-                'n' => 0,
-                'err' => 11000,
-            ],
-            $collection->insert($document)
-        );
+        $this->setExpectedException('MongoDuplicateKeyException');
+        $collection->insert($document);
     }
 
     public function testUnacknowledgedWrite()
@@ -109,7 +103,10 @@ class MongoCollectionTest extends TestCase
 
     public function testInsertWriteConcernException()
     {
-        $this->setExpectedException('MongoConnectionException');
+        $this->setExpectedException(
+            'MongoWriteConcernException',
+            "localhost:27017: cannot use 'w' > 1 when a host is not replicated"
+        );
 
         $document = ['foo' => 'bar'];
         $this->getCollection()->insert($document, ['w' => 2]);
@@ -118,19 +115,18 @@ class MongoCollectionTest extends TestCase
     public function testInsertMany()
     {
         $expected = [
-            'connectionId' => 0,
+            'ok' => 1.0,
             'n' => 0,
             'syncMillis' => 0,
             'writtenTo' => null,
             'err' => null,
-            'errmsg' => null
         ];
 
         $documents = [
             ['foo' => 'bar'],
             ['bar' => 'foo']
         ];
-        $this->assertSame($expected, $this->getCollection()->batchInsert($documents));
+        $this->assertArraySubset($expected, $this->getCollection()->batchInsert($documents));
 
         foreach ($documents as $document) {
             $this->assertInstanceOf('MongoId', $document['_id']);
@@ -141,19 +137,18 @@ class MongoCollectionTest extends TestCase
     public function testInsertManyWithNonNumericKeys()
     {
         $expected = [
-            'connectionId' => 0,
+            'ok' => 1.0,
             'n' => 0,
             'syncMillis' => 0,
             'writtenTo' => null,
             'err' => null,
-            'errmsg' => null
         ];
 
         $documents = [
             'a' => ['foo' => 'bar'],
             'b' => ['bar' => 'foo']
         ];
-        $this->assertSame($expected, $this->getCollection()->batchInsert($documents));
+        $this->assertArraySubset($expected, $this->getCollection()->batchInsert($documents));
 
         $newCollection = $this->getCheckDatabase()->selectCollection('test');
         $this->assertSame(2, $newCollection->count());
@@ -162,19 +157,18 @@ class MongoCollectionTest extends TestCase
     public function testBatchInsertContinuesOnError()
     {
         $expected = [
-            'connectionId' => 0,
+            'ok' => 1.0,
             'n' => 0,
             'syncMillis' => 0,
             'writtenTo' => null,
             'err' => null,
-            'errmsg' => null
         ];
 
         $documents = [
             8,
             'b' => ['bar' => 'foo']
         ];
-        $this->assertSame($expected, $this->getCollection()->batchInsert($documents, ['continueOnError' => true]));
+        $this->assertArraySubset($expected, $this->getCollection()->batchInsert($documents, ['continueOnError' => true]));
 
         $newCollection = $this->getCheckDatabase()->selectCollection('test');
         $this->assertSame(1, $newCollection->count());
@@ -182,7 +176,7 @@ class MongoCollectionTest extends TestCase
 
     public function testBatchInsertException()
     {
-        $this->setExpectedException('MongoConnectionException');
+        $this->setExpectedException('MongoResultException', 'localhost:27017: cannot use \'w\' > 1 when a host is not replicated');
 
         $documents = [['foo' => 'bar']];
         $this->getCollection()->batchInsert($documents, ['w' => 2]);
@@ -198,7 +192,7 @@ class MongoCollectionTest extends TestCase
 
     public function testUpdateWriteConcern()
     {
-        $this->setExpectedException('MongoConnectionException'); // does not match driver
+        $this->setExpectedException('MongoWriteConcernException', "localhost:27017: cannot use 'w' > 1 when a host is not replicated");
 
         $this->getCollection()->update([], ['$set' => ['foo' => 'bar']], ['w' => 2]);
     }
@@ -237,16 +231,8 @@ class MongoCollectionTest extends TestCase
         $document = ['foo' => 'foo'];
         $collection->insert($document);
 
-        $this->assertArraySubset(
-            [
-                'ok' => 0.0,
-                'nModified' => 0,
-                'n' => 0,
-                'err' => 11000,
-                'updatedExisting' => true,
-            ],
-            $collection->update(['foo' => 'bar'], ['$set' => ['foo' => 'foo']])
-        );
+        $this->setExpectedException('MongoDuplicateKeyException');
+        $collection->update(['foo' => 'bar'], ['$set' => ['foo' => 'foo']]);
     }
 
     public function testUpdateMany()
@@ -377,10 +363,10 @@ class MongoCollectionTest extends TestCase
 
     public function testFindOneConnectionIssue()
     {
+        $this->setExpectedException('MongoConnectionException');
+
         $client = $this->getClient([], 'mongodb://localhost:28888?connectTimeoutMS=1');
         $collection = $client->selectCollection('mongo-php-adapter', 'test');
-
-        $this->setExpectedException('MongoConnectionException');
 
         $collection->findOne();
     }
@@ -497,7 +483,7 @@ class MongoCollectionTest extends TestCase
         $this->assertSame(['type' => \MongoClient::RP_SECONDARY_PREFERRED, 'tagsets' => [['a' => 'b']]], $collection->getReadPreference());
 
         $this->assertTrue($collection->setSlaveOkay(false));
-        $this->assertSame(['type' => \MongoClient::RP_PRIMARY], $collection->getReadPreference());
+        $this->assertArraySubset(['type' => \MongoClient::RP_PRIMARY], $collection->getReadPreference());
     }
 
     public function testReadPreferenceIsSetInDriver()
@@ -527,18 +513,9 @@ class MongoCollectionTest extends TestCase
     public function testWriteConcern()
     {
         $collection = $this->getCollection();
-        $this->assertSame(['w' => 1, 'wtimeout' => 0], $collection->getWriteConcern());
-        $this->assertSame(1, $collection->w);
-        $this->assertSame(0, $collection->wtimeout);
 
         $this->assertTrue($collection->setWriteConcern('majority', 100));
         $this->assertSame(['w' => 'majority', 'wtimeout' => 100], $collection->getWriteConcern());
-
-        $collection->w = 2;
-        $this->assertSame(['w' => 2, 'wtimeout' => 100], $collection->getWriteConcern());
-
-        $collection->wtimeout = -1;
-        $this->assertSame(['w' => 2, 'wtimeout' => 0], $collection->getWriteConcern());
     }
 
     public function testWriteConcernIsSetInDriver()
@@ -569,17 +546,19 @@ class MongoCollectionTest extends TestCase
         $id = '54203e08d51d4a1f868b456e';
         $collection = $this->getCollection();
 
+        $objectId = new \MongoId($id);
         $expected = [
             'ok' => 1.0,
             'nModified' => 0,
-            'n' => 0,
+            'n' => 1,
             'err' => null,
             'errmsg' => null,
+            'upserted' => $objectId,
             'updatedExisting' => false,
         ];
 
-        $document = ['_id' => new \MongoId($id), 'foo' => 'bar'];
-        $this->assertSame($expected, $collection->save($document));
+        $document = ['_id' => $objectId, 'foo' => 'bar'];
+        $this->assertEquals($expected, $collection->save($document));
 
         $newCollection = $this->getCheckDatabase()->selectCollection('test');
         $this->assertSame(1, $newCollection->count());
@@ -679,26 +658,18 @@ class MongoCollectionTest extends TestCase
 
     public function testSaveEmptyKeys()
     {
-        $this->setExpectedException('MongoException');
-
         $document = [];
         $this->getCollection()->save($document);
+
+        $this->assertSame(1, $this->getCollection()->count());
     }
 
     public function testSaveEmptyObject()
     {
-        $this->setExpectedException('MongoException');
-
         $document = (object) [];
         $this->getCollection()->save($document);
-    }
 
-    public function testSaveWrite()
-    {
-        $this->setExpectedException('MongoConnectionException'); // should be MongoCursorException
-
-        $document = ['foo' => 'bar'];
-        $this->getCollection()->save($document, ['w' => 2, 'wtimeout' => 1000]);
+        $this->assertSame(1, $this->getCollection()->count());
     }
 
     public function testGetDBRef()
@@ -751,7 +722,7 @@ class MongoCollectionTest extends TestCase
 
     public function testCreateIndexInvalid()
     {
-        $this->setExpectedException('MongoException', 'keys cannot be empty');
+        $this->setExpectedException('MongoException', 'index specification has no elements');
 
         $this->getCollection()->createIndex([]);
     }
@@ -762,8 +733,8 @@ class MongoCollectionTest extends TestCase
 
         $expected = [
             'createdCollectionAutomatically' => false,
-            'numIndexesBefore' => 1,
-            'numIndexesAfter' => 1,
+            'numIndexesBefore' => 2,
+            'numIndexesAfter' => 2,
             'note' => 'all indexes already exist',
             'ok' => 1.0
         ];
@@ -790,8 +761,15 @@ class MongoCollectionTest extends TestCase
 
     public function testEnsureIndex()
     {
+        $expected = [
+            'createdCollectionAutomatically' => true,
+            'numIndexesBefore' => 1,
+            'numIndexesAfter' => 2,
+            'ok' => 1.0
+        ];
+
         $collection = $this->getCollection();
-        $this->assertTrue($collection->ensureIndex(['bar' => 1], ['unique' => true]));
+        $this->assertEquals($expected, $collection->ensureIndex(['bar' => 1], ['unique' => true]));
 
         $newCollection = $this->getCheckDatabase()->selectCollection('test');
         $indexes = iterator_to_array($newCollection->listIndexes());
@@ -806,6 +784,22 @@ class MongoCollectionTest extends TestCase
     {
         $newCollection = $this->getCheckDatabase()->selectCollection('test');
         $newCollection->createIndex(['bar' => 1], ['name' => 'bar']);
+
+        $expected = [
+            'nIndexesWas' => 2,
+            'errmsg' => 'index not found with name [bar_1]',
+            'ok' => 0.0,
+            'code' => 27,
+        ];
+        $this->assertEquals($expected, $this->getCollection()->deleteIndex('bar'));
+
+        $this->assertCount(2, iterator_to_array($newCollection->listIndexes()));
+    }
+
+    public function testDeleteIndexUsingField()
+    {
+        $newCollection = $this->getCheckDatabase()->selectCollection('test');
+        $newCollection->createIndex(['bar' => 1]);
 
         $expected = [
             'nIndexesWas' => 2,
@@ -1060,8 +1054,12 @@ class MongoCollectionTest extends TestCase
     {
         $collection = $this->getCollection();
 
-        $this->setExpectedException('Exception', 'Collection name cannot contain null bytes');
-
-        $collection->{'foo' . chr(0)};
+        $this->assertInstanceOf('MongoCollection', $collection->{'foo' . chr(0)});
+        $this->assertSame('test', $collection->getName());
     }
+}
+
+class PrivatePropertiesStub
+{
+    private $foo = 'bar';
 }

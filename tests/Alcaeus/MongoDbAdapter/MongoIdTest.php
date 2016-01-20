@@ -1,6 +1,7 @@
 <?php
 
 namespace Alcaeus\MongoDbAdapter\Tests;
+use MongoDB\BSON\ObjectID;
 
 /**
  * @author alcaeus <alcaeus@alcaeus.org>
@@ -48,7 +49,7 @@ class MongoIdTest extends TestCase
         $this->skipTestIf(extension_loaded('mongo'));
 
         $original = '54203e08d51d4a1f868b456e';
-        $objectId = new \MongoDB\BSON\ObjectID($original);
+        $objectId = new ObjectID($original);
 
         $id = new \MongoId($objectId);
         $this->assertSame($original, (string) $id);
@@ -61,6 +62,7 @@ class MongoIdTest extends TestCase
      */
     public function testIsValid($expected, $value)
     {
+        $this->skipTestIf($value instanceof ObjectID && extension_loaded('mongo'));
         $this->assertSame($expected, \MongoId::isValid($value));
     }
 
@@ -71,7 +73,7 @@ class MongoIdTest extends TestCase
         return [
             'validId' => [true, '' . $original . ''],
             'MongoId' => [true, new \MongoId($original)],
-            'ObjectID' => [true, new \MongoDB\BSON\ObjectID($original)],
+            'ObjectID' => [true, new ObjectID($original)],
             'invalidString' => [false, 'abc'],
         ];
     }
