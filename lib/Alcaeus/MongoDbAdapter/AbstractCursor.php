@@ -246,15 +246,28 @@ abstract class AbstractCursor
     }
 
     /**
-     * @return \IteratorIterator
+     * @return \Generator
      */
     protected function ensureIterator()
     {
         if ($this->iterator === null) {
-            $this->iterator = new \IteratorIterator($this->ensureCursor());
+            // MongoDB\Driver\Cursor needs to be wrapped into a \Generator so that a valid \Iterator with working implementations of
+            // next, current, valid, key and rewind is returned. These methods don't work if we wrap the Cursor inside an \IteratorIterator
+            $this->iterator = $this->wrapTraversable($this->ensureCursor());
         }
 
         return $this->iterator;
+    }
+
+    /**
+     * @param \Traversable $traversable
+     * @return \Generator
+     */
+    private function wrapTraversable(\Traversable $traversable)
+    {
+        foreach ($traversable as $key => $value) {
+            yield $key => $value;
+        }
     }
 
     /**
