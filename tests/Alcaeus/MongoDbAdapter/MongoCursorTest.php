@@ -19,9 +19,10 @@ class MongoCursorTest extends TestCase
         $this->assertCount(2, $cursor);
 
         $iterated = 0;
-        foreach ($cursor as $item) {
+        foreach ($cursor as $key => $item) {
             $iterated++;
             $this->assertInstanceOf('MongoId', $item['_id']);
+            $this->assertEquals($key, (string) $item['_id']);
             $this->assertSame('bar', $item['foo']);
         }
 

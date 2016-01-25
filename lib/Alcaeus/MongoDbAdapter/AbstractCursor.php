@@ -280,6 +280,12 @@ abstract class AbstractCursor
     private function wrapTraversable(\Traversable $traversable)
     {
         foreach ($traversable as $key => $value) {
+            if ($this instanceof \MongoCursor &&
+                isset($value->_id) &&
+                ($value->_id instanceof \MongoDB\BSON\ObjectID || !is_object($value->_id))
+            ) {
+                $key = (string) $value->_id;
+            }
             yield $key => $value;
         }
     }
