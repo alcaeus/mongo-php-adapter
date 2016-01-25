@@ -263,7 +263,7 @@ abstract class AbstractCursor
      * @param \Traversable $traversable
      * @return \Generator
      */
-    private function wrapTraversable(\Traversable $traversable)
+    protected function wrapTraversable(\Traversable $traversable)
     {
         foreach ($traversable as $key => $value) {
             yield $key => $value;
