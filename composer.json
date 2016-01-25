@@ -11,7 +11,7 @@
     "require": {
         "php": "^5.5 || ^7.0",
         "ext-hash": "*",
-        "mongodb/mongodb": "1.0.0-beta2"
+        "mongodb/mongodb": "^1.0.0"
     },
     "require-dev": {
         "phpunit/phpunit": "^4.8 || ^5.0"
