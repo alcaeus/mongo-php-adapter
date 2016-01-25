@@ -197,7 +197,7 @@ class MongoCursor extends AbstractCursor implements Iterator
     }
 
     /**
-     * Return the next object to which this cursor points, and advance the cursor
+     * Advances the cursor to the next result, and returns that result
      * @link http://www.php.net/manual/en/mongocursor.getnext.php
      * @throws MongoConnectionException
      * @throws MongoCursorTimeoutException
@@ -205,9 +205,7 @@ class MongoCursor extends AbstractCursor implements Iterator
      */
     public function getNext()
     {
-        $this->next();
-
-        return $this->current();
+        return $this->next();
     }
 
     /**

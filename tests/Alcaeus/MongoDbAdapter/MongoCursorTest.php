@@ -49,6 +49,39 @@ class MongoCursorTest extends TestCase
         $cursor->count();
     }
 
+    public function testNextStartsWithFirstItem()
+    {
+        $this->prepareData();
+
+        $collection = $this->getCollection();
+        $cursor = $collection->find(['foo' => 'bar']);
+
+        $item = $cursor->getNext();
+        $this->assertNotNull($item);
+        $this->assertInstanceOf('MongoId', $item['_id']);
+        $this->assertSame('bar', $item['foo']);
+
+        $item = $cursor->getNext();
+        $this->assertNotNull($item);
+        $this->assertInstanceOf('MongoId', $item['_id']);
+        $this->assertSame('bar', $item['foo']);
+
+        $item = $cursor->getNext();
+        $this->assertNull($item);
+
+        $cursor->reset();
+
+        $item = $cursor->getNext();
+        $this->assertNotNull($item);
+        $this->assertInstanceOf('MongoId', $item['_id']);
+        $this->assertSame('bar', $item['foo']);
+
+        $item = $cursor->getNext();
+        $this->assertNotNull($item);
+        $this->assertInstanceOf('MongoId', $item['_id']);
+        $this->assertSame('bar', $item['foo']);
+    }
+
     public function testIteratorInterface()
     {
         $this->prepareData();
