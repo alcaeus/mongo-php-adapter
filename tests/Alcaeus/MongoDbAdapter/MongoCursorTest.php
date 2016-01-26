@@ -90,6 +90,9 @@ class MongoCursorTest extends TestCase
         $collection = $this->getCollection();
         $cursor = $collection->find(['foo' => 'bar']);
 
+        $this->assertFalse($cursor->valid(), 'Cursor should be invalid to start with');
+
+        $cursor->next();
         $this->assertTrue($cursor->valid(), 'Cursor should be valid');
 
         $item = $cursor->current();
