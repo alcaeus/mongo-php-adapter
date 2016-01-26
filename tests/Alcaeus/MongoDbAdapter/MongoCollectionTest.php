@@ -618,6 +618,24 @@ class MongoCollectionTest extends TestCase
         $this->assertAttributeSame('foo', 'foo', $object);
     }
 
+    public function testSavingShouldReplaceTheWholeDocument() {
+        $id = '54203e08d51d4a1f868b456e';
+        $collection = $this->getCollection();
+
+        $insertDocument = ['_id' => new \MongoId($id), 'foo' => 'bar'];
+        $saveDocument = ['_id' => new \MongoId($id)];
+
+        $collection->insert($insertDocument);
+        $collection->save($saveDocument);
+
+        $newCollection = $this->getCheckDatabase()->selectCollection('test');
+        $this->assertSame(1, $newCollection->count());
+        $object = $newCollection->findOne();
+
+        $this->assertNotNull($object);
+        $this->assertObjectNotHasAttribute('foo', $object);
+    }
+
     public function testSaveDuplicate()
     {
         $collection = $this->getCollection();

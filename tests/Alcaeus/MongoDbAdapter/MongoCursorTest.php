@@ -19,9 +19,10 @@ class MongoCursorTest extends TestCase
         $this->assertCount(2, $cursor);
 
         $iterated = 0;
-        foreach ($cursor as $item) {
+        foreach ($cursor as $key => $item) {
             $iterated++;
             $this->assertInstanceOf('MongoId', $item['_id']);
+            $this->assertEquals($key, (string) $item['_id']);
             $this->assertSame('bar', $item['foo']);
         }
 
@@ -47,6 +48,39 @@ class MongoCursorTest extends TestCase
         $this->setExpectedException('MongoConnectionException');
 
         $cursor->count();
+    }
+
+    public function testNextStartsWithFirstItem()
+    {
+        $this->prepareData();
+
+        $collection = $this->getCollection();
+        $cursor = $collection->find(['foo' => 'bar']);
+
+        $item = $cursor->getNext();
+        $this->assertNotNull($item);
+        $this->assertInstanceOf('MongoId', $item['_id']);
+        $this->assertSame('bar', $item['foo']);
+
+        $item = $cursor->getNext();
+        $this->assertNotNull($item);
+        $this->assertInstanceOf('MongoId', $item['_id']);
+        $this->assertSame('bar', $item['foo']);
+
+        $item = $cursor->getNext();
+        $this->assertNull($item);
+
+        $cursor->reset();
+
+        $item = $cursor->getNext();
+        $this->assertNotNull($item);
+        $this->assertInstanceOf('MongoId', $item['_id']);
+        $this->assertSame('bar', $item['foo']);
+
+        $item = $cursor->getNext();
+        $this->assertNotNull($item);
+        $this->assertInstanceOf('MongoId', $item['_id']);
+        $this->assertSame('bar', $item['foo']);
     }
 
     public function testIteratorInterface()

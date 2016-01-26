@@ -719,16 +719,32 @@ class MongoCollection
         $id = $this->ensureDocumentHasMongoId($a);
 
         $document = (array) $a;
-        unset($document['_id']);
 
         $options['upsert'] = true;
 
-        $result = $this->update(['_id' => $id], ['$set' => $a], $options);
-        if ($result['ok'] == 0.0) {
-            throw new \MongoCursorException();
+        try {
+            /** @var \MongoDB\UpdateResult $result */
+            $result = $this->collection->replaceOne(
+                TypeConverter::fromLegacy(['_id' => $id]),
+                TypeConverter::fromLegacy($document),
+                $this->convertWriteConcernOptions($options)
+            );
+        } catch (\MongoDB\Driver\Exception\Exception $e) {
+            ExceptionConverter::toLegacy($e);
         }
 
-        return $result;
+        if (!$result->isAcknowledged()) {
+            return true;
+        }
+
+        return [
+            'ok' => 1.0,
+            'nModified' => $result->getModifiedCount(),
+            'n' => $result->getMatchedCount(),
+            'err' => null,
+            'errmsg' => null,
+            'updatedExisting' => $result->getUpsertedCount() == 0,
+        ];
     }
 
     /**

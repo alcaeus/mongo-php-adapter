@@ -35,7 +35,7 @@ class MongoCommandCursorTest extends TestCase
         $this->assertEquals($expected, $cursor->info());
 
         // Ensure cursor started iterating
-        iterator_to_array($cursor);
+        $array = iterator_to_array($cursor);
 
         $expected['started_iterating'] = true;
         $expected += [
@@ -49,5 +49,11 @@ class MongoCommandCursorTest extends TestCase
         ];
 
         $this->assertEquals($expected, $cursor->info());
+
+        $i = 0;
+        foreach ($array as $key => $value) {
+            $this->assertEquals($i, $key);
+            $i++;
+        }
     }
 }
