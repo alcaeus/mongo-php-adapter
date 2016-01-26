@@ -32,10 +32,11 @@ class MongoGridFSFileTest extends TestCase
 
     public function testWrite()
     {
-        $id = $this->prepareFile();
         $filename = '/tmp/test-mongo-grid-fs-file';
+        $id = $this->prepareFile('abcd', ['filename' => $filename]);
         @unlink($filename);
-        $file = $this->getFile(['_id' => $id, 'length' => 4, 'filename' => $filename]);
+        $file = $this->getGridFS()->findOne(['_id' => $id]);
+        $this->assertInstanceOf(\MongoGridFSFile::class, $file);
 
         $file->write();
 
@@ -49,7 +50,8 @@ class MongoGridFSFileTest extends TestCase
         $id = $this->prepareFile();
         $filename = '/tmp/test-mongo-grid-fs-file';
         @unlink($filename);
-        $file = $this->getFile(['_id' => $id, 'length' => 4]);
+        $file = $this->getGridFS()->findOne(['_id' => $id]);
+        $this->assertInstanceOf(\MongoGridFSFile::class, $file);
 
         $file->write($filename);
 
@@ -70,13 +72,15 @@ class MongoGridFSFileTest extends TestCase
 
     public function testGetResource()
     {
-        $id = $this->prepareFile(str_repeat('a', 300 * 1024));
-        $file = $this->getFile(['_id' => $id, 'length' => 4]);
+        $data = str_repeat('a', 500 * 1024);
+        $id = $this->prepareFile($data);
+        $file = $this->getGridFS()->findOne(['_id' => $id]);
+        $this->assertInstanceOf(\MongoGridFSFile::class, $file);
 
         $result = $file->getResource();
 
         $this->assertTrue(is_resource($result));
-        $this->assertSame('abcd', stream_get_contents($result));
+        $this->assertSame($data, stream_get_contents($result));
     }
 
     /**
