@@ -20,8 +20,8 @@ addons:
 
 before_script:
   - pecl install -f mongodb-${DRIVER_VERSION}
-  - if [ "x$LEGACY_DRIVER_VERSION" != "x" ]; then yes '' | pecl -q install -f mongo-${LEGACY_DRIVER_VERSION}; fi
   - composer install
+  - if [ "x$LEGACY_DRIVER_VERSION" != "x" ]; then yes '' | pecl -q install -f mongo-${LEGACY_DRIVER_VERSION}; fi
 
 script:
     - ./vendor/bin/phpunit --coverage-clover=coverage.clover
