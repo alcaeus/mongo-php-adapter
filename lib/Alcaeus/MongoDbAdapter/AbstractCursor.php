@@ -62,6 +62,11 @@ abstract class AbstractCursor
     protected $ns;
 
     /**
+     * @var bool
+     */
+    protected $startedIterating = false;
+
+    /**
      * @var array
      */
     protected $optionNames = [
@@ -108,6 +113,7 @@ abstract class AbstractCursor
      */
     public function current()
     {
+        $this->startedIterating = true;
         $document = $this->ensureIterator()->current();
         if ($document !== null) {
             $document = TypeConverter::toLegacy($document);
@@ -127,15 +133,22 @@ abstract class AbstractCursor
     }
 
     /**
-     * Advances the cursor to the next result
+     * Advances the cursor to the next result, and returns that result
      * @link http://www.php.net/manual/en/mongocursor.next.php
      * @throws \MongoConnectionException
      * @throws \MongoCursorTimeoutException
-     * @return void
+     * @return array Returns the next object
      */
     public function next()
     {
-        $this->ensureIterator()->next();
+        if (!$this->startedIterating) {
+            $this->ensureIterator();
+            $this->startedIterating = true;
+        } else {
+            $this->ensureIterator()->next();
+        }
+
+        return $this->current();
     }
 
     /**
@@ -148,6 +161,7 @@ abstract class AbstractCursor
     {
         // We can recreate the cursor to allow it to be rewound
         $this->reset();
+        $this->startedIterating = true;
         $this->ensureIterator()->rewind();
     }
 
@@ -338,6 +352,7 @@ abstract class AbstractCursor
      */
     protected function reset()
     {
+        $this->startedIterating = false;
         $this->cursor = null;
         $this->iterator = null;
     }
