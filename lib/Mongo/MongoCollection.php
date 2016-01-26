@@ -276,15 +276,6 @@ class MongoCollection
                 TypeConverter::fromLegacy($a),
                 $this->convertWriteConcernOptions($options)
             );
-        } catch (\MongoDB\Driver\Exception\BulkWriteException $e) {
-            $writeResult = $e->getWriteResult();
-            $writeError = $writeResult->getWriteErrors()[0];
-            return [
-                'ok' => 0.0,
-                'n' => 0,
-                'err' => $writeError->getCode(),
-                'errmsg' => $writeError->getMessage(),
-            ];
         } catch (\MongoDB\Driver\Exception\Exception $e) {
             throw ExceptionConverter::toLegacy($e);
         }
@@ -380,17 +371,6 @@ class MongoCollection
                 TypeConverter::fromLegacy($newobj),
                 $this->convertWriteConcernOptions($options)
             );
-        } catch (\MongoDB\Driver\Exception\BulkWriteException $e) {
-            $writeResult = $e->getWriteResult();
-            $writeError = $writeResult->getWriteErrors()[0];
-            return [
-                'ok' => 0.0,
-                'nModified' => $writeResult->getModifiedCount(),
-                'n' => $writeResult->getMatchedCount(),
-                'err' => $writeError->getCode(),
-                'errmsg' => $writeError->getMessage(),
-                'updatedExisting' => $writeResult->getUpsertedCount() == 0,
-            ];
         } catch (\MongoDB\Driver\Exception\Exception $e) {
             throw ExceptionConverter::toLegacy($e);
         }

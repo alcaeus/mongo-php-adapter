@@ -221,7 +221,7 @@ class MongoCollectionTest extends TestCase
         $this->assertSame(1, $this->getCheckDatabase()->selectCollection('test')->count(['foo' => 'foo']));
     }
 
-    public function testUpdateFail()
+    public function testUpdateDuplicate()
     {
         $collection = $this->getCollection();
         $collection->createIndex(['foo' => 1], ['unique' => 1]);
@@ -641,19 +641,10 @@ class MongoCollectionTest extends TestCase
         $document = ['foo' => 'bar'];
         $collection->save($document);
 
-        $this->setExpectedException('MongoCursorException');
+        $this->setExpectedException('MongoDuplicateKeyException');
 
         unset($document['_id']);
-        $this->assertArraySubset(
-            [
-                'ok' => 0.0,
-                'nModified' => 0,
-                'n' => 0,
-                'err' => 11000,
-                'updatedExisting' => true,
-            ],
-            $collection->save($document)
-        );
+        $collection->save($document);
     }
 
     public function testSaveEmptyKeys()

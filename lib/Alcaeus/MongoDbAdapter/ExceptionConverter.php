@@ -30,6 +30,9 @@ class ExceptionConverter
      */
     public static function toLegacy(Exception\Exception $e, $fallbackClass = 'MongoException')
     {
+        $message = $e->getMessage();
+        $code = $e->getCode();
+
         switch (get_class($e)) {
             case Exception\AuthenticationException::class:
             case Exception\ConnectionException::class:
@@ -40,7 +43,25 @@ class ExceptionConverter
 
             case Exception\BulkWriteException::class:
             case Exception\WriteException::class:
-                $class = 'MongoCursorException';
+                $writeResult = $e->getWriteResult();
+
+                if ($writeResult) {
+                    $writeError = $writeResult->getWriteErrors()[0];
+
+                    $message = $writeError->getMessage();
+                    $code = $writeError->getCode();
+                }
+
+                switch ($code) {
+                    // see https://github.com/mongodb/mongo-php-driver-legacy/blob/ad3ed45739e9702ae48e53ddfadc482d9c4c7e1c/cursor_shared.c#L540
+                    case 11000:
+                    case 11001:
+                    case 12582:
+                        $class = 'MongoDuplicateKeyException';
+                        break;
+                    default:
+                        $class = 'MongoCursorException';
+                }
                 break;
 
             case Exception\ExecutionTimeoutException::class:
@@ -51,10 +72,10 @@ class ExceptionConverter
                 $class = $fallbackClass;
         }
 
-        if (strpos($e->getMessage(), 'No suitable servers found') !== false) {
-            return new \MongoConnectionException($e->getMessage(), $e->getCode(), $e);
+        if (strpos($message, 'No suitable servers found') !== false) {
+            return new \MongoConnectionException($message, $code, $e);
         }
 
-        return new $class($e->getMessage(), $e->getCode(), $e);
+        return new $class($message, $code, $e);
     }
 }
