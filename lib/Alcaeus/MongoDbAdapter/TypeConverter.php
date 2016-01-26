@@ -15,6 +15,9 @@
 
 namespace Alcaeus\MongoDbAdapter;
 
+use MongoDB\BSON;
+use MongoDB\Model;
+
 /**
  * @internal
  */
@@ -56,7 +59,7 @@ class TypeConverter
      * Converts a BSON type to the legacy types
      *
      * This method handles type conversion from ext-mongodb to ext-mongo:
-     *  - For all instances of \MongoDB\BSON\Type it returns an object of the
+     *  - For all instances of BSON\Type it returns an object of the
      *    corresponding legacy type (MongoId, MongoDate, etc.)
      *  - For arrays and objects it iterates over properties and converts each
      *    item individually
@@ -68,7 +71,7 @@ class TypeConverter
     public static function toLegacy($value)
     {
         switch (true) {
-            case $value instanceof \MongoDB\BSON\Type:
+            case $value instanceof BSON\Type:
                 return self::convertBSONObjectToLegacy($value);
             case is_array($value):
             case is_object($value):
@@ -103,28 +106,34 @@ class TypeConverter
     /**
      * Converter method to convert a BSON object to its legacy type
      *
-     * @param \MongoDB\BSON\Type $value
+     * @param BSON\Type $value
      * @return mixed
      */
-    private static function convertBSONObjectToLegacy(\MongoDB\BSON\Type $value)
+    private static function convertBSONObjectToLegacy(BSON\Type $value)
     {
         switch (true) {
-            case $value instanceof \MongoDB\BSON\ObjectID:
+            case $value instanceof BSON\ObjectID:
                 return new \MongoId($value);
-            case $value instanceof \MongoDB\BSON\Binary:
+            case $value instanceof BSON\Binary:
                 return new \MongoBinData($value);
-            case $value instanceof \MongoDB\BSON\Javascript:
+            case $value instanceof BSON\Javascript:
                 return new \MongoCode($value);
-            case $value instanceof \MongoDB\BSON\MaxKey:
+            case $value instanceof BSON\MaxKey:
                 return new \MongoMaxKey();
-            case $value instanceof \MongoDB\BSON\MinKey:
+            case $value instanceof BSON\MinKey:
                 return new \MongoMinKey();
-            case $value instanceof \MongoDB\BSON\Regex:
+            case $value instanceof BSON\Regex:
                 return new \MongoRegex($value);
-            case $value instanceof \MongoDB\BSON\Timestamp:
+            case $value instanceof BSON\Timestamp:
                 return new \MongoTimestamp($value);
-            case $value instanceof \MongoDB\BSON\UTCDatetime:
+            case $value instanceof BSON\UTCDatetime:
                 return new \MongoDate($value);
+            case $value instanceof Model\BSONDocument:
+            case $value instanceof Model\BSONArray:
+                return array_map(
+                    ['self', 'toLegacy'],
+                    $value->getArrayCopy()
+                );
             default:
                 return $value;
         }
@@ -134,21 +143,14 @@ class TypeConverter
      * Converts all arrays with non-numeric keys to stdClass
      *
      * @param array $array
-     * @return array|\stdClass
+     * @return Model\BSONArray|Model\BSONDocument
      */
     private static function ensureCorrectType(array $array)
     {
-        // Empty arrays are left untouched since they may be an empty list or empty document
         if (static::isNumericArray($array)) {
             return $array;
         }
 
-        // Can convert array to stdClass
-        $object = new \stdClass();
-        foreach ($array as $key => $value) {
-            $object->$key = $value;
-        }
-
-        return $object;
+        return new Model\BSONDocument($array);
     }
 }

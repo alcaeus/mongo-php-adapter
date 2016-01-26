@@ -34,7 +34,7 @@ The preferred method of installing this library is with
 [Composer](https://getcomposer.org/) by running the following from your project
 root:
 
-    $ composer require "alcaeus/mongo-php-adapter=dev-master" "mongodb/mongodb=@beta"
+    $ composer require "alcaeus/mongo-php-adapter=dev-master"
 
 If your project includes a library that requires `ext-mongo` you need to also
 specify a `provide` option in your composer.json:

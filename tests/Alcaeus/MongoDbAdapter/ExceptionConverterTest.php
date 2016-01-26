@@ -80,19 +80,7 @@ class ExceptionConverterTest extends \PHPUnit_Framework_TestCase
                 'MongoException',
             ],
             [
-                new \MongoDB\Exception\InvalidArgumentTypeException('message', 2, 'foo'),
-                'MongoException',
-            ],
-            [
-                new \MongoDB\Exception\UnexpectedTypeException('message', 2),
-                'MongoException',
-            ],
-            [
                 new \MongoDB\Exception\UnexpectedValueException('message', 2),
-                'MongoException',
-            ],
-            [
-                new \MongoDB\Exception\UnexpectedValueTypeException('message', 2, 'foo'),
                 'MongoException',
             ],
         ];
