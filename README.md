@@ -46,6 +46,14 @@ Due to a limitation in composer you need to specify this in the root package.
 
 # Known issues
 
+## Return values and exceptions
+
+Some methods may not throw exceptions with the same exception messages as their
+counterparts in `ext-mongo`. Do not rely on exception messages being the same.
+
+Methods that return a result array containing a `connectionId` field will always
+return `0` as connection ID.
+
 ## Mongo
 
  - The Mongo class is deprecated and was not implemented in this library. If you
@@ -100,6 +108,9 @@ Due to a limitation in composer you need to specify this in the root package.
  method is not yet implemented.
  - The [hasNext](https://php.net/manual/en/mongocursor.hasnext.php)
  method is not yet implemented.
+ - The [info](https://php.net/manual/en/mongocursor.info.php) method does not
+ reliably fill all fields in the cursor information. This includes the `at`, `numReturned`,
+ and `server` keys once the cursor has started iterating.
  - The [setFlag](https://php.net/manual/en/mongocursor.setflag.php)
  method is not yet implemented.
 
