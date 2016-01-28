@@ -7,9 +7,12 @@ php:
   - 7.0
 
 env:
-  matrix:
-    - DRIVER_VERSION=1.1.1 LEGACY_DRIVER_VERSION=""
-    - DRIVER_VERSION=1.1.1 LEGACY_DRIVER_VERSION=1.6.12
+  - DRIVER_VERSION=1.1.1
+
+matrix:
+  include:
+    - php: 5.6
+      env: DRIVER_VERSION=1.1.1 LEGACY_DRIVER_VERSION=1.6.12
 
 addons:
   apt:
