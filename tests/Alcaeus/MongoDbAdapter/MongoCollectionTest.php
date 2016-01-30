@@ -176,7 +176,7 @@ class MongoCollectionTest extends TestCase
 
     public function testBatchInsertException()
     {
-        $this->setExpectedException('MongoResultException', 'localhost:27017: cannot use \'w\' > 1 when a host is not replicated');
+        $this->setExpectedException('MongoResultException', 'cannot use \'w\' > 1 when a host is not replicated');
 
         $documents = [['foo' => 'bar']];
         $this->getCollection()->batchInsert($documents, ['w' => 2]);

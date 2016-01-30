@@ -144,19 +144,23 @@ class MongoCollection
             $options = $op;
         }
 
-        $command = [
-            'aggregate' => $this->name,
-            'pipeline' => $pipeline
-        ];
+        if (isset($options['cursor'])) {
+            $options['useCursor'] = true;
 
-        $command += $options;
+            if (isset($options['cursor']['batchSize'])) {
+                $options['batchSize'] = $options['cursor']['batchSize'];
+            }
 
-        try {
-            return $this->db->command($command);
-        } catch (MongoCursorTimeoutException $e) {
-            throw new MongoExecutionTimeoutException($e->getMessage(), $e->getCode(), $e);
+            unset($options['cursor']);
+        } else {
+            $options['useCursor'] = false;
         }
 
+        try {
+            return $this->collection->aggregate(TypeConverter::fromLegacy($pipeline), $options);
+        } catch (\MongoDB\Driver\Exception\Exception $e) {
+            throw ExceptionConverter::toLegacy($e);
+        }
     }
 
     /**
@@ -340,6 +344,7 @@ class MongoCollection
         }
 
         return [
+            'ok' => 1.0,
             'connectionId' => 0,
             'n' => 0,
             'syncMillis' => 0,
@@ -559,7 +564,6 @@ class MongoCollection
         $indexOptions = array_intersect_key($options, $neededOptions);
         $indexes = $this->collection->listIndexes();
         foreach ($indexes as $index) {
-
             if (! empty($options['name']) && $index->getName() === $options['name']) {
                 throw new \MongoResultException(sprintf('index with name: %s already exists', $index->getName()));
             }
@@ -707,22 +711,27 @@ class MongoCollection
                 TypeConverter::fromLegacy($document),
                 $this->convertWriteConcernOptions($options)
             );
+
+            if (! $result->isAcknowledged()) {
+                return true;
+            }
+
+            $resultArray = [
+                'ok' => 1.0,
+                'nModified' => $result->getModifiedCount(),
+                'n' => $result->getUpsertedCount() + $result->getModifiedCount(),
+                'err' => null,
+                'errmsg' => null,
+                'updatedExisting' => $result->getUpsertedCount() == 0,
+            ];
+            if ($result->getUpsertedId() !== null) {
+                $resultArray['upserted'] = TypeConverter::toLegacy($result->getUpsertedId());
+            }
+
+            return $resultArray;
         } catch (\MongoDB\Driver\Exception\Exception $e) {
-            ExceptionConverter::toLegacy($e);
+            throw ExceptionConverter::toLegacy($e);
         }
-
-        if (!$result->isAcknowledged()) {
-            return true;
-        }
-
-        return [
-            'ok' => 1.0,
-            'nModified' => $result->getModifiedCount(),
-            'n' => $result->getMatchedCount(),
-            'err' => null,
-            'errmsg' => null,
-            'updatedExisting' => $result->getUpsertedCount() == 0,
-        ];
     }
 
     /**
