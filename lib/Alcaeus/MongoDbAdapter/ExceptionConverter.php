@@ -76,6 +76,10 @@ class ExceptionConverter
             return new \MongoConnectionException($message, $code, $e);
         }
 
+        if ($message === "cannot use 'w' > 1 when a host is not replicated") {
+            return new \MongoWriteConcernException($message, $code, $e);
+        }
+
         return new $class($message, $code, $e);
     }
 }

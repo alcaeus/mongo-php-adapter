@@ -105,7 +105,7 @@ class MongoCollectionTest extends TestCase
     {
         $this->setExpectedException(
             'MongoWriteConcernException',
-            "localhost:27017: cannot use 'w' > 1 when a host is not replicated"
+            "cannot use 'w' > 1 when a host is not replicated"
         );
 
         $document = ['foo' => 'bar'];
@@ -192,7 +192,7 @@ class MongoCollectionTest extends TestCase
 
     public function testUpdateWriteConcern()
     {
-        $this->setExpectedException('MongoWriteConcernException', "localhost:27017: cannot use 'w' > 1 when a host is not replicated");
+        $this->setExpectedException('MongoWriteConcernException', "cannot use 'w' > 1 when a host is not replicated");
 
         $this->getCollection()->update([], ['$set' => ['foo' => 'bar']], ['w' => 2]);
     }
