@@ -325,10 +325,10 @@ class MongoDB
             $id = $document_or_id;
         } elseif (is_object($document_or_id)) {
             if (! isset($document_or_id->_id)) {
-                return null;
+                $id = $document_or_id;
+            } else {
+                $id = $document_or_id->_id;
             }
-
-            $id = $document_or_id->_id;
         } elseif (is_array($document_or_id)) {
             if (! isset($document_or_id['_id'])) {
                 return null;
@@ -339,7 +339,7 @@ class MongoDB
             $id = $document_or_id;
         }
 
-        return MongoDBRef::create($collection, $id, $this->name);
+        return MongoDBRef::create($collection, $id);
     }
 
 
