@@ -68,9 +68,8 @@ trait WriteConcern
      */
     protected function setWriteConcernFromArray($writeConcernArray)
     {
-        $wstring = $writeConcernArray['w'];
-        $wtimeout = isset($writeConcernArray['wtimeout']) ? $writeConcernArray['wtimeout'] : 0;
+        $this->writeConcern = $this->createWriteConcernFromArray($writeConcernArray);
 
-        return $this->setWriteConcernFromParameters($wstring, $wtimeout);
+        return true;
     }
 }

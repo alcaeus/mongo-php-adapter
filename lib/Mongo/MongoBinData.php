@@ -81,7 +81,6 @@ class MongoBinData implements TypeInterface
      * @link http://php.net/manual/en/mongobindata.construct.php
      * @param string $data Binary data
      * @param int $type Data type
-     * @return MongoBinData Returns a new binary data object
      */
     public function __construct($data, $type = 2)
     {

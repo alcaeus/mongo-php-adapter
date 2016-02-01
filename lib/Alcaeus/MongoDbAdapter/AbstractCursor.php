@@ -52,7 +52,7 @@ abstract class AbstractCursor
     protected $db;
 
     /**
-     * @var \IteratorIterator
+     * @var \Iterator
      */
     protected $iterator;
 
@@ -260,7 +260,7 @@ abstract class AbstractCursor
     }
 
     /**
-     * @return \Generator
+     * @return \Iterator
      */
     protected function ensureIterator()
     {

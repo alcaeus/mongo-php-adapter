@@ -52,7 +52,6 @@ class MongoCollection
      * @param MongoDB $db Parent database.
      * @param string $name Name for this collection.
      * @throws Exception
-     * @return MongoCollection
      */
     public function __construct(MongoDB $db, $name)
     {

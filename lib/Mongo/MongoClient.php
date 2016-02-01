@@ -165,7 +165,7 @@ class MongoClient
      *
      * @return array
      */
-    static public function getConnections()
+    public static function getConnections()
     {
         return [];
     }

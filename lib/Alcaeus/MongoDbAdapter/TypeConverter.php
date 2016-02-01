@@ -143,7 +143,7 @@ class TypeConverter
      * Converts all arrays with non-numeric keys to stdClass
      *
      * @param array $array
-     * @return Model\BSONArray|Model\BSONDocument
+     * @return array|Model\BSONArray|Model\BSONDocument
      */
     private static function ensureCorrectType(array $array)
     {
