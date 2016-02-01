@@ -47,11 +47,9 @@ class MongoCommandCursorTest extends TestCase
             'host' => 'localhost',
             'port' => 27017,
             'connection_type_desc' => 'STANDALONE',
-            'firstBatchAt' => 2,
-            'firstBatchNumReturned' => 2,
         ];
 
-        $this->assertEquals($expected, $cursor->info());
+        $this->assertArraySubset($expected, $cursor->info());
 
         $i = 0;
         foreach ($array as $key => $value) {

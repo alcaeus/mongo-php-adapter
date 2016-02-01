@@ -29,7 +29,7 @@ abstract class AbstractCursor
     /**
      * @var int
      */
-    protected $batchSize;
+    protected $batchSize = 0;
 
     /**
      * @var Collection
@@ -65,6 +65,11 @@ abstract class AbstractCursor
      * @var bool
      */
     protected $startedIterating = false;
+
+    /**
+     * @var int
+     */
+    protected $position = 0;
 
     /**
      * @var array
@@ -113,7 +118,10 @@ abstract class AbstractCursor
      */
     public function current()
     {
-        $this->startedIterating = true;
+        if (! $this->startedIterating) {
+            return null;
+        }
+
         $document = $this->ensureIterator()->current();
         if ($document !== null) {
             $document = TypeConverter::toLegacy($document);
@@ -129,6 +137,10 @@ abstract class AbstractCursor
      */
     public function key()
     {
+        if (! $this->startedIterating) {
+            return null;
+        }
+
         return $this->ensureIterator()->key();
     }
 
@@ -141,11 +153,12 @@ abstract class AbstractCursor
      */
     public function next()
     {
-        if (!$this->startedIterating) {
+        if (! $this->startedIterating) {
             $this->ensureIterator();
             $this->startedIterating = true;
         } else {
             $this->ensureIterator()->next();
+            $this->position++;
         }
 
         return $this->current();
@@ -162,6 +175,7 @@ abstract class AbstractCursor
         // We can recreate the cursor to allow it to be rewound
         $this->reset();
         $this->startedIterating = true;
+        $this->position = 0;
         $this->ensureIterator()->rewind();
     }
 
@@ -172,6 +186,10 @@ abstract class AbstractCursor
      */
     public function valid()
     {
+        if (! $this->startedIterating) {
+            return false;
+        }
+
         return $this->ensureIterator()->valid();
     }
 
@@ -323,10 +341,11 @@ abstract class AbstractCursor
                     $typeString = 'STANDALONE';
             }
 
+            $cursorId = (string) $this->cursor->getId();
             $iterationInfo += [
-                'id' => (string) $this->cursor->getId(),
-                'at' => null, // @todo Complete info for cursor that is iterating
-                'numReturned' => null, // @todo Complete info for cursor that is iterating
+                'id' => (int) $cursorId,
+                'at' => $this->position,
+                'numReturned' => $this->position, // This can't be obtained from the new cursor
                 'server' => sprintf('%s:%d;-;.;%d', $this->cursor->getServer()->getHost(), $this->cursor->getServer()->getPort(), getmypid()),
                 'host' => $this->cursor->getServer()->getHost(),
                 'port' => $this->cursor->getServer()->getPort(),

@@ -181,7 +181,7 @@ class MongoCollection
 
         // Convert cursor option
         if (! isset($options['cursor'])) {
-            $options['cursor'] = true;
+            $options['cursor'] = new \stdClass();
         }
 
         $command += $options;

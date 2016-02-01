@@ -20,10 +20,11 @@ class MongoCursorTest extends TestCase
 
         $iterated = 0;
         foreach ($cursor as $key => $item) {
-            $iterated++;
+            $this->assertSame($iterated, $cursor->info()['at']);
             $this->assertInstanceOf('MongoId', $item['_id']);
             $this->assertEquals($key, (string) $item['_id']);
             $this->assertSame('bar', $item['foo']);
+            $iterated++;
         }
 
         $this->assertSame(2, $iterated);
@@ -91,6 +92,8 @@ class MongoCursorTest extends TestCase
         $cursor = $collection->find(['foo' => 'bar']);
 
         $this->assertFalse($cursor->valid(), 'Cursor should be invalid to start with');
+        $this->assertNull($cursor->current(), 'Cursor should be invalid to start with');
+        $this->assertNull($cursor->key(), 'Cursor should be invalid to start with');
 
         $cursor->next();
         $this->assertTrue($cursor->valid(), 'Cursor should be valid');

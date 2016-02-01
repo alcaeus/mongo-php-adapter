@@ -109,14 +109,22 @@ return `0` as connection ID.
  - The [hasNext](https://php.net/manual/en/mongocursor.hasnext.php)
  method is not yet implemented.
  - The [info](https://php.net/manual/en/mongocursor.info.php) method does not
- reliably fill all fields in the cursor information. This includes the `at`, `numReturned`,
- and `server` keys once the cursor has started iterating.
+ reliably fill all fields in the cursor information. This includes the `numReturned`
+ and `server` keys once the cursor has started iterating. The `numReturned` field
+ will always show the same value as the `at` field. The `server` field is lacking
+ authentication information.
  - The [setFlag](https://php.net/manual/en/mongocursor.setflag.php)
  method is not yet implemented.
 
 ## MongoCommandCursor
  - The [createFromDocument](https://php.net/manual/en/mongocommandcursor.createfromdocument.php)
  method is not yet implemented.
+ - The [info](https://php.net/manual/en/mongocommandcursor.info.php) method does not
+ reliably fill all fields in the cursor information. This includes the `at`, `numReturned`,
+ `firstBatchAt` and `firstBatchNumReturned` fields. The `at` and `numReturned`
+ fields always return 0 for compatibility to MongoCursor. The `firstBatchAt` and
+ `firstBatchNumReturned` fields will contain the same value, which is the internal
+ position of the iterator.
 
 ## Types
 

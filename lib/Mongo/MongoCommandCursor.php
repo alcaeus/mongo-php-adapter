@@ -81,4 +81,23 @@ class MongoCommandCursor extends AbstractCursor implements MongoCursorInterface
             'fields' => null,
         ];
     }
+
+    /**
+     * @return array
+     */
+    protected function getIterationInfo()
+    {
+        $iterationInfo = parent::getIterationInfo();
+
+        if ($iterationInfo['started_iterating']) {
+            $iterationInfo += [
+                'firstBatchAt' => $iterationInfo['at'],
+                'firstBatchNumReturned' => $iterationInfo['numReturned'],
+            ];
+            $iterationInfo['at'] = 0;
+            $iterationInfo['numReturned'] = 0;
+        }
+
+        return $iterationInfo;
+    }
 }
