@@ -83,7 +83,10 @@ class MongoClient
         }
 
         $this->server = $server;
-        $this->client = new Client($server, $options, $driverOptions);
+        if (false === strpos($this->server, 'mongodb://')) {
+            $this->server = 'mongodb://'.$this->server;
+        }
+        $this->client = new Client($this->server, $options, $driverOptions);
         $info = $this->client->__debugInfo();
         $this->manager = $info['manager'];
 
