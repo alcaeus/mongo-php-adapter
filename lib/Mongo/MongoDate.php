@@ -36,7 +36,6 @@ class MongoDate implements TypeInterface
      * @link http://php.net/manual/en/mongodate.construct.php
      * @param int $sec Number of seconds since January 1st, 1970
      * @param int $usec Microseconds
-     * @return MongoDate Returns this new date
      */
     public function __construct($sec = 0, $usec = 0)
     {

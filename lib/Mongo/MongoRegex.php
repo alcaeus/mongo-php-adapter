@@ -33,7 +33,6 @@ class MongoRegex implements TypeInterface
      *
      * @link http://php.net/manual/en/mongoregex.construct.php
      * @param string|Regex $regex Regular expression string of the form /expr/flags
-     * @return MongoRegex Returns a new regular expression
      */
     public function __construct($regex)
     {

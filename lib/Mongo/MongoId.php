@@ -29,7 +29,6 @@ class MongoId implements Serializable, TypeInterface
      *
      * @link http://www.php.net/manual/en/mongoid.construct.php
      * @param string $id [optional] A string to use as the id. Must be 24 hexidecimal characters. If an invalid string is passed to this constructor, the constructor will ignore it and create a new id value.
-     * @return MongoId
      *
      * @throws MongoException
      */

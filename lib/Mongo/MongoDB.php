@@ -55,7 +55,6 @@ class MongoDB
      * @param MongoClient $conn Database connection.
      * @param string $name Database name.
      * @throws Exception
-     * @return MongoDB Returns the database.
      */
     public function __construct(MongoClient $conn, $name)
     {

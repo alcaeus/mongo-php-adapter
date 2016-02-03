@@ -36,7 +36,6 @@ class MongoGridFSCursor extends MongoCursor
      * @param string $ns Full name of database and collection
      * @param array $query Database query
      * @param array $fields Fields to return
-     * @return MongoGridFSCursor Returns the new cursor
      */
     public function __construct(MongoGridFS $gridfs, MongoClient $connection, $ns, array $query = array(), array $fields = array())
     {

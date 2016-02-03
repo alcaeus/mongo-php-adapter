@@ -32,7 +32,6 @@ class MongoGridFSFile
      *
      * @param MongoGridFS $gridfs The parent MongoGridFS instance
      * @param array $file A file from the database
-     * @return MongoGridFSFile Returns a new MongoGridFSFile
      */
     public function __construct(MongoGridFS $gridfs, array $file)
     {

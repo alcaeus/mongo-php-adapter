@@ -54,7 +54,6 @@ class MongoGridFS extends MongoCollection
      * @param MongoDB $db Database
      * @param string $prefix [optional] <p>Optional collection name prefix.</p>
      * @param mixed $chunks  [optional]
-     * @return MongoGridFS
      * @throws \Exception
      */
     public function __construct(MongoDB $db, $prefix = "fs", $chunks = null)
