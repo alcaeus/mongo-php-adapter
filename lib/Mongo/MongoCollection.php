@@ -492,7 +492,11 @@ class MongoCollection
 
                 $options['projection'] = is_array($fields) ? TypeConverter::fromLegacy($fields) : [];
 
-                $document = $this->collection->findOneAndUpdate($query, $update, $options);
+                if (! \MongoDB\is_first_key_operator($update)) {
+                    $document = $this->collection->findOneAndReplace($query, $update, $options);
+                } else {
+                    $document = $this->collection->findOneAndUpdate($query, $update, $options);
+                }
             }
         } catch (\MongoDB\Driver\Exception\ConnectionException $e) {
             throw new MongoResultException($e->getMessage(), $e->getCode(), $e);
