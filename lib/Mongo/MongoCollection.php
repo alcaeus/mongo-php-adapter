@@ -501,6 +501,10 @@ class MongoCollection
             } else {
                 $update = is_array($update) ? TypeConverter::fromLegacy($update) : [];
 
+                if (!\MongoDB\is_first_key_operator($update)) {
+                    $update = ['$set' => $update];
+                }
+
                 if (isset($options['new'])) {
                     $options['returnDocument'] = \MongoDB\Operation\FindOneAndUpdate::RETURN_DOCUMENT_AFTER;
                     unset($options['new']);
