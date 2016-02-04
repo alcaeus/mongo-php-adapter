@@ -105,4 +105,10 @@ class MongoClientTest extends TestCase
         $this->assertArrayHasKey('databases', $databases);
         $this->assertContains('mongo-php-adapter', $databases['databases']);
     }
+
+    public function testNoPrefixUri()
+    {
+        $client = $this->getClient(null, 'localhost');
+        $this->assertNotNull($client);
+    }
 }
