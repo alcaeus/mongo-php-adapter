@@ -127,12 +127,26 @@ class MongoWriteBatch
 
         switch ($this->batchType) {
             case self::COMMAND_UPDATE:
-                return [
+                $upsertedIds = [];
+                foreach ($result->getUpsertedIds() as $index => $id) {
+                    $upsertedIds[] = [
+                        'index' => $index,
+                        '_id' => TypeConverter::toLegacy($id)
+                    ];
+                }
+
+                $result = [
                     'nMatched' => $result->getMatchedCount(),
                     'nModified' => $result->getModifiedCount(),
                     'nUpserted' => $result->getUpsertedCount(),
                     'ok' => $ok,
                 ];
+
+                if (count($upsertedIds)) {
+                    $result['upserted'] = $upsertedIds;
+                }
+
+                return $result;
 
             case self::COMMAND_DELETE:
                 return [
@@ -153,19 +167,19 @@ class MongoWriteBatch
         switch ($this->batchType) {
             case self::COMMAND_UPDATE:
                 if (! isset($item['q'])) {
-                    throw new Exception("Expected $item to contain 'q' key");
+                    throw new Exception("Expected \$item to contain 'q' key");
                 }
                 if (! isset($item['u'])) {
-                    throw new Exception("Expected $item to contain 'u' key");
+                    throw new Exception("Expected \$item to contain 'u' key");
                 }
                 break;
 
             case self::COMMAND_DELETE:
                 if (! isset($item['q'])) {
-                    throw new Exception("Expected $item to contain 'q' key");
+                    throw new Exception("Expected \$item to contain 'q' key");
                 }
                 if (! isset($item['limit'])) {
-                    throw new Exception("Expected $item to contain 'limit' key");
+                    throw new Exception("Expected \$item to contain 'limit' key");
                 }
                 break;
         }

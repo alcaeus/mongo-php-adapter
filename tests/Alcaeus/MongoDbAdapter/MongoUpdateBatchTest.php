@@ -65,18 +65,21 @@ class MongoUpdateBatchTest extends TestCase
 
     public function testUpsert()
     {
+        $document = ['foo' => 'foo'];
+        $this->getCollection()->insert($document);
         $batch = new \MongoUpdateBatch($this->getCollection());
 
-        $this->assertTrue($batch->add(['q' => [], 'u' => ['$set' => ['foo' => 'bar']], 'upsert' => true]));
+        $this->assertTrue($batch->add(['q' => ['foo' => 'foo'], 'u' => ['$set' => ['foo' => 'bar']], 'upsert' => true]));
+        $this->assertTrue($batch->add(['q' => ['bar' => 'foo'], 'u' => ['$set' => ['foo' => 'bar']], 'upsert' => true]));
 
         $expected = [
             'upserted' => [
                 [
-                    'index' => 0,
+                    'index' => 1,
                 ]
             ],
-            'nMatched' => 0,
-            'nModified' => 0,
+            'nMatched' => 1,
+            'nModified' => 1,
             'nUpserted' => 1,
             'ok' => true,
         ];
@@ -87,7 +90,8 @@ class MongoUpdateBatchTest extends TestCase
         $this->assertInstanceOf('MongoId', $result['upserted'][0]['_id']);
 
         $newCollection = $this->getCheckDatabase()->selectCollection('test');
-        $this->assertSame(1, $newCollection->count());
+        $this->assertSame(0, $newCollection->count(['foo' => 'foo']));
+        $this->assertSame(2, $newCollection->count());
         $record = $newCollection->findOne();
         $this->assertNotNull($record);
         $this->assertObjectHasAttribute('foo', $record);
