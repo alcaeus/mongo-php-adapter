@@ -203,14 +203,14 @@ class MongoGridFS extends MongoCollection
         try {
             $file = $this->insertFile($record, $options);
         } catch (MongoException $e) {
-            throw new MongoGridFSException('Cannot insert file record', 0, $e);
+            throw new MongoGridFSException('Could not store file: '. $e->getMessage(), 0, $e);
         }
 
         try {
             $this->insertChunksFromBytes($bytes, $file);
         } catch (MongoException $e) {
             $this->delete($file['_id']);
-            throw new MongoGridFSException('Error while inserting chunks', 0, $e);
+            throw new MongoGridFSException('Could not store file: ' . $e->getMessage(), 0, $e);
         }
 
         return $file['_id'];
@@ -253,14 +253,14 @@ class MongoGridFS extends MongoCollection
         try {
             $file = $this->insertFile($record, $options);
         } catch (MongoException $e) {
-            throw new MongoGridFSException('Cannot insert file record', 0, $e);
+            throw new MongoGridFSException('Could not store file: ' . $e->getMessage(), 0, $e);
         }
 
         try {
             $length = $this->insertChunksFromFile($handle, $file, $md5);
         } catch (MongoException $e) {
             $this->delete($file['_id']);
-            throw new MongoGridFSException('Error while inserting chunks', 0, $e);
+            throw new MongoGridFSException('Could not store file: ' . $e->getMessage(), 0, $e);
         }
 
 
@@ -273,7 +273,7 @@ class MongoGridFS extends MongoCollection
             try {
                 $update['md5'] = $md5;
             } catch (MongoException $e) {
-                throw new MongoGridFSException('Error computing MD5 checksum', 0, $e);
+                throw new MongoGridFSException('Could not store file: ' . $e->getMessage(), 0, $e);
             }
         }
 
@@ -281,11 +281,11 @@ class MongoGridFS extends MongoCollection
             try {
                 $result = $this->update(['_id' => $file['_id']], ['$set' => $update]);
                 if (! $this->isOKResult($result)) {
-                    throw new MongoGridFSException('Error updating file record');
+                    throw new MongoGridFSException('Could not store file');
                 }
             } catch (MongoException $e) {
                 $this->delete($file['_id']);
-                throw new MongoGridFSException('Error updating file record', 0, $e);
+                throw new MongoGridFSException('Could not store file: ' . $e->getMessage(), 0, $e);
             }
 
         }

@@ -91,7 +91,7 @@ class MongoCollectionTest extends TestCase
         $collection->insert($document);
 
         unset($document['_id']);
-        $this->setExpectedException('MongoDuplicateKeyException');
+        $this->setExpectedExceptionRegExp('MongoDuplicateKeyException', '/E11000 duplicate key error .* mongo-php-adapter\.test/');
         $collection->insert($document);
     }
 
