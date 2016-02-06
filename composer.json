@@ -20,8 +20,10 @@
         "ext-mongo": "1.6.12"
     },
     "autoload": {
+        "psr-0": {
+            "Mongo": "lib/Mongo"
+        },
         "psr-4": {
-            "": "lib/Mongo",
             "Alcaeus\\MongoDbAdapter\\": "lib/Alcaeus/MongoDbAdapter"
         },
         "files": [ "lib/Mongo/functions.php" ]
