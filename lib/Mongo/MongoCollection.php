@@ -101,7 +101,7 @@ class MongoCollection
             return $this->getWriteConcern()[$name];
         }
 
-        return $this->db->selectCollection($this->name . '.' . $name);
+        return $this->db->selectCollection($this->name . '.' . str_replace(chr(0), '', $name));
     }
 
     /**
@@ -144,19 +144,23 @@ class MongoCollection
             $options = $op;
         }
 
-        $command = [
-            'aggregate' => $this->name,
-            'pipeline' => $pipeline
-        ];
+        if (isset($options['cursor'])) {
+            $options['useCursor'] = true;
 
-        $command += $options;
+            if (isset($options['cursor']['batchSize'])) {
+                $options['batchSize'] = $options['cursor']['batchSize'];
+            }
 
-        try {
-            return $this->db->command($command);
-        } catch (MongoCursorTimeoutException $e) {
-            throw new MongoExecutionTimeoutException($e->getMessage(), $e->getCode(), $e);
+            unset($options['cursor']);
+        } else {
+            $options['useCursor'] = false;
         }
 
+        try {
+            return $this->collection->aggregate(TypeConverter::fromLegacy($pipeline), $options);
+        } catch (\MongoDB\Driver\Exception\Exception $e) {
+            throw ExceptionConverter::toLegacy($e);
+        }
     }
 
     /**
@@ -177,7 +181,7 @@ class MongoCollection
 
         // Convert cursor option
         if (! isset($options['cursor'])) {
-            $options['cursor'] = true;
+            $options['cursor'] = new \stdClass();
         }
 
         $command += $options;
@@ -263,7 +267,7 @@ class MongoCollection
     public function insert(&$a, array $options = [])
     {
         if (! $this->ensureDocumentHasMongoId($a)) {
-            trigger_error(sprintf('%s expects parameter %d to be an array or object, %s given', __METHOD__, 1, gettype($a)), E_USER_WARNING);
+            trigger_error(sprintf('%s(): expects parameter %d to be an array or object, %s given', __METHOD__, 1, gettype($a)), E_USER_WARNING);
             return;
         }
 
@@ -276,17 +280,8 @@ class MongoCollection
                 TypeConverter::fromLegacy($a),
                 $this->convertWriteConcernOptions($options)
             );
-        } catch (\MongoDB\Driver\Exception\BulkWriteException $e) {
-            $writeResult = $e->getWriteResult();
-            $writeError = $writeResult->getWriteErrors()[0];
-            return [
-                'ok' => 0.0,
-                'n' => 0,
-                'err' => $writeError->getCode(),
-                'errmsg' => $writeError->getMessage(),
-            ];
         } catch (\MongoDB\Driver\Exception\Exception $e) {
-            ExceptionConverter::toLegacy($e);
+            throw ExceptionConverter::toLegacy($e);
         }
 
         if (! $result->isAcknowledged()) {
@@ -341,7 +336,7 @@ class MongoCollection
                 $this->convertWriteConcernOptions($options)
             );
         } catch (\MongoDB\Driver\Exception\Exception $e) {
-            ExceptionConverter::toLegacy($e);
+            throw ExceptionConverter::toLegacy($e, 'MongoResultException');
         }
 
         if (! $result->isAcknowledged()) {
@@ -349,12 +344,12 @@ class MongoCollection
         }
 
         return [
+            'ok' => 1.0,
             'connectionId' => 0,
             'n' => 0,
             'syncMillis' => 0,
             'writtenTo' => null,
             'err' => null,
-            'errmsg' => null,
         ];
     }
 
@@ -381,19 +376,8 @@ class MongoCollection
                 TypeConverter::fromLegacy($newobj),
                 $this->convertWriteConcernOptions($options)
             );
-        } catch (\MongoDB\Driver\Exception\BulkWriteException $e) {
-            $writeResult = $e->getWriteResult();
-            $writeError = $writeResult->getWriteErrors()[0];
-            return [
-                'ok' => 0.0,
-                'nModified' => $writeResult->getModifiedCount(),
-                'n' => $writeResult->getMatchedCount(),
-                'err' => $writeError->getCode(),
-                'errmsg' => $writeError->getMessage(),
-                'updatedExisting' => $writeResult->getUpsertedCount() == 0,
-            ];
         } catch (\MongoDB\Driver\Exception\Exception $e) {
-            ExceptionConverter::toLegacy($e);
+            throw ExceptionConverter::toLegacy($e);
         }
 
         if (! $result->isAcknowledged()) {
@@ -433,7 +417,7 @@ class MongoCollection
                 $this->convertWriteConcernOptions($options)
             );
         } catch (\MongoDB\Driver\Exception\Exception $e) {
-            ExceptionConverter::toLegacy($e);
+            throw ExceptionConverter::toLegacy($e);
         }
 
         if (! $result->isAcknowledged()) {
@@ -508,12 +492,16 @@ class MongoCollection
 
                 $options['projection'] = is_array($fields) ? TypeConverter::fromLegacy($fields) : [];
 
-                $document = $this->collection->findOneAndUpdate($query, $update, $options);
+                if (! \MongoDB\is_first_key_operator($update)) {
+                    $document = $this->collection->findOneAndReplace($query, $update, $options);
+                } else {
+                    $document = $this->collection->findOneAndUpdate($query, $update, $options);
+                }
             }
         } catch (\MongoDB\Driver\Exception\ConnectionException $e) {
             throw new MongoResultException($e->getMessage(), $e->getCode(), $e);
         } catch (\MongoDB\Driver\Exception\Exception $e) {
-            ExceptionConverter::toLegacy($e, 'MongoResultException');
+            throw ExceptionConverter::toLegacy($e, 'MongoResultException');
         }
 
         if ($document) {
@@ -538,7 +526,7 @@ class MongoCollection
         try {
             $document = $this->collection->findOne(TypeConverter::fromLegacy($query), $options);
         } catch (\MongoDB\Driver\Exception\Exception $e) {
-            ExceptionConverter::toLegacy($e);
+            throw ExceptionConverter::toLegacy($e);
         }
 
         if ($document !== null) {
@@ -572,15 +560,21 @@ class MongoCollection
         }
 
         if (! is_array($keys) || ! count($keys)) {
-            throw new MongoException('keys cannot be empty');
+            throw new MongoException('index specification has no elements');
         }
 
         // duplicate
         $neededOptions = ['unique' => 1, 'sparse' => 1, 'expireAfterSeconds' => 1, 'background' => 1, 'dropDups' => 1];
         $indexOptions = array_intersect_key($options, $neededOptions);
-        $indexes = $this->collection->listIndexes();
-        foreach ($indexes as $index) {
+        $indexes = iterator_to_array($this->collection->listIndexes());
+        $indexCount = count($indexes);
 
+        // listIndexes returns 0 for non-existing collections while the legacy driver returns 1
+        if ($indexCount === 0) {
+            $indexCount = 1;
+        }
+
+        foreach ($indexes as $index) {
             if (! empty($options['name']) && $index->getName() === $options['name']) {
                 throw new \MongoResultException(sprintf('index with name: %s already exists', $index->getName()));
             }
@@ -595,8 +589,8 @@ class MongoCollection
 
                 return [
                     'createdCollectionAutomatically' => false,
-                    'numIndexesBefore' => count($indexes),
-                    'numIndexesAfter' => count($indexes),
+                    'numIndexesBefore' => $indexCount,
+                    'numIndexesAfter' => $indexCount,
                     'note' => 'all indexes already exist',
                     'ok' => 1.0
                 ];
@@ -606,13 +600,13 @@ class MongoCollection
         try {
             $this->collection->createIndex($keys, $this->convertWriteConcernOptions($options));
         } catch (\MongoDB\Driver\Exception\Exception $e) {
-            ExceptionConverter::toLegacy($e);
+            throw ExceptionConverter::toLegacy($e);
         }
 
         return [
             'createdCollectionAutomatically' => true,
-            'numIndexesBefore' => count($indexes),
-            'numIndexesAfter' => count($indexes) + 1,
+            'numIndexesBefore' => $indexCount,
+            'numIndexesAfter' => $indexCount + 1,
             'ok' => 1.0
         ];
     }
@@ -623,14 +617,12 @@ class MongoCollection
      * @link http://www.php.net/manual/en/mongocollection.ensureindex.php
      * @param array $keys Field or fields to use as index.
      * @param array $options [optional] This parameter is an associative array of the form array("optionname" => <boolean>, ...).
-     * @return boolean always true
+     * @return array Returns the database response.
      * @deprecated Use MongoCollection::createIndex() instead.
      */
     public function ensureIndex(array $keys, array $options = [])
     {
-        $this->createIndex($keys, $options);
-
-        return true;
+        return $this->createIndex($keys, $options);
     }
 
     /**
@@ -644,13 +636,25 @@ class MongoCollection
     {
         if (is_string($keys)) {
             $indexName = $keys;
+            if (! preg_match('#_-?1$#', $indexName)) {
+                $indexName .= '_1';
+            }
         } elseif (is_array($keys)) {
             $indexName = \MongoDB\generate_index_name($keys);
         } else {
             throw new \InvalidArgumentException();
         }
 
-        return TypeConverter::toLegacy($this->collection->dropIndex($indexName));
+        try {
+            return TypeConverter::toLegacy($this->collection->dropIndex($indexName));
+        } catch (\MongoDB\Driver\Exception\Exception $e) {
+            return [
+                'nIndexesWas' => count($this->getIndexInfo()),
+                'errmsg' => $e->getMessage(),
+                'ok' => 0.0,
+                'code' => $e->getCode(),
+            ];
+        }
     }
 
     /**
@@ -697,7 +701,7 @@ class MongoCollection
         try {
             return $this->collection->count(TypeConverter::fromLegacy($query), $options);
         } catch (\MongoDB\Driver\Exception\Exception $e) {
-            ExceptionConverter::toLegacy($e);
+            throw ExceptionConverter::toLegacy($e);
         }
     }
 
@@ -728,22 +732,27 @@ class MongoCollection
                 TypeConverter::fromLegacy($document),
                 $this->convertWriteConcernOptions($options)
             );
+
+            if (! $result->isAcknowledged()) {
+                return true;
+            }
+
+            $resultArray = [
+                'ok' => 1.0,
+                'nModified' => $result->getModifiedCount(),
+                'n' => $result->getUpsertedCount() + $result->getModifiedCount(),
+                'err' => null,
+                'errmsg' => null,
+                'updatedExisting' => $result->getUpsertedCount() == 0,
+            ];
+            if ($result->getUpsertedId() !== null) {
+                $resultArray['upserted'] = TypeConverter::toLegacy($result->getUpsertedId());
+            }
+
+            return $resultArray;
         } catch (\MongoDB\Driver\Exception\Exception $e) {
-            ExceptionConverter::toLegacy($e);
+            throw ExceptionConverter::toLegacy($e);
         }
-
-        if (!$result->isAcknowledged()) {
-            return true;
-        }
-
-        return [
-            'ok' => 1.0,
-            'nModified' => $result->getModifiedCount(),
-            'n' => $result->getMatchedCount(),
-            'err' => null,
-            'errmsg' => null,
-            'updatedExisting' => $result->getUpsertedCount() == 0,
-        ];
     }
 
     /**
@@ -907,16 +916,13 @@ class MongoCollection
     {
         $checkKeys = function($array) {
             foreach (array_keys($array) as $key) {
-                if (is_int($key) || empty($key) || strpos($key, '*') === 1) {
+                if (empty($key) || strpos($key, '*') === 1) {
                     throw new \MongoException('document contain invalid key');
                 }
             }
         };
 
         if (is_array($document)) {
-            if (empty($document)) {
-                throw new \MongoException('document cannot be empty');
-            }
             if (! isset($document['_id'])) {
                 $document['_id'] = new \MongoId();
             }
@@ -925,9 +931,13 @@ class MongoCollection
 
             return $document['_id'];
         } elseif (is_object($document)) {
-            if (empty((array) $document)) {
-                throw new \MongoException('document cannot be empty');
+            $reflectionObject = new \ReflectionObject($document);
+            foreach ($reflectionObject->getProperties() as $property) {
+                if (! $property->isPublic()) {
+                    throw new \MongoException('zero-length keys are not allowed, did you use $ with double quotes?');
+                }
             }
+
             if (! isset($document->_id)) {
                 $document->_id = new \MongoId();
             }

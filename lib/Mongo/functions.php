@@ -15,24 +15,28 @@
 
 use Alcaeus\MongoDbAdapter\TypeConverter;
 
-/**
- * Deserializes a BSON object into a PHP array
- *
- * @param string $bson The BSON to be deserialized.
- * @return array Returns the deserialized BSON object.
- */
-function bson_decode($bson)
-{
-    return TypeConverter::toLegacy(\MongoDB\BSON\toPHP($bson));
+if (! function_exists('bson_decode')) {
+    /**
+     * Deserializes a BSON object into a PHP array
+     *
+     * @param string $bson The BSON to be deserialized.
+     * @return array Returns the deserialized BSON object.
+     */
+    function bson_decode($bson)
+    {
+        return TypeConverter::toLegacy(\MongoDB\BSON\toPHP($bson));
+    }
 }
 
-/**
- * Serializes a PHP variable into a BSON string
- *
- * @param mixed $anything The variable to be serialized.
- * @return string Returns the serialized string.
- */
-function bson_encode($anything)
-{
-    return \MongoDB\BSON\fromPHP(TypeConverter::fromLegacy($anything));
+if (! function_exists('bson_encode')) {
+    /**
+     * Serializes a PHP variable into a BSON string
+     *
+     * @param mixed $anything The variable to be serialized.
+     * @return string Returns the serialized string.
+     */
+    function bson_encode($anything)
+    {
+        return \MongoDB\BSON\fromPHP(TypeConverter::fromLegacy($anything));
+    }
 }

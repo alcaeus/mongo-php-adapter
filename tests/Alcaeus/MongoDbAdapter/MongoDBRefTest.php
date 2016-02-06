@@ -34,17 +34,18 @@ class MongoDBRefTest extends TestCase
     public static function dataCreateThroughMongoDB()
     {
         $id = new \MongoId();
-        $validRef = ['$ref' => 'test', '$id' => $id, '$db' => 'mongo-php-adapter'];
+        $validRef = ['$ref' => 'test', '$id' => $id];
 
         $object = new \stdClass();
         $object->_id = $id;
 
+        $objectWithoutId = new \stdClass();
         return [
             'simpleId' => [$validRef, $id],
             'arrayWithIdProperty' => [$validRef, ['_id' => $id]],
             'objectWithIdProperty' => [$validRef, $object],
             'arrayWithoutId' => [null, []],
-            'objectWithoutId' => [null, new \stdClass()],
+            'objectWithoutId' => [['$ref' => 'test', '$id' => $objectWithoutId], $objectWithoutId],
         ];
     }
 

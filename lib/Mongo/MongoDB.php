@@ -112,8 +112,7 @@ class MongoDB
     public function __set($name, $value)
     {
         if ($name === 'w' || $name === 'wtimeout') {
-            $this->setWriteConcernFromArray([$name => $value] + $this->getWriteConcern());
-            $this->createDatabaseObject();
+            trigger_error("The '{$name}' property is read-only", E_DEPRECATED);
         }
     }
 
@@ -134,7 +133,7 @@ class MongoDB
         try {
             $collections = $this->db->listCollections($options);
         } catch (\MongoDB\Driver\Exception\Exception $e) {
-            ExceptionConverter::toLegacy($e);
+            throw ExceptionConverter::toLegacy($e);
         }
 
         $getCollectionInfo = function (CollectionInfo $collectionInfo) {
@@ -164,7 +163,7 @@ class MongoDB
         try {
             $collections = $this->db->listCollections($options);
         } catch (\MongoDB\Driver\Exception\Exception $e) {
-            ExceptionConverter::toLegacy($e);
+            throw ExceptionConverter::toLegacy($e);
         }
 
         $getCollectionName = function (CollectionInfo $collectionInfo) {
@@ -270,6 +269,10 @@ class MongoDB
     public function createCollection($name, $options)
     {
         try {
+            if (isset($options['capped'])) {
+                $options['capped'] = (bool) $options['capped'];
+            }
+
             $this->db->createCollection($name, $options);
         } catch (\MongoDB\Driver\Exception\Exception $e) {
             return false;
@@ -322,10 +325,10 @@ class MongoDB
             $id = $document_or_id;
         } elseif (is_object($document_or_id)) {
             if (! isset($document_or_id->_id)) {
-                return null;
+                $id = $document_or_id;
+            } else {
+                $id = $document_or_id->_id;
             }
-
-            $id = $document_or_id->_id;
         } elseif (is_array($document_or_id)) {
             if (! isset($document_or_id['_id'])) {
                 return null;
@@ -336,7 +339,7 @@ class MongoDB
             $id = $document_or_id;
         }
 
-        return MongoDBRef::create($collection, $id, $this->name);
+        return MongoDBRef::create($collection, $id);
     }
 
 
@@ -380,16 +383,12 @@ class MongoDB
             $cursor->setReadPreference($this->getReadPreference());
 
             return iterator_to_array($cursor)[0];
-        } catch (\MongoDB\Driver\Exception\ExecutionTimeoutException $e) {
-            throw new MongoCursorTimeoutException($e->getMessage(), $e->getCode(), $e);
-        } catch (\MongoDB\Driver\Exception\RuntimeException $e) {
+        } catch (\MongoDB\Driver\Exception\Exception $e) {
             return [
-                'ok' => 0,
+                'ok' => 0.0,
                 'errmsg' => $e->getMessage(),
                 'code' => $e->getCode(),
             ];
-        } catch (\MongoDB\Driver\Exception\Excepiton $e) {
-            ExceptionConverter::toLegacy($e);
         }
     }
 

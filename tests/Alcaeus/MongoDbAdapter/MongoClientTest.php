@@ -7,21 +7,6 @@ namespace Alcaeus\MongoDbAdapter\Tests;
  */
 class MongoClientTest extends TestCase
 {
-    public function testConnectAndDisconnect()
-    {
-        $client = $this->getClient();
-        $this->assertTrue($client->connected);
-
-        $client->close();
-        $this->assertFalse($client->connected);
-    }
-
-    public function testClientWithoutAutomaticConnect()
-    {
-        $client = $this->getClient([]);
-        $this->assertFalse($client->connected);
-    }
-
     public function testGetDb()
     {
         $client = $this->getClient();
@@ -63,16 +48,17 @@ class MongoClientTest extends TestCase
     public function testGetHosts()
     {
         $client = $this->getClient();
+        $hosts = $client->getHosts();
         $this->assertArraySubset(
             [
-                'localhost:27017' => [
+                'localhost:27017;-;.;' . getmypid() => [
                     'host' => 'localhost',
                     'port' => 27017,
                     'health' => 1,
                     'state' => 0,
                 ],
             ],
-            $client->getHosts()
+            $hosts
         );
     }
 
@@ -81,14 +67,13 @@ class MongoClientTest extends TestCase
         $client = $this->getClient();
         $this->assertSame(['type' => \MongoClient::RP_PRIMARY], $client->getReadPreference());
 
-        $this->assertTrue($client->setReadPreference(\MongoClient::RP_SECONDARY, ['a' => 'b']));
-        $this->assertSame(['type' => \MongoClient::RP_SECONDARY, 'tagsets' => ['a' => 'b']], $client->getReadPreference());
+        $this->assertTrue($client->setReadPreference(\MongoClient::RP_SECONDARY, [['a' => 'b']]));
+        $this->assertSame(['type' => \MongoClient::RP_SECONDARY, 'tagsets' => [['a' => 'b']]], $client->getReadPreference());
     }
 
     public function testWriteConcern()
     {
         $client = $this->getClient();
-        $this->assertSame(['w' => 1, 'wtimeout' => 0], $client->getWriteConcern());
 
         $this->assertTrue($client->setWriteConcern('majority', 100));
         $this->assertSame(['w' => 'majority', 'wtimeout' => 100], $client->getWriteConcern());
@@ -103,7 +88,19 @@ class MongoClientTest extends TestCase
         $this->assertSame(1.0, $databases['ok']);
         $this->assertArrayHasKey('totalSize', $databases);
         $this->assertArrayHasKey('databases', $databases);
-        $this->assertContains('mongo-php-adapter', $databases['databases']);
+
+        foreach ($databases['databases'] as $database) {
+            $this->assertArrayHasKey('name', $database);
+            $this->assertArrayHasKey('empty', $database);
+            $this->assertArrayHasKey('sizeOnDisk', $database);
+
+            if ($database['name'] == 'mongo-php-adapter') {
+                $this->assertFalse($database['empty']);
+                return;
+            }
+        }
+
+        $this->fail('Could not find mongo-php-adapter database in list');
     }
 
     public function testNoPrefixUri()

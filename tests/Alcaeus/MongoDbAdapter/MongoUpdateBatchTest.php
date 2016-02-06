@@ -17,12 +17,10 @@ class MongoUpdateBatchTest extends TestCase
         $this->assertTrue($batch->add(['q' => ['foo' => 'bar'], 'u' => ['$set' => ['foo' => 'foo']]]));
 
         $expected = [
-            'ok' => 1.0,
-            'nInserted' => 0,
             'nMatched' => 1,
             'nModified' => 1,
             'nUpserted' => 0,
-            'nRemoved' => 0,
+            'ok' => true,
         ];
 
         $this->assertSame($expected, $batch->execute());
@@ -49,12 +47,10 @@ class MongoUpdateBatchTest extends TestCase
         $this->assertTrue($batch->add(['q' => ['foo' => 'bar'], 'u' => ['$set' => ['foo' => 'foo']], 'multi' => true]));
 
         $expected = [
-            'ok' => 1.0,
-            'nInserted' => 0,
             'nMatched' => 2,
             'nModified' => 2,
             'nUpserted' => 0,
-            'nRemoved' => 0,
+            'ok' => true,
         ];
 
         $this->assertSame($expected, $batch->execute());
@@ -69,23 +65,33 @@ class MongoUpdateBatchTest extends TestCase
 
     public function testUpsert()
     {
+        $document = ['foo' => 'foo'];
+        $this->getCollection()->insert($document);
         $batch = new \MongoUpdateBatch($this->getCollection());
 
-        $this->assertTrue($batch->add(['q' => [], 'u' => ['$set' => ['foo' => 'bar']], 'upsert' => true]));
+        $this->assertTrue($batch->add(['q' => ['foo' => 'foo'], 'u' => ['$set' => ['foo' => 'bar']], 'upsert' => true]));
+        $this->assertTrue($batch->add(['q' => ['bar' => 'foo'], 'u' => ['$set' => ['foo' => 'bar']], 'upsert' => true]));
 
         $expected = [
-            'ok' => 1.0,
-            'nInserted' => 0,
-            'nMatched' => 0,
-            'nModified' => 0,
+            'upserted' => [
+                [
+                    'index' => 1,
+                ]
+            ],
+            'nMatched' => 1,
+            'nModified' => 1,
             'nUpserted' => 1,
-            'nRemoved' => 0,
+            'ok' => true,
         ];
 
-        $this->assertSame($expected, $batch->execute());
+        $result = $batch->execute();
+        $this->assertArraySubset($expected, $result);
+
+        $this->assertInstanceOf('MongoId', $result['upserted'][0]['_id']);
 
         $newCollection = $this->getCheckDatabase()->selectCollection('test');
-        $this->assertSame(1, $newCollection->count());
+        $this->assertSame(0, $newCollection->count(['foo' => 'foo']));
+        $this->assertSame(2, $newCollection->count());
         $record = $newCollection->findOne();
         $this->assertNotNull($record);
         $this->assertObjectHasAttribute('foo', $record);
@@ -97,7 +103,7 @@ class MongoUpdateBatchTest extends TestCase
         $collection = $this->getCollection();
         $batch = new \MongoUpdateBatch($collection);
 
-        $this->setExpectedException('Exception', 'invalid item');
+        $this->setExpectedException('Exception', "Expected \$item to contain 'q' key");
 
         $batch->add([]);
     }

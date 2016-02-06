@@ -115,38 +115,71 @@ class MongoWriteBatch
 
         try {
             $result = $collection->BulkWrite($this->items, $options);
-            $ok = 1.0;
+            $ok = true;
         } catch (\MongoDB\Driver\Exception\BulkWriteException $e) {
             $result = $e->getWriteResult();
-            $ok = 0.0;
+            $ok = false;
         }
 
-        if ($ok === 1.0) {
+        if ($ok === true) {
             $this->items = [];
         }
 
-        return [
-            'ok' => $ok,
-            'nInserted' => $result->getInsertedCount(),
-            'nMatched' => $result->getMatchedCount(),
-            'nModified' => $result->getModifiedCount(),
-            'nUpserted' => $result->getUpsertedCount(),
-            'nRemoved' => $result->getDeletedCount(),
-        ];
+        switch ($this->batchType) {
+            case self::COMMAND_UPDATE:
+                $upsertedIds = [];
+                foreach ($result->getUpsertedIds() as $index => $id) {
+                    $upsertedIds[] = [
+                        'index' => $index,
+                        '_id' => TypeConverter::toLegacy($id)
+                    ];
+                }
+
+                $result = [
+                    'nMatched' => $result->getMatchedCount(),
+                    'nModified' => $result->getModifiedCount(),
+                    'nUpserted' => $result->getUpsertedCount(),
+                    'ok' => $ok,
+                ];
+
+                if (count($upsertedIds)) {
+                    $result['upserted'] = $upsertedIds;
+                }
+
+                return $result;
+
+            case self::COMMAND_DELETE:
+                return [
+                    'nRemoved' => $result->getDeletedCount(),
+                    'ok' => $ok,
+                ];
+
+            case self::COMMAND_INSERT:
+                return [
+                    'nInserted' => $result->getInsertedCount(),
+                    'ok' => $ok,
+                ];
+        }
     }
 
     private function validate(array $item)
     {
         switch ($this->batchType) {
             case self::COMMAND_UPDATE:
-                if (! isset($item['q']) || ! isset($item['u'])) {
-                    throw new Exception('invalid item');
+                if (! isset($item['q'])) {
+                    throw new Exception("Expected \$item to contain 'q' key");
+                }
+                if (! isset($item['u'])) {
+                    throw new Exception("Expected \$item to contain 'u' key");
                 }
                 break;
 
             case self::COMMAND_DELETE:
-                if (! isset($item['q']) || ! isset($item['limit'])) {
-                    throw new Exception('invalid item');
+                if (! isset($item['q'])) {
+                    throw new Exception("Expected \$item to contain 'q' key");
+                }
+                if (! isset($item['limit'])) {
+                    throw new Exception("Expected \$item to contain 'limit' key");
                 }
                 break;
         }

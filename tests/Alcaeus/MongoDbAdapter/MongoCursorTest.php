@@ -20,10 +20,11 @@ class MongoCursorTest extends TestCase
 
         $iterated = 0;
         foreach ($cursor as $key => $item) {
-            $iterated++;
+            $this->assertSame($iterated, $cursor->info()['at']);
             $this->assertInstanceOf('MongoId', $item['_id']);
             $this->assertEquals($key, (string) $item['_id']);
             $this->assertSame('bar', $item['foo']);
+            $iterated++;
         }
 
         $this->assertSame(2, $iterated);
@@ -42,7 +43,7 @@ class MongoCursorTest extends TestCase
 
     public function testCountCannotConnect()
     {
-        $client = $this->getClient([], 'mongodb://localhost:28888');
+        $client = $this->getClient(['connect' => false], 'mongodb://localhost:28888');
         $cursor = $client->selectCollection('mongo-php-adapter', 'test')->find();
 
         $this->setExpectedException('MongoConnectionException');
@@ -90,6 +91,11 @@ class MongoCursorTest extends TestCase
         $collection = $this->getCollection();
         $cursor = $collection->find(['foo' => 'bar']);
 
+        $this->assertFalse($cursor->valid(), 'Cursor should be invalid to start with');
+        $this->assertNull($cursor->current(), 'Cursor should be invalid to start with');
+        $this->assertNull($cursor->key(), 'Cursor should be invalid to start with');
+
+        $cursor->next();
         $this->assertTrue($cursor->valid(), 'Cursor should be valid');
 
         $item = $cursor->current();
@@ -122,6 +128,8 @@ class MongoCursorTest extends TestCase
      */
     public function testCursorAppliesOptions($checkOptionCallback, \Closure $applyOptionCallback = null)
     {
+        $this->skipTestIf(extension_loaded('mongo'));
+
         $query = ['foo' => 'bar'];
         $projection = ['_id' => false, 'foo' => true];
 
@@ -290,7 +298,7 @@ class MongoCursorTest extends TestCase
         $expected = [
             'ns' => 'mongo-php-adapter.test',
             'limit' => 3,
-            'batchSize' => null,
+            'batchSize' => 0,
             'skip' => 1,
             'flags' => 0,
             'query' => ['foo' => 'bar'],
@@ -298,32 +306,32 @@ class MongoCursorTest extends TestCase
             'started_iterating' => false,
         ];
 
-        $this->assertSame($expected, $cursor->info());
+        $this->assertEquals($expected, $cursor->info());
 
         // Ensure cursor started iterating
         iterator_to_array($cursor);
 
         $expected['started_iterating'] = true;
         $expected += [
-            'id' => '0',
-            'at' => null,
-            'numReturned' => null,
-            'server' => null,
+            'id' => 0,
+            'at' => 1,
+            'numReturned' => 1,
+            'server' => 'localhost:27017;-;.;' . getmypid(),
             'host' => 'localhost',
             'port' => 27017,
             'connection_type_desc' => 'STANDALONE'
         ];
 
-        $this->assertSame($expected, $cursor->info());
+        $this->assertEquals($expected, $cursor->info());
     }
 
     public function testReadPreferenceIsInherited()
     {
         $collection = $this->getCollection();
-        $collection->setReadPreference(\MongoClient::RP_SECONDARY, ['a' => 'b']);
+        $collection->setReadPreference(\MongoClient::RP_SECONDARY, [['a' => 'b']]);
 
         $cursor = $collection->find(['foo' => 'bar']);
-        $this->assertSame(['type' => \MongoClient::RP_SECONDARY, 'tagsets' => ['a' => 'b']], $cursor->getReadPreference());
+        $this->assertSame(['type' => \MongoClient::RP_SECONDARY, 'tagsets' => [['a' => 'b']]], $cursor->getReadPreference());
     }
 
     /**

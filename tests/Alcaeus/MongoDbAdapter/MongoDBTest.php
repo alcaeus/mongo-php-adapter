@@ -71,7 +71,7 @@ class MongoDBTest extends TestCase
     {
         $database = $this->getDatabase();
 
-        $this->assertFalse($database->createCollection('test', ['capped' => 2, 'size' => 100]));
+        $this->assertInstanceOf('MongoCollection', $database->createCollection('test', ['capped' => 2, 'size' => 100]));
     }
 
     public function testGetCollectionProperty()
@@ -106,13 +106,17 @@ class MongoDBTest extends TestCase
 
         $this->failMaxTimeMS();
 
-        $this->setExpectedException('MongoCursorTimeoutException');
-
-        $database->command([
+        $result = $database->command([
             "count" => "test",
             "query" => array("a" => 1),
             "maxTimeMS" => 100,
         ]);
+
+        $this->assertSame([
+            'ok' => 0.0,
+            'errmsg' => 'operation exceeded time limit',
+            'code' => 50,
+        ], $result);
     }
 
     public function testReadPreference()
@@ -121,62 +125,72 @@ class MongoDBTest extends TestCase
         $this->assertSame(['type' => \MongoClient::RP_PRIMARY], $database->getReadPreference());
         $this->assertFalse($database->getSlaveOkay());
 
-        $this->assertTrue($database->setReadPreference(\MongoClient::RP_SECONDARY, ['a' => 'b']));
-        $this->assertSame(['type' => \MongoClient::RP_SECONDARY, 'tagsets' => ['a' => 'b']], $database->getReadPreference());
+        $this->assertTrue($database->setReadPreference(\MongoClient::RP_SECONDARY, [['a' => 'b']]));
+        $this->assertSame(['type' => \MongoClient::RP_SECONDARY, 'tagsets' => [['a' => 'b']]], $database->getReadPreference());
         $this->assertTrue($database->getSlaveOkay());
 
-        // Only way to check whether options are passed down is through debugInfo
-        $writeConcern = $database->getDb()->__debugInfo()['readPreference'];
-
-        $this->assertSame(ReadPreference::RP_SECONDARY, $writeConcern->getMode());
-        $this->assertSame(['a' => 'b'], $writeConcern->getTagSets());
-
         $this->assertTrue($database->setSlaveOkay(true));
-        $this->assertSame(['type' => \MongoClient::RP_SECONDARY_PREFERRED, 'tagsets' => ['a' => 'b']], $database->getReadPreference());
+        $this->assertSame(['type' => \MongoClient::RP_SECONDARY_PREFERRED, 'tagsets' => [['a' => 'b']]], $database->getReadPreference());
 
         $this->assertTrue($database->setSlaveOkay(false));
-        $this->assertSame(['type' => \MongoClient::RP_PRIMARY], $database->getReadPreference());
+        // Only test a subset since we don't keep tagsets around for RP_PRIMARY
+        $this->assertArraySubset(['type' => \MongoClient::RP_PRIMARY], $database->getReadPreference());
+    }
+
+    public function testReadPreferenceIsSetInDriver()
+    {
+        $this->skipTestIf(extension_loaded('mongo'));
+
+        $database = $this->getDatabase();
+
+        $this->assertTrue($database->setReadPreference(\MongoClient::RP_SECONDARY, [['a' => 'b']]));
+
+        // Only way to check whether options are passed down is through debugInfo
+        $readPreference = $database->getDb()->__debugInfo()['readPreference'];
+
+        $this->assertSame(ReadPreference::RP_SECONDARY, $readPreference->getMode());
+        $this->assertSame([['a' => 'b']], $readPreference->getTagSets());
+
     }
 
     public function testReadPreferenceIsInherited()
     {
         $client = $this->getClient();
-        $client->setReadPreference(\MongoClient::RP_SECONDARY, ['a' => 'b']);
+        $client->setReadPreference(\MongoClient::RP_SECONDARY, [['a' => 'b']]);
 
         $database = $client->selectDB('test');
-        $this->assertSame(['type' => \MongoClient::RP_SECONDARY, 'tagsets' => ['a' => 'b']], $database->getReadPreference());
+        $this->assertSame(['type' => \MongoClient::RP_SECONDARY, 'tagsets' => [['a' => 'b']]], $database->getReadPreference());
     }
 
     public function testWriteConcern()
     {
         $database = $this->getDatabase();
-        $this->assertSame(['w' => 1, 'wtimeout' => 0], $database->getWriteConcern());
-        $this->assertSame(1, $database->w);
-        $this->assertSame(0, $database->wtimeout);
 
         $this->assertTrue($database->setWriteConcern('majority', 100));
         $this->assertSame(['w' => 'majority', 'wtimeout' => 100], $database->getWriteConcern());
+    }
 
-        $database->w = 2;
-        $this->assertSame(['w' => 2, 'wtimeout' => 100], $database->getWriteConcern());
+    public function testWriteConcernIsSetInDriver()
+    {
+        $this->skipTestIf(extension_loaded('mongo'));
 
-        $database->wtimeout = -1;
-        $this->assertSame(['w' => 2, 'wtimeout' => 0], $database->getWriteConcern());
+        $database = $this->getDatabase();
+        $this->assertTrue($database->setWriteConcern(2, 100));
 
         // Only way to check whether options are passed down is through debugInfo
         $writeConcern = $database->getDb()->__debugInfo()['writeConcern'];
 
         $this->assertSame(2, $writeConcern->getW());
-        $this->assertSame(0, $writeConcern->getWtimeout());
+        $this->assertSame(100, $writeConcern->getWtimeout());
     }
 
     public function testWriteConcernIsInherited()
     {
         $client = $this->getClient();
-        $client->setWriteConcern('majority', 100);
+        $client->setWriteConcern(2, 100);
 
         $database = $client->selectDB('test');
-        $this->assertSame(['w' => 'majority', 'wtimeout' => 100], $database->getWriteConcern());
+        $this->assertSame(['w' => 2, 'wtimeout' => 100], $database->getWriteConcern());
     }
 
     public function testProfilingLevel()
@@ -192,7 +206,7 @@ class MongoDBTest extends TestCase
     public function testForceError()
     {
         $result = $this->getDatabase()->forceError();
-        $this->assertSame(0, $result['ok']);
+        $this->assertSame(0.0, $result['ok']);
     }
 
     public function testExecute()
