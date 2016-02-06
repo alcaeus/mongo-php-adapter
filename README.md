@@ -91,6 +91,8 @@ return `0` as connection ID.
 
 ## MongoCollection
 
+ - The [aggregate](https://secure.php.net/manual/en/mongocollection.aggregate.php)
+ method is not working because of a bug in the underlying library.
  - The [createIndex](https://secure.php.net/manual/en/mongocollection.createindex.php)
  method does not yet return the same result as the original method. Instead, it
  always returns the name of the index created.

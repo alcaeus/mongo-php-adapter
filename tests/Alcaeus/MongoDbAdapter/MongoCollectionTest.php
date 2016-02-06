@@ -394,6 +394,7 @@ class MongoCollectionTest extends TestCase
 
     public function testAggregate()
     {
+        $this->skipTestUnless(extension_loaded('mongo'));
         $collection = $this->getCollection();
 
         $this->prepareData();
@@ -422,6 +423,7 @@ class MongoCollectionTest extends TestCase
 
     public function testAggregateTimeoutException()
     {
+        $this->skipTestUnless(extension_loaded('mongo'));
         $collection = $this->getCollection();
 
         $this->failMaxTimeMS();
