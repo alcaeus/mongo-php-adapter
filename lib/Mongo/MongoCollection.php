@@ -101,7 +101,7 @@ class MongoCollection
             return $this->getWriteConcern()[$name];
         }
 
-        return $this->db->selectCollection($this->name . '.' . $name);
+        return $this->db->selectCollection($this->name . '.' . str_replace(chr(0), '', $name));
     }
 
     /**
@@ -336,7 +336,7 @@ class MongoCollection
                 $this->convertWriteConcernOptions($options)
             );
         } catch (\MongoDB\Driver\Exception\Exception $e) {
-            throw ExceptionConverter::toLegacy($e);
+            throw ExceptionConverter::toLegacy($e, 'MongoResultException');
         }
 
         if (! $result->isAcknowledged()) {
@@ -560,13 +560,20 @@ class MongoCollection
         }
 
         if (! is_array($keys) || ! count($keys)) {
-            throw new MongoException('keys cannot be empty');
+            throw new MongoException('index specification has no elements');
         }
 
         // duplicate
         $neededOptions = ['unique' => 1, 'sparse' => 1, 'expireAfterSeconds' => 1, 'background' => 1, 'dropDups' => 1];
         $indexOptions = array_intersect_key($options, $neededOptions);
-        $indexes = $this->collection->listIndexes();
+        $indexes = iterator_to_array($this->collection->listIndexes());
+        $indexCount = count($indexes);
+
+        // listIndexes returns 0 for non-existing collections while the legacy driver returns 1
+        if ($indexCount === 0) {
+            $indexCount = 1;
+        }
+
         foreach ($indexes as $index) {
             if (! empty($options['name']) && $index->getName() === $options['name']) {
                 throw new \MongoResultException(sprintf('index with name: %s already exists', $index->getName()));
@@ -582,8 +589,8 @@ class MongoCollection
 
                 return [
                     'createdCollectionAutomatically' => false,
-                    'numIndexesBefore' => count($indexes),
-                    'numIndexesAfter' => count($indexes),
+                    'numIndexesBefore' => $indexCount,
+                    'numIndexesAfter' => $indexCount,
                     'note' => 'all indexes already exist',
                     'ok' => 1.0
                 ];
@@ -598,8 +605,8 @@ class MongoCollection
 
         return [
             'createdCollectionAutomatically' => true,
-            'numIndexesBefore' => count($indexes),
-            'numIndexesAfter' => count($indexes) + 1,
+            'numIndexesBefore' => $indexCount,
+            'numIndexesAfter' => $indexCount + 1,
             'ok' => 1.0
         ];
     }
@@ -610,14 +617,12 @@ class MongoCollection
      * @link http://www.php.net/manual/en/mongocollection.ensureindex.php
      * @param array $keys Field or fields to use as index.
      * @param array $options [optional] This parameter is an associative array of the form array("optionname" => <boolean>, ...).
-     * @return boolean always true
+     * @return array Returns the database response.
      * @deprecated Use MongoCollection::createIndex() instead.
      */
     public function ensureIndex(array $keys, array $options = [])
     {
-        $this->createIndex($keys, $options);
-
-        return true;
+        return $this->createIndex($keys, $options);
     }
 
     /**
@@ -631,13 +636,25 @@ class MongoCollection
     {
         if (is_string($keys)) {
             $indexName = $keys;
+            if (! preg_match('#_-?1$#', $indexName)) {
+                $indexName .= '_1';
+            }
         } elseif (is_array($keys)) {
             $indexName = \MongoDB\generate_index_name($keys);
         } else {
             throw new \InvalidArgumentException();
         }
 
-        return TypeConverter::toLegacy($this->collection->dropIndex($indexName));
+        try {
+            return TypeConverter::toLegacy($this->collection->dropIndex($indexName));
+        } catch (\MongoDB\Driver\Exception\Exception $e) {
+            return [
+                'nIndexesWas' => count($this->getIndexInfo()),
+                'errmsg' => $e->getMessage(),
+                'ok' => 0.0,
+                'code' => $e->getCode(),
+            ];
+        }
     }
 
     /**
@@ -914,6 +931,13 @@ class MongoCollection
 
             return $document['_id'];
         } elseif (is_object($document)) {
+            $reflectionObject = new \ReflectionObject($document);
+            foreach ($reflectionObject->getProperties() as $property) {
+                if (! $property->isPublic()) {
+                    throw new \MongoException('zero-length keys are not allowed, did you use $ with double quotes?');
+                }
+            }
+
             if (! isset($document->_id)) {
                 $document->_id = new \MongoId();
             }

@@ -176,10 +176,11 @@ class MongoCollectionTest extends TestCase
 
     public function testBatchInsertException()
     {
-        $this->setExpectedException('MongoResultException', 'cannot use \'w\' > 1 when a host is not replicated');
+        $this->setExpectedException('MongoDuplicateKeyException', 'E11000 duplicate key error index: mongo-php-adapter.test.$_id_');
 
-        $documents = [['foo' => 'bar']];
-        $this->getCollection()->batchInsert($documents, ['w' => 2]);
+        $id = new \MongoId();
+        $documents = [['_id' => $id, 'foo' => 'bar'], ['_id' => $id, 'foo' => 'bleh']];
+        $this->getCollection()->batchInsert($documents);
     }
 
     public function testBatchInsertEmptyBatchException()
