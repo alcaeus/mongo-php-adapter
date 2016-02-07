@@ -308,4 +308,9 @@ class MongoDBTest extends TestCase
         ];
         $this->assertSame($expected, $this->getDatabase()->dropCollection('test'));
     }
+
+    public function testRepair()
+    {
+        $this->assertSame(['ok' => 1.0], $this->getDatabase()->repair());
+    }
 }

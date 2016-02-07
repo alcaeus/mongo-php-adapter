@@ -242,7 +242,13 @@ class MongoDB
      */
     public function repair($preserve_cloned_files = FALSE, $backup_original_files = FALSE)
     {
-        $this->notImplemented();
+        $command = [
+            'repairDatabase' => 1,
+            'preserveClonedFilesOnFailure' => $preserve_cloned_files,
+            'backupOriginalFiles' => $backup_original_files,
+        ];
+
+        return $this->command($command);
     }
 
     /**

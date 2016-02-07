@@ -86,8 +86,6 @@ return `0` as connection ID.
  and [listCollections](https://php.net/manual/en/mongodb.listcollections.php)
  methods is ignored. These methods do not return information about system
  collections.
- - The [repair](https://secure.php.net/manual/en/mongodb.repair.php)
- method is not yet implemented.
 
 ## MongoCollection
 
