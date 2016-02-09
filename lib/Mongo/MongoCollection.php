@@ -366,8 +366,15 @@ class MongoCollection
     public function update(array $criteria , array $newobj, array $options = [])
     {
         $multiple = isset($options['multiple']) ? $options['multiple'] : false;
-        $method = $multiple ? 'updateMany' : 'updateOne';
+        $isReplace = ! \MongoDB\is_first_key_operator($newobj);
+
+        if ($isReplace && $multiple) {
+            throw new \MongoWriteConcernException('multi update only works with $ operators', 9);
+        }
         unset($options['multiple']);
+
+        $method = $isReplace ? 'replace' : 'update';
+        $method .= $multiple ? 'Many' : 'One';
 
         try {
             /** @var \MongoDB\UpdateResult $result */

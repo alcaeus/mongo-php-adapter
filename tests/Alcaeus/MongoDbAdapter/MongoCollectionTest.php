@@ -176,7 +176,7 @@ class MongoCollectionTest extends TestCase
 
     public function testBatchInsertException()
     {
-        $this->setExpectedException('MongoDuplicateKeyException', 'E11000 duplicate key error index: mongo-php-adapter.test.$_id_');
+        $this->setExpectedExceptionRegExp('MongoDuplicateKeyException', '/E11000 duplicate key error .* mongo-php-adapter.test.*_id_/');
 
         $id = new \MongoId();
         $documents = [['_id' => $id, 'foo' => 'bar'], ['_id' => $id, 'foo' => 'bleh']];
@@ -220,6 +220,37 @@ class MongoCollectionTest extends TestCase
         $this->assertSame($expected, $result);
 
         $this->assertSame(1, $this->getCheckDatabase()->selectCollection('test')->count(['foo' => 'foo']));
+    }
+
+    public function testUpdateReplaceOne()
+    {
+        $document = ['foo' => 'bar', 'bar' => 'foo'];
+        $this->getCollection()->insert($document);
+
+        // Unset ID to re-insert
+        unset($document['_id']);
+        $this->getCollection()->insert($document);
+
+        $expected = [
+            'ok' => 1.0,
+            'nModified' => 1,
+            'n' => 1,
+            'err' => null,
+            'errmsg' => null,
+            'updatedExisting' => true,
+        ];
+
+        $result = $this->getCollection()->update(['foo' => 'bar'], ['foo' => 'foo']);
+        $this->assertSame($expected, $result);
+
+        $this->assertSame(1, $this->getCheckDatabase()->selectCollection('test')->count(['foo' => 'foo']));
+        $this->assertSame(1, $this->getCheckDatabase()->selectCollection('test')->count(['bar' => 'foo']));
+    }
+
+    public function testUpdateReplaceMultiple()
+    {
+        $this->setExpectedExceptionRegExp('MongoWriteConcernException', '/multi update only works with \$ operators/', 9);
+        $this->getCollection()->update(['foo' => 'bar'], ['foo' => 'foo'], ['multiple' => true]);
     }
 
     public function testUpdateDuplicate()
