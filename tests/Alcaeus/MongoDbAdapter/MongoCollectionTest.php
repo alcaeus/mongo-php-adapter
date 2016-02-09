@@ -176,7 +176,7 @@ class MongoCollectionTest extends TestCase
 
     public function testBatchInsertException()
     {
-        $this->setExpectedException('MongoDuplicateKeyException', 'E11000 duplicate key error index: mongo-php-adapter.test.$_id_');
+        $this->setExpectedExceptionRegExp('MongoDuplicateKeyException', '/E11000 duplicate key error .* mongo-php-adapter.test.*_id_/');
 
         $id = new \MongoId();
         $documents = [['_id' => $id, 'foo' => 'bar'], ['_id' => $id, 'foo' => 'bleh']];
