@@ -923,8 +923,8 @@ class MongoCollection
     {
         $checkKeys = function($array) {
             foreach (array_keys($array) as $key) {
-                if (empty($key) || strpos($key, '*') === 1) {
-                    throw new \MongoException('document contain invalid key');
+                if (empty($key) && $key !== 0) {
+                    throw new \MongoException('zero-length keys are not allowed, did you use $ with double quotes?');
                 }
             }
         };

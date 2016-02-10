@@ -81,6 +81,30 @@ class MongoCollectionTest extends TestCase
         $this->getCollection()->insert($document);
     }
 
+    public function testInsertWithInvalidKey()
+    {
+        $document = ['*' => 'foo'];
+        $this->getCollection()->insert($document);
+
+        $this->assertSame(1, $this->getCollection()->count(['*' => 'foo']));
+    }
+
+    public function testInsertWithEmptyKey()
+    {
+        $this->setExpectedException('MongoException', 'zero-length keys are not allowed, did you use $ with double quotes?');
+
+        $document = ['' => 'foo'];
+        $this->getCollection()->insert($document);
+    }
+
+    public function testInsertWithNumericKey()
+    {
+        $document = ['foo'];
+        $this->getCollection()->insert($document);
+
+        $this->assertSame(1, $this->getCollection()->count(['foo']));
+    }
+
     public function testInsertDuplicate()
     {
         $collection = $this->getCollection();
@@ -181,6 +205,38 @@ class MongoCollectionTest extends TestCase
         $id = new \MongoId();
         $documents = [['_id' => $id, 'foo' => 'bar'], ['_id' => $id, 'foo' => 'bleh']];
         $this->getCollection()->batchInsert($documents);
+    }
+
+    public function testBatchInsertObjectWithPrivateProperties()
+    {
+        $this->setExpectedException('MongoException', 'zero-length keys are not allowed, did you use $ with double quotes?');
+
+        $documents = [new PrivatePropertiesStub()];
+        $this->getCollection()->batchInsert($documents);
+    }
+
+    public function testBatchInsertWithInvalidKey()
+    {
+        $documents = [['*' => 'foo']];
+        $this->getCollection()->batchInsert($documents);
+
+        $this->assertSame(1, $this->getCollection()->count(['*' => 'foo']));
+    }
+
+    public function testBatchInsertWithEmptyKey()
+    {
+        $this->setExpectedException('MongoException', 'zero-length keys are not allowed, did you use $ with double quotes?');
+
+        $documents = [['' => 'foo']];
+        $this->getCollection()->batchInsert($documents);
+    }
+
+    public function testBatchInsertWithNumericKey()
+    {
+        $documents = [['foo']];
+        $this->getCollection()->batchInsert($documents);
+
+        $this->assertSame(1, $this->getCollection()->count(['foo']));
     }
 
     public function testBatchInsertEmptyBatchException()
