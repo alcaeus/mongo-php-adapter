@@ -132,7 +132,7 @@ class MongoGridFS extends MongoCollection
         }
 
         $items = iterator_to_array($this->find($query, $fields)->limit(1));
-        return current($items);
+        return count($items) ? current($items) : null;
     }
 
     /**
