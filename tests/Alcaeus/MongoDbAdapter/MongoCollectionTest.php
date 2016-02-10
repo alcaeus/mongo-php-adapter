@@ -449,6 +449,12 @@ class MongoCollectionTest extends TestCase
         $this->assertSame(['foo' => 'foo'], $document);
     }
 
+    public function testFindOneNotFound()
+    {
+        $document = $this->getCollection()->findOne(['foo' => 'foo'], ['_id' => false]);
+        $this->assertNull($document);
+    }
+
     public function testFindOneConnectionIssue()
     {
         $this->setExpectedException('MongoConnectionException');

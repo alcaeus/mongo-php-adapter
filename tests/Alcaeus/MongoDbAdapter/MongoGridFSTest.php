@@ -280,6 +280,15 @@ class MongoGridFSTest extends TestCase
         $this->assertInstanceOf('MongoGridFSFile', $result);
     }
 
+    public function testFindOneNotFoundReturnsNull()
+    {
+        $collection = $this->getGridFS();
+
+        $result = $collection->findOne();
+
+        $this->assertNull($result);
+    }
+
     public function testPut()
     {
         $collection = $this->getGridFS();
