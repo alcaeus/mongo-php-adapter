@@ -49,7 +49,7 @@ class TypeConverter
                     $result[$key] = self::fromLegacy($item);
                 }
 
-                return self::ensureCorrectType($result);
+                return self::ensureCorrectType($result, is_object($value));
             default:
                 return $value;
         }
@@ -143,10 +143,15 @@ class TypeConverter
      * Converts all arrays with non-numeric keys to stdClass
      *
      * @param array $array
+     * @param bool $wasObject
      * @return array|Model\BSONArray|Model\BSONDocument
      */
-    private static function ensureCorrectType(array $array)
+    private static function ensureCorrectType(array $array, $wasObject = false)
     {
+        if ($array === [] && $wasObject) {
+            return (object) $array;
+        }
+
         if (static::isNumericArray($array)) {
             return $array;
         }

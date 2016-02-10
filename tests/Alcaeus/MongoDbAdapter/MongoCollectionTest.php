@@ -997,6 +997,80 @@ class MongoCollectionTest extends TestCase
         );
     }
 
+    public function testMapReduce()
+    {
+        $data = array(
+            array(
+                'username' => 'jones',
+                'likes' => 20.0,
+                'text' => 'Hello world!'
+            ),
+            array(
+                'username' => 'bob',
+                'likes' => 100.0,
+                'text' => 'Hello world!'
+            ),
+            array(
+                'username' => 'bob',
+                'likes' => 100.0,
+                'text' => 'Hello world!'
+            ),
+        );
+
+        $collection = $this->getCollection();
+        $collection->batchInsert($data);
+
+        $map = 'function() {
+            emit(this.username, { count: 1, likes: this.likes });
+        }';
+
+        $reduce = 'function(key, values) {
+            var result = {count: 0, likes: 0};
+
+            values.forEach(function(value) {
+              result.count += value.count;
+              result.likes += value.likes;
+            });
+
+            return result;
+        }';
+
+        $finalize = 'function (key, value) { value.test = "test"; return value; }';
+
+        $command = [
+            'mapreduce' => $this->getCollection()->getName(),
+            'map' => new \MongoCode($map),
+            'reduce' => new \MongoCode($reduce),
+            'query' => (object) [],
+            'out' => ['inline' => true],
+            'finalize' => new \MongoCode($finalize),
+        ];
+
+        $result = $this->getDatabase()->command($command);
+
+        $expected = [
+            [
+                '_id' => 'bob',
+                'value' => [
+                    'count' => 2.0,
+                    'likes' => 200.0,
+                    'test' => 'test',
+                ],
+            ],
+            [
+                '_id' => 'jones',
+                'value' => [
+                    'count' => 1.0,
+                    'likes' => 20.0,
+                    'test' => 'test',
+                ],
+            ],
+        ];
+
+        $this->assertSame(1.0, $result['ok']);
+        $this->assertSame($expected, $result['results']);
+    }
+
     public function testFindAndModifyResultException()
     {
         $this->markTestSkipped('Test fails on travis-ci - skipped while investigating this');
