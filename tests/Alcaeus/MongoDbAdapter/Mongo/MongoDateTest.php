@@ -1,6 +1,8 @@
 <?php
 
-namespace Alcaeus\MongoDbAdapter\Tests;
+namespace Alcaeus\MongoDbAdapter\Tests\Mongo;
+
+use Alcaeus\MongoDbAdapter\Tests\TestCase;
 use Alcaeus\MongoDbAdapter\TypeInterface;
 
 /**
