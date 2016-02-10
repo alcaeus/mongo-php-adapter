@@ -1,8 +1,9 @@
 <?php
 
-namespace Alcaeus\MongoDbAdapter\Tests;
+namespace Alcaeus\MongoDbAdapter\Tests\Mongo;
+
 use MongoDB\Driver\ReadPreference;
-use MongoDB\Operation\Find;
+use Alcaeus\MongoDbAdapter\Tests\TestCase;
 
 /**
  * @author alcaeus <alcaeus@alcaeus.org>

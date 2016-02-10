@@ -148,14 +148,10 @@ class TypeConverter
      */
     private static function ensureCorrectType(array $array, $wasObject = false)
     {
-        if ($array === [] && $wasObject) {
-            return (object) $array;
+        if ($wasObject || ! static::isNumericArray($array)) {
+            return new Model\BSONDocument($array);
         }
 
-        if (static::isNumericArray($array)) {
-            return $array;
-        }
-
-        return new Model\BSONDocument($array);
+        return $array;
     }
 }
