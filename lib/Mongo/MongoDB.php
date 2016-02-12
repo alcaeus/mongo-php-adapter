@@ -125,8 +125,10 @@ class MongoDB
      */
     public function getCollectionInfo(array $options = [])
     {
-        // The includeSystemCollections option is no longer supported
+        $includeSystemCollections = false;
+        // The includeSystemCollections option is no longer supported in the command
         if (isset($options['includeSystemCollections'])) {
+            $includeSystemCollections = $options['includeSystemCollections'];
             unset($options['includeSystemCollections']);
         }
 
@@ -143,7 +145,12 @@ class MongoDB
             ];
         };
 
-        return array_map($getCollectionInfo, iterator_to_array($collections));
+        $eligibleCollections = array_filter(
+            iterator_to_array($collections),
+            $this->getSystemCollectionFilterClosure($includeSystemCollections)
+        );
+
+        return array_map($getCollectionInfo, $eligibleCollections);
     }
 
     /**
@@ -155,8 +162,10 @@ class MongoDB
      */
     public function getCollectionNames(array $options = [])
     {
-        // The includeSystemCollections option is no longer supported
+        $includeSystemCollections = false;
+        // The includeSystemCollections option is no longer supported in the command
         if (isset($options['includeSystemCollections'])) {
+            $includeSystemCollections = $options['includeSystemCollections'];
             unset($options['includeSystemCollections']);
         }
 
@@ -170,7 +179,12 @@ class MongoDB
             return $collectionInfo->getName();
         };
 
-        return array_map($getCollectionName, iterator_to_array($collections));
+        $eligibleCollections = array_filter(
+            iterator_to_array($collections),
+            $this->getSystemCollectionFilterClosure($includeSystemCollections)
+        );
+
+        return array_map($getCollectionName, $eligibleCollections);
     }
 
     /**
@@ -520,5 +534,15 @@ class MongoDB
             }
         }
 
+    }
+
+    /**
+     * @param bool $includeSystemCollections
+     * @return Closure
+     */
+    private function getSystemCollectionFilterClosure($includeSystemCollections = false) {
+        return function (CollectionInfo $collectionInfo) use ($includeSystemCollections) {
+            return $includeSystemCollections || ! preg_match('#^system\.#', $collectionInfo->getName());
+        };
     }
 }

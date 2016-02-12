@@ -81,11 +81,6 @@ return `0` as connection ID.
  - The [authenticate](https://secure.php.net/manual/en/mongodb.authenticate.php)
  method is not supported. To connect to a database with authentication, please
  supply the credentials using the connection string.
- - The `includeSystemCollections` parameter used in the [getCollectionInfo](https://php.net/manual/en/mongodb.getcollectioninfo.php]),
- [getCollectionNames](https://php.net/manual/en/mongodb.getcollectionnames.php]),
- and [listCollections](https://php.net/manual/en/mongodb.listcollections.php)
- methods is ignored. These methods do not return information about system
- collections.
 
 ## MongoCollection
 

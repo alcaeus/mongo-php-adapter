@@ -283,6 +283,38 @@ class MongoDBTest extends TestCase
         $this->fail('The test collection was not found');
     }
 
+    public function testGetCollectionNamesDoesNotListSystemCollections()
+    {
+        // Enable profiling to ensure we have a system.profile collection
+        $this->getDatabase()->setProfilingLevel(\MongoDB::PROFILING_ON);
+
+        try {
+            $document = ['foo' => 'bar'];
+            $this->getCollection()->insert($document);
+
+            $collectionNames = $this->getDatabase()->getCollectionNames();
+            $this->assertNotContains('system.profile', $collectionNames);
+        } finally {
+            $this->getDatabase()->setProfilingLevel(\MongoDB::PROFILING_OFF);
+        }
+    }
+
+    public function testGetCollectionNamesWithSystemCollections()
+    {
+        // Enable profiling to ensure we have a system.profile collection
+        $this->getDatabase()->setProfilingLevel(\MongoDB::PROFILING_ON);
+
+        try {
+            $document = ['foo' => 'bar'];
+            $this->getCollection()->insert($document);
+
+            $collectionNames = $this->getDatabase()->getCollectionNames(['includeSystemCollections' => true]);
+            $this->assertContains('system.profile', $collectionNames);
+        } finally {
+            $this->getDatabase()->setProfilingLevel(\MongoDB::PROFILING_OFF);
+        }
+    }
+
     public function testListCollectionsExecutionTimeoutException()
     {
         $this->failMaxTimeMS();
