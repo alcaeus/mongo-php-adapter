@@ -550,8 +550,6 @@ class MongoCollection
      * @param array $keys Field or fields to use as index.
      * @param array $options [optional] This parameter is an associative array of the form array("optionname" => <boolean>, ...).
      * @return array Returns the database response.
-     *
-     * @todo This method does not yet return the correct result
      */
     public function createIndex($keys, array $options = [])
     {
@@ -570,37 +568,38 @@ class MongoCollection
             throw new MongoException('index specification has no elements');
         }
 
+        if (! isset($options['name'])) {
+            $options['name'] = \MongoDB\generate_index_name($keys);
+        }
+
         // duplicate
-        $neededOptions = ['unique' => 1, 'sparse' => 1, 'expireAfterSeconds' => 1, 'background' => 1, 'dropDups' => 1];
-        $indexOptions = array_intersect_key($options, $neededOptions);
+        $skippedOptions = ['background' => 1, 'dropDups' => 1, 'name' => 1, 'v' => 1, 'ns' => 1, 'key' => 1, 'writeConcern' => 1];
+        $indexOptions = array_diff_key($options, $skippedOptions);
         $indexes = iterator_to_array($this->collection->listIndexes());
         $indexCount = count($indexes);
+        $collectionExists = true;
 
         // listIndexes returns 0 for non-existing collections while the legacy driver returns 1
         if ($indexCount === 0) {
+            $collectionExists = false;
             $indexCount = 1;
         }
 
         foreach ($indexes as $index) {
-            if (! empty($options['name']) && $index->getName() === $options['name']) {
-                throw new \MongoResultException(sprintf('index with name: %s already exists', $index->getName()));
-            }
-
-            if ($index->getKey() == $keys) {
-                $currentIndexOptions = array_intersect_key($index->__debugInfo(), $neededOptions);
-
-                unset($currentIndexOptions['name']);
-                if ($currentIndexOptions != $indexOptions) {
-                    throw new \MongoResultException('Index with same keys but different options already exists');
+            if ($index->getKey() === $keys) {
+                if ($indexOptions != array_diff_key($index->__debugInfo(), $skippedOptions)) {
+                    throw new \MongoResultException(sprintf('Index with name: %s already exists with different options', $options['name']));
                 }
 
                 return [
-                    'createdCollectionAutomatically' => false,
+                    'createdCollectionAutomatically' => ! $collectionExists,
                     'numIndexesBefore' => $indexCount,
                     'numIndexesAfter' => $indexCount,
                     'note' => 'all indexes already exist',
                     'ok' => 1.0
                 ];
+            } elseif ($index->getName() === $options['name']) {
+                throw new \MongoResultException(sprintf('index with name: %s already exists', $index->getName()));
             }
         }
 
@@ -611,7 +610,7 @@ class MongoCollection
         }
 
         return [
-            'createdCollectionAutomatically' => true,
+            'createdCollectionAutomatically' => ! $collectionExists,
             'numIndexesBefore' => $indexCount,
             'numIndexesAfter' => $indexCount + 1,
             'ok' => 1.0
