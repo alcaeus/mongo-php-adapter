@@ -667,7 +667,11 @@ class MongoCollection
      */
     public function deleteIndexes()
     {
-        return TypeConverter::toLegacy($this->collection->dropIndexes());
+        try {
+            return TypeConverter::toLegacy($this->collection->dropIndexes());
+        } catch (\MongoDB\Driver\Exception\Exception $e) {
+            return ExceptionConverter::toResultArray($e);
+        }
     }
 
     /**
