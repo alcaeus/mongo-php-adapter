@@ -928,6 +928,16 @@ class MongoCollectionTest extends TestCase
         $this->assertCount(1, iterator_to_array($newCollection->listIndexes())); // ID index is present by default
     }
 
+    public function testDeleteIndexesForNonExistingCollection()
+    {
+        $expected = [
+            'ok' => 0.0,
+            'errmsg' => 'ns not found',
+            'code' => 26,
+        ];
+        $this->assertSame($expected, $this->getcollection('nonExisting')->deleteIndexes());
+    }
+
     public function testGetIndexInfo()
     {
         $collection = $this->getCollection();
