@@ -830,6 +830,47 @@ class MongoCollectionTest extends TestCase
         $this->assertSame($expected, $this->getCollection()->createIndex(['foo' => 1]));
     }
 
+    public function testCreateIndexTwiceWithSameName()
+    {
+        $this->getCollection()->createIndex(['foo' => 1], ['name' => 'test_index']);
+
+        $expected = [
+            'createdCollectionAutomatically' => false,
+            'numIndexesBefore' => 2,
+            'numIndexesAfter' => 2,
+            'note' => 'all indexes already exist',
+            'ok' => 1.0
+        ];
+        $this->assertSame($expected, $this->getCollection()->createIndex(['foo' => 1], ['name' => 'test_index']));
+    }
+
+    public function testCreateIndexTwiceWithDifferentName()
+    {
+        $this->getCollection()->createIndex(['foo' => 1], ['name' => 'test_index']);
+
+        $expected = [
+            'createdCollectionAutomatically' => false,
+            'numIndexesBefore' => 2,
+            'numIndexesAfter' => 2,
+            'note' => 'all indexes already exist',
+            'ok' => 1.0
+        ];
+        $this->assertSame($expected, $this->getCollection()->createIndex(['foo' => 1], ['name' => 'index_test']));
+    }
+
+    public function testCreateIndexTwiceWithDifferentOrder()
+    {
+        $this->getCollection()->createIndex(['foo' => 1, 'bar' => 1]);
+
+        $expected = [
+            'createdCollectionAutomatically' => false,
+            'numIndexesBefore' => 2,
+            'numIndexesAfter' => 3,
+            'ok' => 1.0
+        ];
+        $this->assertSame($expected, $this->getCollection()->createIndex(['bar' => 1, 'foo' => 1]));
+    }
+
     public function testCreateIndexesWithDifferentOptions()
     {
         $this->setExpectedException('MongoResultException');
@@ -839,7 +880,32 @@ class MongoCollectionTest extends TestCase
         $this->getCollection()->createIndex(['foo' => 1], ['unique' => true]);
     }
 
-    public function testCreateIndexWithSameName()
+    /**
+     * @dataProvider createIndexIgnoredOptions
+     */
+    public function testCreateIndexesWithIgnoredOptions($option)
+    {
+        $this->getCollection()->createIndex(['foo' => 1]);
+
+        $expected = [
+            'createdCollectionAutomatically' => false,
+            'numIndexesBefore' => 2,
+            'numIndexesAfter' => 2,
+            'note' => 'all indexes already exist',
+            'ok' => 1.0
+        ];
+        $this->assertSame($expected, $this->getCollection()->createIndex(['foo' => 1], [$option => true]));
+    }
+
+    public static function createIndexIgnoredOptions()
+    {
+        return [
+            'background' => ['background'],
+            'dropDups' => ['dropDups'],
+        ];
+    }
+
+    public function testCreateIndexWithSameNameAndDifferentOptions()
     {
         $this->setExpectedException('MongoResultException');
 
@@ -867,6 +933,30 @@ class MongoCollectionTest extends TestCase
         $this->assertSame(['bar' => 1], $index->getKey());
         $this->assertTrue($index->isUnique());
         $this->assertSame('mongo-php-adapter.test', $index->getNamespace());
+    }
+
+    public function testEnsureIndexAlreadyExists()
+    {
+        $collection = $this->getCollection();
+        $collection->ensureIndex(['bar' => 1], ['unique' => true]);
+
+        $expected = [
+            'createdCollectionAutomatically' => false,
+            'numIndexesBefore' => 2,
+            'numIndexesAfter' => 2,
+            'ok' => 1.0,
+            'note' => 'all indexes already exist',
+        ];
+        $this->assertEquals($expected, $collection->ensureIndex(['bar' => 1], ['unique' => true]));
+    }
+
+    public function testEnsureIndexAlreadyExistsWithDifferentOptions()
+    {
+        $collection = $this->getCollection();
+        $collection->ensureIndex(['bar' => 1], ['unique' => true]);
+
+        $this->setExpectedException('MongoResultException', 'Index with name: bar_1 already exists with different options');
+        $collection->ensureIndex(['bar' => 1]);
     }
 
     public function testDeleteIndexUsingIndexName()
