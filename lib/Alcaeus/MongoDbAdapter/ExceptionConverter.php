@@ -82,4 +82,19 @@ class ExceptionConverter
 
         return new $class($message, $code, $e);
     }
+
+    /**
+     * Converts an exception to
+     *
+     * @param Exception\Exception $e
+     * @return array
+     */
+    public static function toResultArray(Exception\Exception $e)
+    {
+        return [
+            'ok' => 0.0,
+            'errmsg' => $e->getMessage(),
+            'code' => $e->getCode(),
+        ];
+    }
 }

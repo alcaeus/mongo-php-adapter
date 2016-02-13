@@ -655,12 +655,7 @@ class MongoCollection
         try {
             return TypeConverter::toLegacy($this->collection->dropIndex($indexName));
         } catch (\MongoDB\Driver\Exception\Exception $e) {
-            return [
-                'nIndexesWas' => count($this->getIndexInfo()),
-                'errmsg' => $e->getMessage(),
-                'ok' => 0.0,
-                'code' => $e->getCode(),
-            ];
+            return ExceptionConverter::toResultArray($e) + ['nIndexesWas' => count($this->getIndexInfo())];
         }
     }
 

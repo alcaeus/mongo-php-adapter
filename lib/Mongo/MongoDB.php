@@ -404,11 +404,7 @@ class MongoDB
 
             return iterator_to_array($cursor)[0];
         } catch (\MongoDB\Driver\Exception\Exception $e) {
-            return [
-                'ok' => 0.0,
-                'errmsg' => $e->getMessage(),
-                'code' => $e->getCode(),
-            ];
+            return ExceptionConverter::toResultArray($e);
         }
     }
 
