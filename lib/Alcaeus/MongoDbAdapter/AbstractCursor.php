@@ -375,4 +375,12 @@ abstract class AbstractCursor
         $this->cursor = null;
         $this->iterator = null;
     }
+
+    /**
+     * @return array
+     */
+    public function __sleep()
+    {
+        return ['batchSize', 'connection', 'iterator', 'ns', 'optionNames', 'position', 'startedIterating'];
+    }
 }

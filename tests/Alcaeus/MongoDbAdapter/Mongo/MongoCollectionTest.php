@@ -10,6 +10,11 @@ use Alcaeus\MongoDbAdapter\Tests\TestCase;
  */
 class MongoCollectionTest extends TestCase
 {
+    public function testSerialize()
+    {
+        $this->assertInternalType('string', serialize($this->getCollection()));
+    }
+
     public function testGetNestedCollections()
     {
         $collection = $this->getCollection()->foo->bar;

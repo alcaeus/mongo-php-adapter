@@ -958,5 +958,13 @@ class MongoCollection
             throw new Exception('Collection name cannot contain null bytes');
         }
     }
+
+    /**
+     * @return array
+     */
+    public function __sleep()
+    {
+        return ['db', 'name'];
+    }
 }
 

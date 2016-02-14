@@ -541,4 +541,12 @@ class MongoDB
             return $includeSystemCollections || ! preg_match('#^system\.#', $collectionInfo->getName());
         };
     }
+
+    /**
+     * @return array
+     */
+    public function __sleep()
+    {
+        return ['connection', 'name'];
+    }
 }

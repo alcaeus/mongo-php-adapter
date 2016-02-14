@@ -100,4 +100,12 @@ class MongoCommandCursor extends AbstractCursor implements MongoCursorInterface
 
         return $iterationInfo;
     }
+
+    /**
+     * @return array
+     */
+    public function __sleep()
+    {
+        return ['command'] + parent::__sleep();
+    }
 }

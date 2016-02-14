@@ -10,6 +10,13 @@ use Alcaeus\MongoDbAdapter\Tests\TestCase;
  */
 class MongoCommandCursorTest extends TestCase
 {
+    public function testSerialize()
+    {
+        $this->prepareData();
+        $cursor = $this->getCollection()->aggregateCursor([['$match' => ['foo' => 'bar']]]);
+        $this->assertInternalType('string', serialize($cursor));
+    }
+
     public function testInfo()
     {
         $this->prepareData();

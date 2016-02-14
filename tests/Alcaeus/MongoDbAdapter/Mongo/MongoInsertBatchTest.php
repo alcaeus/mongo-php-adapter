@@ -6,6 +6,12 @@ use Alcaeus\MongoDbAdapter\Tests\TestCase;
 
 class MongoInsertBatchTest extends TestCase
 {
+    public function testSerialize()
+    {
+        $batch = new \MongoInsertBatch($this->getCollection());
+        $this->assertInternalType('string', serialize($batch));
+    }
+
     public function testInsertBatch()
     {
         $batch = new \MongoInsertBatch($this->getCollection());

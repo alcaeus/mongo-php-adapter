@@ -6,6 +6,15 @@ use Alcaeus\MongoDbAdapter\Tests\TestCase;
 
 class MongoGridFSFileTest extends TestCase
 {
+    public function testSerialize()
+    {
+        $this->prepareFile('abcd', ['filename' => 'foo']);
+        $file = $this->getGridFS()->findOne(['filename' => 'foo']);
+        $this->assertInstanceOf(\MongoGridFSFile::class, $file);
+
+        $this->assertInternalType('string', serialize($file));
+    }
+
     public function testFileProperty()
     {
         $file = $this->getFile();

@@ -455,4 +455,28 @@ class MongoCursor extends AbstractCursor implements Iterator
             'fields' => $this->projection,
         ];
     }
+
+    /**
+     * @return array
+     */
+    public function __sleep()
+    {
+        return [
+            'allowPartialResults',
+            'awaitData',
+            'flags',
+            'hint',
+            'limit',
+            'maxTimeMS',
+            'noCursorTimeout',
+            'optionNames',
+            'options',
+            'projection',
+            'query',
+            'skip',
+            'snapshot',
+            'sort',
+            'tailable',
+        ] + parent::__sleep();
+    }
 }

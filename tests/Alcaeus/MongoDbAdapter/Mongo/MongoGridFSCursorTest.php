@@ -6,6 +6,16 @@ use Alcaeus\MongoDbAdapter\Tests\TestCase;
 
 class MongoGridFSCursorTest extends TestCase
 {
+    public function testSerialize()
+    {
+        $gridfs = $this->getGridFS();
+        $gridfs->storeBytes('foo', ['filename' => 'foo.txt']);
+        $gridfs->storeBytes('bar', ['filename' => 'bar.txt']);
+        $cursor = $gridfs->find(['filename' => 'foo.txt']);
+
+        $this->assertInternalType('string', serialize($cursor));
+    }
+
     public function testCursorItems()
     {
         $gridfs = $this->getGridFS();

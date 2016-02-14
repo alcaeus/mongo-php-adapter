@@ -334,5 +334,15 @@ class MongoClient
     {
         throw new \Exception('Not implemented');
     }
+
+    /**
+     * @return array
+     */
+    function __sleep()
+    {
+        return [
+            'connected', 'status', 'server', 'persistent'
+        ];
+    }
 }
 

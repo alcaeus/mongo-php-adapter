@@ -12,6 +12,13 @@ use MongoDB\Operation\Find;
  */
 class MongoCursorTest extends TestCase
 {
+    public function testSerialize()
+    {
+        $this->prepareData();
+        $cursor = $this->getCollection()->find(['foo' => 'bar']);
+        $this->assertInternalType('string', serialize($cursor));
+    }
+
     public function testCursorConvertsTypes()
     {
         $this->prepareData();
