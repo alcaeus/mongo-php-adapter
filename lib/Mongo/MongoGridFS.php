@@ -444,4 +444,12 @@ class MongoGridFS extends MongoCollection
         return (is_array($result) && $result['ok'] == 1.0) ||
                (is_bool($result) && $result);
     }
+
+    /**
+     * @return array
+     */
+    public function __sleep()
+    {
+        return ['chunks', 'chunksName', 'database', 'defaultChunkSize', 'filesName', 'prefix'] + parent::__sleep();
+    }
 }

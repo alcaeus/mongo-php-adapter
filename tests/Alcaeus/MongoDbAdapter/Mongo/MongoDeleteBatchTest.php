@@ -6,6 +6,12 @@ use Alcaeus\MongoDbAdapter\Tests\TestCase;
 
 class MongoDeleteBatchTest extends TestCase
 {
+    public function testSerialize()
+    {
+        $batch = new \MongoDeleteBatch($this->getCollection());
+        $this->assertInternalType('string', serialize($batch));
+    }
+
     public function testDeleteOne()
     {
         $collection = $this->getCollection();

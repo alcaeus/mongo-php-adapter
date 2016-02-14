@@ -9,6 +9,11 @@ use Alcaeus\MongoDbAdapter\Tests\TestCase;
  */
 class MongoClientTest extends TestCase
 {
+    public function testSerialize()
+    {
+        $this->assertInternalType('string', serialize($this->getClient()));
+    }
+
     public function testGetDb()
     {
         $client = $this->getClient();

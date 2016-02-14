@@ -6,6 +6,11 @@ use Alcaeus\MongoDbAdapter\Tests\TestCase;
 
 class MongoGridFSTest extends TestCase
 {
+    public function testSerialize()
+    {
+        $this->assertInternalType('string', serialize($this->getGridFS()));
+    }
+
     public function testChunkProperty()
     {
         $collection = $this->getGridFS();

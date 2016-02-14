@@ -10,6 +10,11 @@ use MongoDB\Driver\ReadPreference;
  */
 class MongoDBTest extends TestCase
 {
+    public function testSerialize()
+    {
+        $this->assertInternalType('string', serialize($this->getDatabase()));
+    }
+
     public function testEmptyDatabaseName()
     {
         $this->setExpectedException('Exception', 'Database name cannot be empty');

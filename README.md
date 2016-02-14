@@ -54,6 +54,11 @@ counterparts in `ext-mongo`. Do not rely on exception messages being the same.
 Methods that return a result array containing a `connectionId` field will always
 return `0` as connection ID.
 
+## Serialization of objects
+Serialization of any Mongo* objects (e.g. MongoGridFSFile, MongoCursor, etc.)
+will not work properly. The objects can be serialized but are not usable after
+unserializing them.
+
 ## Mongo
 
  - The Mongo class is deprecated and was not implemented in this library. If you
