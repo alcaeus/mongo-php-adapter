@@ -591,7 +591,13 @@ class MongoCollection
         }
 
         try {
-            $this->collection->createIndex($keys, $this->convertWriteConcernOptions($options));
+            foreach (['w', 'wTimeoutMS', 'safe', 'timeout', 'wtimeout'] as $invalidOption) {
+                if (isset($options[$invalidOption])) {
+                    unset($options[$invalidOption]);
+                }
+            }
+
+            $this->collection->createIndex($keys, $options);
         } catch (\MongoDB\Driver\Exception\Exception $e) {
             throw ExceptionConverter::toLegacy($e, 'MongoResultException');
         }
