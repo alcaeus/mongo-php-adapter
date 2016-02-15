@@ -527,8 +527,14 @@ class MongoCollection
      * @param array $options
      * @return array|null
      */
-    public function findOne(array $query = [], array $fields = [], array $options = [])
+    public function findOne($query = [], array $fields = [], array $options = [])
     {
+        // Can't typehint for array since MongoGridFS extends and accepts strings
+        if (! is_array($query)) {
+            trigger_error(sprintf('MongoCollection::findOne(): expects parameter 1 to be an array or object, %s given', gettype($query)), E_WARNING);
+            return;
+        }
+
         $options = ['projection' => $fields] + $options;
         try {
             $document = $this->collection->findOne(TypeConverter::fromLegacy($query), $options);

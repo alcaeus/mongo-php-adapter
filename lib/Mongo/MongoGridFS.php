@@ -120,15 +120,15 @@ class MongoGridFS extends MongoCollection
      * Returns a single file matching the criteria
      *
      * @link http://www.php.net/manual/en/mongogridfs.findone.php
-     * @param array $query The fields for which to search.
+     * @param mixed $query The fields for which to search or a filename to search for.
      * @param array $fields Fields of the results to return.
      * @param array $options Options for the find command
      * @return MongoGridFSFile|null
      */
-    public function findOne(array $query = [], array $fields = [], array $options = [])
+    public function findOne($query = [], array $fields = [], array $options = [])
     {
-        if (is_string($query)) {
-            $query = ['filename' => $query];
+        if (! is_array($query)) {
+            $query = ['filename' => (string) $query];
         }
 
         $items = iterator_to_array($this->find($query, $fields)->limit(1));
