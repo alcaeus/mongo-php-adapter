@@ -287,6 +287,19 @@ class MongoGridFSTest extends TestCase
         $this->assertInstanceOf('MongoGridFSFile', $result);
     }
 
+    public function testFindOneWithFilenameReturnsFile()
+    {
+        $collection = $this->getGridFS();
+        $this->prepareFile('abcd', ['filename' => 'abcd']);
+        $this->prepareFile('test', ['filename' => 'test']);
+        $this->prepareFile('zyxv', ['filename' => 'zyxv']);
+
+        $result = $collection->findOne('test');
+
+        $this->assertInstanceOf('MongoGridFSFile', $result);
+        $this->assertSame('test', $result->getBytes());
+    }
+
     public function testFindOneNotFoundReturnsNull()
     {
         $collection = $this->getGridFS();
