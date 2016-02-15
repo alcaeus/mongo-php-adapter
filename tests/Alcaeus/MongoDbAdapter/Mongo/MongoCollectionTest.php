@@ -835,6 +835,20 @@ class MongoCollectionTest extends TestCase
         $this->assertSame($expected, $this->getCollection()->createIndex(['foo' => 1]));
     }
 
+    public function testCreateIndexWithDeprecatedOptions()
+    {
+        $this->getCollection()->createIndex(['foo' => 1], ['w' => 1]);
+
+        $expected = [
+            'createdCollectionAutomatically' => false,
+            'numIndexesBefore' => 2,
+            'numIndexesAfter' => 2,
+            'note' => 'all indexes already exist',
+            'ok' => 1.0
+        ];
+        $this->assertSame($expected, $this->getCollection()->createIndex(['foo' => 1]));
+    }
+
     public function testCreateIndexTwiceWithSameName()
     {
         $this->getCollection()->createIndex(['foo' => 1], ['name' => 'test_index']);
