@@ -77,6 +77,7 @@ class MongoIdTest extends TestCase
             'MongoId' => [true, new \MongoId($original)],
             'ObjectID' => [true, new ObjectID($original)],
             'invalidString' => [false, 'abc'],
+            'object' => [false, new \stdClass()],
         ];
     }
 }

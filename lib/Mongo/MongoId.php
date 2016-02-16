@@ -48,6 +48,8 @@ class MongoId implements Serializable, TypeInterface
     {
         if ($value instanceof ObjectID || $value instanceof MongoId) {
             return true;
+        } elseif (! is_string($value)) {
+            return false;
         }
 
         return (bool) preg_match('#^[a-f0-9]{24}$#i', $value);
