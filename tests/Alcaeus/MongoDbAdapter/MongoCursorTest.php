@@ -82,6 +82,50 @@ class MongoCursorTest extends TestCase
         $this->assertInstanceOf('MongoId', $item['_id']);
         $this->assertSame('bar', $item['foo']);
     }
+    
+    public function testHasNext() {
+        $this->prepareData();
+        
+        $collection = $this->getCollection();
+        $cursor = $collection->find(['foo' => 'bar']);
+        
+        $checkNext = $cursor->hasNext();
+        $this->assertTrue($checkNext);
+        
+        $item = $cursor->getNext();
+        $this->assertNotNull($item);
+        $this->assertInstanceOf('MongoId', $item['_id']);
+        $this->assertSame('bar', $item['foo']);
+        
+        $item = $cursor->getNext();
+        $this->assertNotNull($item);
+        $this->assertInstanceOf('MongoId', $item['_id']);
+        $this->assertSame('bar', $item['foo']);
+        
+        $checkNext = $cursor->hasNext();
+        $this->assertFalse($checkNext);
+        
+        $item = $cursor->getNext();
+        $this->assertNull($item);
+        
+        $cursor->reset();
+        
+        $checkNext = $cursor->hasNext();
+        $this->assertTrue($checkNext);
+        
+        $item = $cursor->getNext();
+        $this->assertNotNull($item);
+        $this->assertInstanceOf('MongoId', $item['_id']);
+        $this->assertSame('bar', $item['foo']);
+        
+        $checkNext = $cursor->hasNext();
+        $this->assertTrue($checkNext);
+        
+        $item = $cursor->getNext();
+        $this->assertNotNull($item);
+        $this->assertInstanceOf('MongoId', $item['_id']);
+        $this->assertSame('bar', $item['foo']);
+    }
 
     public function testIteratorInterface()
     {

@@ -372,7 +372,7 @@ class MongoCursor extends AbstractCursor implements Iterator
         return $this;
     }
 
-    /**
+    /** 
      * Sets whether this cursor will be left open after fetching the last results
      * @link http://www.php.net/manual/en/mongocursor.tailable.php
      * @param bool $tail If the cursor should be tailable.
