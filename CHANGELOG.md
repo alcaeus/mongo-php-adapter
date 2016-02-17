@@ -3,7 +3,7 @@ CHANGELOG
 
 This changelog references the relevant changes done in minor version updates.
 
-1.0.0-BETA1 (2016-02-xx)
+1.0.0-BETA1 (2016-02-17)
 ------------------------
 
 All issues and pull requests under this release may be found under the
