@@ -5,10 +5,10 @@
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/alcaeus/mongo-php-adapter/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/alcaeus/mongo-php-adapter/?branch=master)
 
 The Mongo PHP Adapter is a userland library designed to act as an adapter
-between applications relying on ext-mongo and the new driver (ext-mongodb).
+between applications relying on ext-mongo and the new driver (`ext-mongodb`).
 
 It provides the API of ext-mongo built on top of mongo-php-library, thus being
-compatible with PHP7.
+compatible with PHP 7.
 
 # Goal
 
@@ -17,7 +17,7 @@ on libraries using ext-mongo (e.g. [Doctrine ODM](https://github.com/doctrine/mo
 but want to migrate to PHP 7 or HHVM on which ext-mongo will not run.
 
 You should not be using this library if you do not rely on a library using
-ext-mongo. If you are starting a new project, please check out [mongodb/mongodb](https://github.com/mongodb/mongo-php-library).
+`ext-mongo`. If you are starting a new project, please check out [mongodb/mongodb](https://github.com/mongodb/mongo-php-library).
 
 # Stability
 
@@ -27,8 +27,8 @@ fatal errors may occur. Please use at your own risk.
 
 # Installation
 
-This library requires you to have the mongodb extension installed and conflicts
-with the legacy mongo extension.
+This library requires you to have the `mongodb` extension installed, and it
+conflicts with the legacy `mongo` extension.
 
 The preferred method of installing this library is with
 [Composer](https://getcomposer.org/) by running the following from your project
@@ -36,13 +36,26 @@ root:
 
     $ composer require "alcaeus/mongo-php-adapter=^1.0.0@beta"
 
-If your project requires a library that requires `ext-mongo` you need to also
-specify a `replace` option in your composer.json:
-    "replace": {
-        "ext-mongo": "1.6.12"
+This package declares that it replaces `ext-mongo`; Composer only allows this
+replacement to apply if `composer.json` or a dependency contain a requirement,
+see [composer/composer#2690](https://github.com/composer/composer/issues/2690).
+
+Therefore, you either need to have a dependency on a package which requires
+`ext-mongo`, such as `doctrine/mongodb`, in your project:
+
+    "require": {
+        "php": "^7.0",
+        "alcaeus/mongo-php-adapter": "^1.0.0@beta",
+        "doctrine/mongodb": "dev-master"
     }
 
-Due to a limitation in composer you need to specify this in the **root package**.
+or you need to explicitly require `ext-mongo` yourself in `composer.json`:
+
+    "require": {
+        "php": "^7.0",
+        "alcaeus/mongo-php-adapter": "^1.0.0@beta",
+        "ext-mongo": "*"
+    }
 
 # Known issues
 
