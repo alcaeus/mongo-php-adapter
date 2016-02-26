@@ -13,5 +13,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+if (class_exists('MongoException', false)) {
+    return;
+}
+
 class MongoException extends Exception {
 }

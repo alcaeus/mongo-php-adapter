@@ -13,6 +13,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+if (class_exists('MongoExecutionTimeoutException', false)) {
+    return;
+}
+
 /**
  * <p>(PECL mongo &gt;= 1.5.0)</p>
  * @link http://php.net/manual/en/class.mongoexecutiontimeoutexception.php

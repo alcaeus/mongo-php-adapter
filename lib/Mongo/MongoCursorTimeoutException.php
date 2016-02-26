@@ -13,6 +13,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+if (class_exists('MongoCursorTimeoutException', false)) {
+    return;
+}
+
 class MongoCursorTimeoutException extends MongoCursorException {
 
 }

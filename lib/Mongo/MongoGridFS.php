@@ -13,6 +13,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+if (class_exists('MongoGridFS', false)) {
+    return;
+}
+
 class MongoGridFS extends MongoCollection
 {
     const ASCENDING = 1;

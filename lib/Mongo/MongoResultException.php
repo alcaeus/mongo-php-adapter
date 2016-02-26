@@ -13,6 +13,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+if (class_exists('MongoResultException', false)) {
+    return;
+}
+
 /**
  * <p>(PECL mongo &gt;= 1.3.0)</p>
  * @link http://php.net/manual/en/class.mongoresultexception.php#mongoresultexception.props.document
