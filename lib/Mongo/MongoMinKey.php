@@ -13,6 +13,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+if (class_exists('MongoMinKey', false)) {
+    return;
+}
+
 use Alcaeus\MongoDbAdapter\TypeInterface;
 use MongoDB\BSON\MinKey;
 

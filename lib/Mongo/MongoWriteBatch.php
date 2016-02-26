@@ -13,6 +13,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+if (class_exists('MongoWriteBatch', false)) {
+    return;
+}
+
 use Alcaeus\MongoDbAdapter\TypeConverter;
 use Alcaeus\MongoDbAdapter\Helper\WriteConcernConverter;
 

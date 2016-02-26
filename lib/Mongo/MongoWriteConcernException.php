@@ -13,6 +13,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+if (class_exists('MongoWriteConcernException', false)) {
+    return;
+}
+
 /**
  * <p>(PECL mongo &gt;= 1.5.0)</p>
  * @link http://php.net/manual/en/class.mongowriteconcernexception.php#class.mongowriteconcernexception

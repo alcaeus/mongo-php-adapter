@@ -13,6 +13,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+if (class_exists('Mongo', false)) {
+    return;
+}
+
 /**
  * The connection point between MongoDB and PHP.
  * This class is used to initiate a connection and for database server commands.

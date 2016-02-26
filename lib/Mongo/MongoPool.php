@@ -13,6 +13,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+if (class_exists('MongoPool', false)) {
+    return;
+}
+
 /**
  * @deprecated The current (1.3.0+) releases of the driver no longer implements pooling. This class and its methods are therefore deprecated and should not be used.
  */

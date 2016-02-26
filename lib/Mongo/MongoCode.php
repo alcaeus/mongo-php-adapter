@@ -13,6 +13,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+if (class_exists('MongoCode', false)) {
+    return;
+}
+
 class MongoCode implements \Alcaeus\MongoDbAdapter\TypeInterface
 {
     /**

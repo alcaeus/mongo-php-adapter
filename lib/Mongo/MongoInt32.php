@@ -13,6 +13,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+if (class_exists('MongoInt32', false)) {
+    return;
+}
+
 use Alcaeus\MongoDbAdapter\TypeInterface;
 
 class MongoInt32 implements TypeInterface

@@ -13,6 +13,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+if (class_exists('MongoDB', false)) {
+    return;
+}
+
 use Alcaeus\MongoDbAdapter\Helper;
 use Alcaeus\MongoDbAdapter\TypeConverter;
 use Alcaeus\MongoDbAdapter\ExceptionConverter;
