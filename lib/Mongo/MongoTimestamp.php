@@ -52,10 +52,10 @@ class MongoTimestamp implements TypeInterface
     public function __construct($sec = 0, $inc = 0)
     {
         if ($sec instanceof Timestamp) {
-            // Only way is to convert is from string: [<sec>:<inc>]
+            // Only way is to convert is from string: [<inc>:<sec>]
             $parts = explode(':', substr((string) $sec, 1, -1));
-            $this->sec = (int) $parts[0];
-            $this->inc = (int) $parts[1];
+            $this->sec = (int) $parts[1];
+            $this->inc = (int) $parts[0];
 
             return;
         }
@@ -89,6 +89,6 @@ class MongoTimestamp implements TypeInterface
      */
     public function toBSONType()
     {
-        return new Timestamp($this->sec, $this->inc);
+        return new Timestamp($this->inc, $this->sec);
     }
 }
