@@ -494,7 +494,6 @@ class MongoCollectionTest extends TestCase
 
     public function testAggregate()
     {
-        $this->skipTestUnless(extension_loaded('mongo'));
         $collection = $this->getCollection();
 
         $this->prepareData();
@@ -521,9 +520,22 @@ class MongoCollectionTest extends TestCase
         ], $result['result']);
     }
 
+    public function testAggregateInvalidPipeline()
+    {
+        $collection = $this->getCollection();
+
+        $pipeline = [
+            [
+                '$invalid' => []
+            ],
+        ];
+
+        $this->setExpectedException('MongoResultException', 'Unrecognized pipeline stage name');
+        $collection->aggregate($pipeline);
+    }
+
     public function testAggregateTimeoutException()
     {
-        $this->skipTestUnless(extension_loaded('mongo'));
         $collection = $this->getCollection();
 
         $this->failMaxTimeMS();
