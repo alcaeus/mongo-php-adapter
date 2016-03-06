@@ -161,9 +161,15 @@ class MongoCollection
         }
 
         try {
-            return $this->collection->aggregate(TypeConverter::fromLegacy($pipeline), $options);
+            $cursor = $this->collection->aggregate(TypeConverter::fromLegacy($pipeline), $options);
+
+            return [
+                'ok' => 1.0,
+                'result' => TypeConverter::toLegacy($cursor),
+                'waitedMS' => 0,
+            ];
         } catch (\MongoDB\Driver\Exception\Exception $e) {
-            throw ExceptionConverter::toLegacy($e);
+            throw ExceptionConverter::toLegacy($e,'MongoResultException');
         }
     }
 
