@@ -125,6 +125,9 @@ unserializing them.
  authentication information.
  - The [setFlag](https://php.net/manual/en/mongocursor.setflag.php)
  method is not yet implemented.
+ - The [timeout](https://php.net/manual/en/mongocursor.timeout.php) method will
+ not change any query options. Client-side timeouts are no longer supported by
+ the new driver. Use the maxTimeMS setting as a replacement.
 
 ## MongoCommandCursor
  - The [createFromDocument](https://php.net/manual/en/mongocommandcursor.createfromdocument.php)
