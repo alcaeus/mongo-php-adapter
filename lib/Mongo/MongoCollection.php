@@ -500,7 +500,13 @@ class MongoCollection
                 unset($options['remove']);
                 $document = $this->collection->findOneAndDelete($query, $options);
             } else {
-                $update = is_array($update) ? TypeConverter::fromLegacy($update) : [];
+                $update = is_array($update) ? $update : [];
+                if (isset($options['update']) && is_array($options['update'])) {
+                    $update = array_merge($update, $options['update']);
+                    unset($options['update']);
+                }
+
+                $update = TypeConverter::fromLegacy($update);
 
                 if (isset($options['new'])) {
                     $options['returnDocument'] = \MongoDB\Operation\FindOneAndUpdate::RETURN_DOCUMENT_AFTER;
