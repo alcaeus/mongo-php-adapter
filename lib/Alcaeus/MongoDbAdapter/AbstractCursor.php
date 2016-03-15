@@ -67,6 +67,26 @@ abstract class AbstractCursor
     protected $startedIterating = false;
 
     /**
+     * @var bool
+     */
+    protected $cursorNeedsAdvancing = true;
+
+    /**
+     * @var mixed
+     */
+    private $current = null;
+
+    /**
+     * @var mixed
+     */
+    private $key = null;
+
+    /**
+     * @var mixed
+     */
+    private $valid = false;
+
+    /**
      * @var int
      */
     protected $position = 0;
@@ -118,16 +138,7 @@ abstract class AbstractCursor
      */
     public function current()
     {
-        if (! $this->startedIterating) {
-            return null;
-        }
-
-        $document = $this->ensureIterator()->current();
-        if ($document !== null) {
-            $document = TypeConverter::toLegacy($document);
-        }
-
-        return $document;
+        return $this->current;
     }
 
     /**
@@ -137,11 +148,7 @@ abstract class AbstractCursor
      */
     public function key()
     {
-        if (! $this->startedIterating) {
-            return null;
-        }
-
-        return $this->ensureIterator()->key();
+        return $this->key;
     }
 
     /**
@@ -157,11 +164,15 @@ abstract class AbstractCursor
             $this->ensureIterator();
             $this->startedIterating = true;
         } else {
-            $this->ensureIterator()->next();
+            if ($this->cursorNeedsAdvancing) {
+                $this->ensureIterator()->next();
+            }
+
+            $this->cursorNeedsAdvancing = true;
             $this->position++;
         }
 
-        return $this->current();
+        return $this->storeIteratorState();
     }
 
     /**
@@ -177,6 +188,7 @@ abstract class AbstractCursor
         $this->startedIterating = true;
         $this->position = 0;
         $this->ensureIterator()->rewind();
+        $this->storeIteratorState();
     }
 
     /**
@@ -186,11 +198,7 @@ abstract class AbstractCursor
      */
     public function valid()
     {
-        if (! $this->startedIterating) {
-            return false;
-        }
-
-        return $this->ensureIterator()->valid();
+        return $this->valid;
     }
 
     /**
@@ -375,6 +383,7 @@ abstract class AbstractCursor
         $this->startedIterating = false;
         $this->cursor = null;
         $this->iterator = null;
+        $this->storeIteratorState();
     }
 
     /**
@@ -383,5 +392,31 @@ abstract class AbstractCursor
     public function __sleep()
     {
         return ['batchSize', 'connection', 'iterator', 'ns', 'optionNames', 'position', 'startedIterating'];
+    }
+
+    /**
+     * Stores the current cursor element.
+     *
+     * This is necessary because hasNext() might advance the iterator but we still
+     * need to be able to return the current object.
+     */
+    private function storeIteratorState()
+    {
+        if (! $this->startedIterating) {
+            $this->current = null;
+            $this->key = null;
+            $this->valid = false;
+            return null;
+        }
+
+        $this->current = $this->ensureIterator()->current();
+        $this->key = $this->ensureIterator()->key();
+        $this->valid = $this->ensureIterator()->valid();
+
+        if ($this->current !== null) {
+            $this->current = TypeConverter::toLegacy($this->current);
+        }
+
+        return $this->current;
     }
 }
