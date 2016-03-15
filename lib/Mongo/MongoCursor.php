@@ -221,8 +221,12 @@ class MongoCursor extends AbstractCursor implements Iterator
      */
     public function hasNext()
     {
-        $this->errorIfOpened();
-        $this->notImplemented();
+        if ($this->cursorNeedsAdvancing) {
+            $this->ensureIterator()->next();
+            $this->cursorNeedsAdvancing = false;
+        }
+
+        return $this->ensureIterator()->valid();
     }
 
     /**
