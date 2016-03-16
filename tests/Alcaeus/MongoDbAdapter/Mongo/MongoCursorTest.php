@@ -67,21 +67,25 @@ class MongoCursorTest extends TestCase
         $collection = $this->getCollection();
         $cursor = $collection->find(['foo' => 'bar']);
 
+        $this->assertTrue($cursor->hasNext());
         $item = $cursor->getNext();
         $this->assertNotNull($item);
         $this->assertInstanceOf('MongoId', $item['_id']);
         $this->assertSame('bar', $item['foo']);
 
+        $this->assertTrue($cursor->hasNext());
         $item = $cursor->getNext();
         $this->assertNotNull($item);
         $this->assertInstanceOf('MongoId', $item['_id']);
         $this->assertSame('bar', $item['foo']);
 
+        $this->assertFalse($cursor->hasNext());
         $item = $cursor->getNext();
         $this->assertNull($item);
 
         $cursor->reset();
 
+        $this->assertTrue($cursor->hasNext());
         $item = $cursor->getNext();
         $this->assertNotNull($item);
         $this->assertInstanceOf('MongoId', $item['_id']);
