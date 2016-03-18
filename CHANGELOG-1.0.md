@@ -3,6 +3,26 @@ CHANGELOG
 
 This changelog references the relevant changes done in minor version updates.
 
+1.0.0 (2016-03-18)
+------------------
+
+All issues and pull requests under this release may be found under the
+[1.0.0](https://github.com/alcaeus/mongo-php-adapter/issues?q=milestone%3A1.0.0)
+milestone.
+
+ * [#74](https://github.com/alcaeus/mongo-php-adapter/pull/74) fixes running an
+ aggregation command and returning a result document instead of a result cursor.
+ This bug was fixed in the underlying mongo-php-library.
+ * [#71](https://github.com/alcaeus/mongo-php-adapter/pull/71) adds checks to
+ all class files to prevent class declarations when `ext-mongo` is already
+ loaded and not using an autoloader.
+ * [#72](https://github.com/alcaeus/mongo-php-adapter/pull/72) fixes wrong
+ argument order in the constructor for the `Timestamp` type.
+ * [#75](https://github.com/alcaeus/mongo-php-adapter/pull/75) adds a warning to
+ `MongoCursor::timeout` to let people now cursor timeouts are no longer supported.
+ * [#77](https://github.com/alcaeus/mongo-php-adapter/pull/77) adds support for
+ the `update` option in `findAndModify` calls.
+
 1.0.0-BETA1 (2016-02-17)
 ------------------------
 
