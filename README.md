@@ -19,12 +19,6 @@ but want to migrate to PHP 7 or HHVM on which ext-mongo will not run.
 You should not be using this library if you do not rely on a library using
 `ext-mongo`. If you are starting a new project, please check out [mongodb/mongodb](https://github.com/mongodb/mongo-php-library).
 
-# Stability
-
-This library is still in development and not stable enough to be used in
-production. In addition to the known issues outlined below, other issues or
-fatal errors may occur. Please use at your own risk.
-
 # Installation
 
 This library requires you to have the `mongodb` extension installed, and it
@@ -34,9 +28,9 @@ The preferred method of installing this library is with
 [Composer](https://getcomposer.org/) by running the following from your project
 root:
 
-    $ composer require "alcaeus/mongo-php-adapter=^1.0.0@beta"
+    $ composer require alcaeus/mongo-php-adapter
 
-This package declares that it replaces `ext-mongo`; Composer only allows this
+This package declares that it provides `ext-mongo`; Composer only allows this
 replacement to apply if `composer.json` or a dependency contain a requirement,
 see [composer/composer#2690](https://github.com/composer/composer/issues/2690).
 
@@ -45,7 +39,7 @@ Therefore, you either need to have a dependency on a package which requires
 
     "require": {
         "php": "^7.0",
-        "alcaeus/mongo-php-adapter": "^1.0.0@beta",
+        "alcaeus/mongo-php-adapter": "^1.0.0",
         "doctrine/mongodb": "dev-master"
     }
 
@@ -53,7 +47,7 @@ or you need to explicitly require `ext-mongo` yourself in `composer.json`:
 
     "require": {
         "php": "^7.0",
-        "alcaeus/mongo-php-adapter": "^1.0.0@beta",
+        "alcaeus/mongo-php-adapter": "^1.0.0",
         "ext-mongo": "*"
     }
 
