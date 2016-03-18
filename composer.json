@@ -17,7 +17,7 @@
         "phpunit/phpunit": "^4.8 || ^5.0"
     },
     "provide": {
-        "ext-mongo": "1.6.12"
+        "ext-mongo": "1.6.13"
     },
     "autoload": {
         "psr-0": {
