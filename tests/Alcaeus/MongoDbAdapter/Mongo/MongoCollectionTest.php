@@ -439,6 +439,60 @@ class MongoCollectionTest extends TestCase
         $this->assertSame(2, $collection->count(['foo' => 'bar']));
     }
 
+    public function testCountWithLimit()
+    {
+        $this->prepareData();
+        $collection = $this->getCollection();
+
+        $this->assertSame(2, $collection->count([], ['limit' => 2]));
+        $this->assertSame(1, $collection->count(['foo' => 'bar'], ['limit' => 1]));
+    }
+
+    public function testCountWithLimitLegacy()
+    {
+        $this->prepareData();
+        $collection = $this->getCollection();
+
+        $this->assertSame(2, $collection->count([], 2));
+        $this->assertSame(1, $collection->count(['foo' => 'bar'], 1));
+    }
+
+    public function testCountWithSkip()
+    {
+        $this->prepareData();
+        $collection = $this->getCollection();
+
+        $this->assertSame(2, $collection->count([], ['skip' => 1]));
+        $this->assertSame(1, $collection->count(['foo' => 'bar'], ['skip' => 1]));
+    }
+
+    public function testCountWithSkipLegacy()
+    {
+        $this->prepareData();
+        $collection = $this->getCollection();
+
+        $this->assertSame(2, $collection->count([], null, 1));
+        $this->assertSame(1, $collection->count(['foo' => 'bar'], null, 1));
+    }
+
+    public function testCountWithLimitAndSkip()
+    {
+        $this->prepareData();
+        $collection = $this->getCollection();
+
+        $this->assertSame(2, $collection->count([], ['skip' => 1, 'limit' => 2]));
+        $this->assertSame(1, $collection->count([], ['skip' => 1, 'limit' => 1]));
+    }
+
+    public function testCountWithLimitAndSkipLegacy()
+    {
+        $this->prepareData();
+        $collection = $this->getCollection();
+
+        $this->assertSame(2, $collection->count([], 2, 1));
+        $this->assertSame(1, $collection->count([], 1, 1));
+    }
+
     public function testCountTimeout()
     {
         $this->failMaxTimeMS();
