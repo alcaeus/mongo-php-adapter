@@ -724,9 +724,23 @@ class MongoCollection
      * @param array $options
      * @return int Returns the number of documents matching the query.
      */
-    public function count($query = [], array $options = [])
+    public function count($query = [], $options = [])
     {
         try {
+            // Handle legacy mode - limit and skip as second and third parameters, respectively
+            if (! is_array($options)) {
+                $limit = $options;
+                $options = [];
+
+                if ($limit !== null) {
+                    $options['limit'] = (int) $limit;
+                }
+
+                if (func_num_args() > 2) {
+                    $options['skip'] = (int) func_get_args()[2];
+                }
+            }
+
             return $this->collection->count(TypeConverter::fromLegacy($query), $options);
         } catch (\MongoDB\Driver\Exception\Exception $e) {
             throw ExceptionConverter::toLegacy($e);
