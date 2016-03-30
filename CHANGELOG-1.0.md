@@ -3,6 +3,18 @@ CHANGELOG
 
 This changelog references the relevant changes done in minor version updates.
 
+1.0.1 (????-??-??)
+------------------
+
+All issues and pull requests under this release may be found under the
+[1.0.1](https://github.com/alcaeus/mongo-php-adapter/issues?q=milestone%3A1.0.1)
+milestone.
+
+ * [#85](https://github.com/alcaeus/mongo-php-adapter/pull/85) fixes calls to
+ `MongoCollection::count` using the legacy syntax of providing `skip` and `limit`
+ arguments instead of an `options` array.
+
+
 1.0.0 (2016-03-18)
 ------------------
 
