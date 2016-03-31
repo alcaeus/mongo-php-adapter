@@ -546,6 +546,32 @@ class MongoCollectionTest extends TestCase
         $this->assertEquals(['bar'], $values);
     }
 
+    public function testDistinctWithIdQuery()
+    {
+        $document1 = ['foo' => 'bar'];
+        $document2 = ['foo' => 'bar'];
+        $document3 = ['foo' => 'foo'];
+
+        $collection = $this->getCollection();
+        $collection->insert($document1);
+        $collection->insert($document2);
+        $collection->insert($document3);
+
+        $this->assertSame(
+            ['bar'],
+            $collection->distinct('foo', ['_id' => [
+                '$in' => [$document1['_id'], $document2['_id']]
+            ]])
+        );
+
+        $this->assertEquals(
+            ['bar', 'foo'],
+            $collection->distinct('foo', ['_id' => [
+                '$in' => [$document1['_id'], $document3['_id']]
+            ]])
+        );
+    }
+
     public function testAggregate()
     {
         $collection = $this->getCollection();

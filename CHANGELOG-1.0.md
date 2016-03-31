@@ -13,6 +13,9 @@ milestone.
  * [#85](https://github.com/alcaeus/mongo-php-adapter/pull/85) fixes calls to
  `MongoCollection::count` using the legacy syntax of providing `skip` and `limit`
  arguments instead of an `options` array.
+ * [#88](https://github.com/alcaeus/mongo-php-adapter/pull/88) fixes an error
+ where a call to `MongoCollection::distinct` with a query did not convert legacy
+ BSON types to the new driver types.
 
 
 1.0.0 (2016-03-18)
