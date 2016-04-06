@@ -64,7 +64,7 @@ class MongoDB
     {
         $this->checkDatabaseName($name);
         $this->connection = $conn;
-        $this->name = $name;
+        $this->name = (string) $name;
 
         $this->setReadPreferenceFromArray($conn->getReadPreference());
         $this->setWriteConcernFromArray($conn->getWriteConcern());

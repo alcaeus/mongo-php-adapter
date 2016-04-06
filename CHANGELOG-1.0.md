@@ -3,6 +3,16 @@ CHANGELOG
 
 This changelog references the relevant changes done in minor version updates.
 
+1.0.2 (????-??-??)
+------------------
+
+All issues and pull requests under this release may be found under the
+[1.0.2](https://github.com/alcaeus/mongo-php-adapter/issues?q=milestone%3A1.0.2)
+milestone.
+
+ * [#90](https://github.com/alcaeus/mongo-php-adapter/pull/90) ensures that database
+ and collection names are properly cast to string on creation.
+
 1.0.1 (2016-04-01)
 ------------------
 
