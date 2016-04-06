@@ -70,7 +70,7 @@ class MongoGridFS extends MongoCollection
         }
 
         $this->database = $db;
-        $this->prefix = $prefix;
+        $this->prefix = (string) $prefix;
         $this->filesName = $prefix . '.files';
         $this->chunksName = $prefix . '.chunks';
 
