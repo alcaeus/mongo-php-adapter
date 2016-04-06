@@ -61,7 +61,7 @@ class MongoCollection
     {
         $this->checkCollectionName($name);
         $this->db = $db;
-        $this->name = $name;
+        $this->name = (string) $name;
 
         $this->setReadPreferenceFromArray($db->getReadPreference());
         $this->setWriteConcernFromArray($db->getWriteConcern());

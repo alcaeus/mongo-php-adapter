@@ -1479,6 +1479,15 @@ class MongoCollectionTest extends TestCase
         $this->assertInstanceOf('MongoCollection', $collection->{'foo' . chr(0)});
         $this->assertSame('test', $collection->getName());
     }
+
+    public function testSelectCollectionWithDatabaseObject()
+    {
+        $client = $this->getClient();
+        $database = $this->getDatabase($client);
+
+        $collection = $client->selectCollection($database, 'test');
+        $this->assertSame('mongo-php-adapter.test', (string) $collection);
+    }
 }
 
 class PrivatePropertiesStub
