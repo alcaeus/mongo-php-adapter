@@ -12,6 +12,8 @@ milestone.
 
  * [#90](https://github.com/alcaeus/mongo-php-adapter/pull/90) ensures that database
  and collection names are properly cast to string on creation.
+ * [#94](https://github.com/alcaeus/mongo-php-adapter/pull/94) fixes an error in
+ `MongoCursor::hasNext` that led to wrong data being returned.
 
 1.0.1 (2016-04-01)
 ------------------
