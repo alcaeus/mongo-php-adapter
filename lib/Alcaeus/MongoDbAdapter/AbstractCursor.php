@@ -400,7 +400,7 @@ abstract class AbstractCursor
      * This is necessary because hasNext() might advance the iterator but we still
      * need to be able to return the current object.
      */
-    private function storeIteratorState()
+    protected function storeIteratorState()
     {
         if (! $this->startedIterating) {
             $this->current = null;

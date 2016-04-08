@@ -1488,6 +1488,28 @@ class MongoCollectionTest extends TestCase
         $collection = $client->selectCollection($database, 'test');
         $this->assertSame('mongo-php-adapter.test', (string) $collection);
     }
+
+    public function testHasNextLoop()
+    {
+        $collection = $this->getCollection();
+        for ($i = 0; $i < 5; $i++) {
+            $document = ['i' => $i];
+            $collection->insert($document);
+        }
+
+        $cursor = $collection->find()->sort(['i' => 1]);
+        $data = [];
+        $i = 0;
+        while ($cursor->hasNext()) {
+            $this->assertSame($i < 5, $cursor->hasNext());
+            $row = $cursor->getNext();
+            $this->assertSame($i, $row['i']);
+            $data[] = $row;
+            $i++;
+        }
+
+        $this->assertCount(5, $data);
+    }
 }
 
 class PrivatePropertiesStub
