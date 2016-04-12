@@ -60,6 +60,18 @@ class MongoCursorTest extends TestCase
         $cursor->count();
     }
 
+    public function testCountAfterIteration()
+    {
+        $this->prepareData();
+
+        $collection = $this->getCollection();
+        $cursor = $collection->find(['foo' => 'bar']);
+
+        // Ensure the generator is consumed and thus closed
+        iterator_to_array($cursor);
+        $this->assertSame(2, $cursor->count(true));
+    }
+
     public function testNextStartsWithFirstItem()
     {
         $this->prepareData();

@@ -7,6 +7,18 @@ This changelog references the relevant changes done in minor version updates.
 ------------------
 
 All issues and pull requests under this release may be found under the
+[1.0.3](https://github.com/alcaeus/mongo-php-adapter/issues?q=milestone%3A1.0.3)
+milestone.
+
+ * [#96](https://github.com/alcaeus/mongo-php-adapter/pull/96) fixes errors when
+ calling `count` on a cursor that has been iterated fully. The fix removes a
+ performance improvement when calling `count` on a cursor that has been opened.
+ `MongoCursor::count` now always re-issues a `count` command to the server.
+
+1.0.2 (2016-04-08)
+------------------
+
+All issues and pull requests under this release may be found under the
 [1.0.2](https://github.com/alcaeus/mongo-php-adapter/issues?q=milestone%3A1.0.2)
 milestone.
 
