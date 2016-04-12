@@ -135,10 +135,6 @@ class MongoCursor extends AbstractCursor implements Iterator
      */
     public function count($foundOnly = false)
     {
-        if ($foundOnly && $this->cursor !== null) {
-            return iterator_count($this->ensureIterator());
-        }
-
         $optionNames = ['hint', 'maxTimeMS'];
         if ($foundOnly) {
             $optionNames = array_merge($optionNames, ['limit', 'skip']);
