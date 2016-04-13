@@ -3,7 +3,7 @@ CHANGELOG
 
 This changelog references the relevant changes done in minor version updates.
 
-1.0.3 (????-??-??)
+1.0.3 (2016-04-13)
 ------------------
 
 All issues and pull requests under this release may be found under the
@@ -16,6 +16,8 @@ milestone.
  `MongoCursor::count` now always re-issues a `count` command to the server.
  * [#98](https://github.com/alcaeus/mongo-php-adapter/pull/98) fixes an error
  where using BSON types in a query projection would result in wrong results.
+ * [#99](https://github.com/alcaeus/mongo-php-adapter/pull/99) ensures that the
+ `sec` and `usec` properties for `MongoDate` are cast to int.
 
 1.0.2 (2016-04-08)
 ------------------

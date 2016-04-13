@@ -46,6 +46,13 @@ class MongoDateTest extends TestCase
         $this->assertSame((float) $timestamp, (float) $bsonTimestamp);
     }
 
+    public function testCreateWithString()
+    {
+        $date = new \MongoDate('1234567890', '123456');
+        $this->assertAttributeSame(1234567890, 'sec', $date);
+        $this->assertAttributeSame(123000, 'usec', $date);
+    }
+
     public function testCreateWithBsonDate()
     {
         $this->skipTestUnless(in_array(TypeInterface::class, class_implements('MongoDate')));
