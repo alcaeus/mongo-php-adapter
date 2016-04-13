@@ -5,6 +5,7 @@ namespace Alcaeus\MongoDbAdapter\Tests\Mongo;
 use Alcaeus\MongoDbAdapter\Tests\TestCase;
 use Alcaeus\MongoDbAdapter\TypeConverter;
 use MongoDB\Driver\ReadPreference;
+use MongoDB\Model\BSONDocument;
 use MongoDB\Operation\Find;
 
 /**
@@ -282,10 +283,10 @@ class MongoCursorTest extends TestCase
                 },
             ],
             'projectionDefaultFields' => [
-                getBasicCheckCallback(['_id' => false, 'foo' => true], 'projection'),
+                getBasicCheckCallback(new BSONDocument(['_id' => false, 'foo' => true]), 'projection'),
             ],
             'projectionDifferentFields' => [
-                getBasicCheckCallback(['_id' => false, 'foo' => true, 'bar' => true], 'projection'),
+                getBasicCheckCallback(new BSONDocument(['_id' => false, 'foo' => true, 'bar' => true]), 'projection'),
                 function (\MongoCursor $cursor) {
                     $cursor->fields(['_id' => false, 'foo' => true, 'bar' => true]);
                 },
