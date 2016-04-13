@@ -408,6 +408,9 @@ class MongoCursor extends AbstractCursor implements Iterator
         return $this->awaitData ? Find::TAILABLE_AWAIT : Find::TAILABLE;
     }
 
+    /**
+     * @return array
+     */
     protected function convertModifiers()
     {
         $modifiers = array_key_exists('modifiers', $this->options) ? $this->options['modifiers'] : [];
@@ -421,6 +424,14 @@ class MongoCursor extends AbstractCursor implements Iterator
         }
 
         return $modifiers;
+    }
+
+    /**
+     * @return array
+     */
+    protected function convertProjection()
+    {
+        return TypeConverter::fromLegacy($this->projection);
     }
 
     /**

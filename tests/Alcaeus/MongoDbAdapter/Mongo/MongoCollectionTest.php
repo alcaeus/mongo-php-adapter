@@ -1510,6 +1510,48 @@ class MongoCollectionTest extends TestCase
 
         $this->assertCount(5, $data);
     }
+
+    public function testProjectionWithBSONTypes()
+    {
+        $collection = $this->getCollection();
+
+        $id = new \MongoId();
+        $referencedId = new \MongoId();
+
+        $data = [
+            '_id' => $id,
+            'loveItems' => [
+                [
+                    'sellable' => [
+                        '$ref' => 'sellables',
+                        '$id' => $referencedId,
+                    ]
+                ],
+                [
+                    'sellable' => [
+                        '$ref' => 'sellables',
+                        '$id' => new \MongoId(),
+                    ]
+                ]
+            ]
+        ];
+        $collection->insert($data);
+
+        $item = $collection->findOne(
+            ['_id' => $id],
+            ['loveItems' => ['$elemMatch' => ['sellable.$id' => $referencedId]]]
+        );
+        $this->assertArrayHasKey('loveItems', $item);
+        $this->assertCount(1, $item['loveItems']);
+
+        $cursor = $collection->find(
+            ['_id' => $id],
+            ['loveItems' => ['$elemMatch' => ['sellable.$id' => $referencedId]]]
+        );
+        $items = iterator_to_array($cursor, false);
+        $this->assertCount(1, $items);
+        $this->assertCount(1, $items[0]['loveItems']);
+    }
 }
 
 class PrivatePropertiesStub
