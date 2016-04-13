@@ -50,12 +50,12 @@ class MongoDate implements TypeInterface
         } elseif ($sec instanceof UTCDateTime) {
             $msecString = (string) $sec;
 
-            $sec = (int) substr($msecString, 0, -3);
+            $sec = substr($msecString, 0, -3);
             $usec = ((int) substr($msecString, -3)) * 1000;
         }
 
-        $this->sec = $sec;
-        $this->usec = $this->truncateMicroSeconds($usec);
+        $this->sec = (int) $sec;
+        $this->usec = (int) $this->truncateMicroSeconds($usec);
     }
 
     /**
