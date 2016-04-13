@@ -3,7 +3,7 @@ CHANGELOG
 
 This changelog references the relevant changes done in minor version updates.
 
-1.0.2 (????-??-??)
+1.0.3 (????-??-??)
 ------------------
 
 All issues and pull requests under this release may be found under the
@@ -14,6 +14,8 @@ milestone.
  calling `count` on a cursor that has been iterated fully. The fix removes a
  performance improvement when calling `count` on a cursor that has been opened.
  `MongoCursor::count` now always re-issues a `count` command to the server.
+ * [#98](https://github.com/alcaeus/mongo-php-adapter/pull/98) fixes an error
+ where using BSON types in a query projection would result in wrong results.
 
 1.0.2 (2016-04-08)
 ------------------
