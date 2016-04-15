@@ -1552,6 +1552,152 @@ class MongoCollectionTest extends TestCase
         $this->assertCount(1, $items);
         $this->assertCount(1, $items[0]['loveItems']);
     }
+
+    public function testReplaceOneNoBulkWriteException()
+    {
+        $mongoId = new \MongoId();
+        $arr = [
+            '_id' => $mongoId,
+            'allowCredits' => true,
+            'attributeValueImageMap' => [],
+            'buyWithMeMode' => 'i',
+            'checklist' => [
+                'images' => true,
+                'productDetails' => true,
+                'published' => true,
+                'sellerCopy' => false,
+                'video' => false,
+            ],
+            'clearance' => false,
+            'cs' => false,
+            'customizable' => false,
+            "createdAt" => new \MongoTimestamp(),
+            "lastActivityDate" => new \MongoTimestamp(),
+            "lastCommentDate" => new \MongoTimestamp(),
+            "liveDate" => new \MongoTimestamp(),
+            "ll" => new \MongoTimestamp(),
+            "lockedAt" => new \MongoTimestamp(),
+            'description' => '<p>A <b>circle</b> is a simple <a href="http://en.wikipedia.org/wiki/Shape">shape</a> of <a href="http://en.wikipedia.org/wiki/Euclidean_geometry">Euclidean geometry</a> that is the set of all <a href="http://en.wikipedia.org/wiki/Point_%28geometry%29">points</a> in a <a href="http://en.wikipedia.org/wiki/Plane_%28mathematics%29">plane</a> that are at a given distance from a given point, the <a href="http://en.wikipedia.org/wiki/Centre_%28geometry%29">centre</a>. The distance between any of the points and the centre is called the <a href="http://en.wikipedia.org/wiki/Radius">radius</a>. It can also be defined as the locus of a point equidistant from a fixed point.<br></p>',
+            'disc' => true,
+            'estimatedShippingDays' => 7,
+            'exclusive' => true,
+            'freeShipping' => false,
+            'handlingDetail' => 'Our circles are delicate',
+            'handlingFee' => 0,
+            'hasBeenLive' => true,
+            'introducedToFeed' => false,
+            'lockedBy' => null,
+            'loveCount' => 9,
+            'ltl' => [
+                '$ref' => 'identities',
+                '$id' => new \MongoId(),
+            ],
+            'maxPrice' => 75.99,
+            'media' => [
+                'images' => [
+                    [
+                        '_id' => new \MongoId(),
+                        'h' => 594,
+                        'highRes' => false,
+                        'oq' => 90,
+                        'percentWhitespace' => 91,
+                        'pid' => 'c14b55a',
+                        'processed' => true,
+                        'processingQueued' => false,
+                        'resolution' => [
+                            'x' => 72,
+                            'y' => 72,
+                        ],
+                        't' => 'jpeg',
+                        "updatedAt" => new \MongoTimestamp(),
+                        'versions' => [
+                            'original' => 'images/2013/09/23/16/5240a14272989a9e5d000122.jpg',
+                            'source' => 'images/2013/09/23/16/5240a14272989a9e5d000122-source.jpeg',
+                            'transformed' => 'images/2015/04/14/08/5240a14272989a9e5d000122-transformed.jpeg',
+                        ],
+                        'w' => 594,
+                    ],
+                ],
+                'unusedImages' => [],
+                "updatedAt" => new \MongoTimestamp(),
+                'videoUrl' => '',
+            ],
+            'metadata' => [
+                'comments' => [],
+                'copySourced' => false,
+                'financeApproved' => false,
+                'imageSourced' => false,
+                'productSourced' => false,
+                'readyForEmail' => false,
+                'team' => [
+                    [
+                        'role' => 'Creator',
+                    ],
+                    [
+                        'role' => 'Buyer',
+                    ],
+                    [
+                        'role' => 'Producer',
+                    ],
+                ],
+            ],
+            'minPrice' => 75.99,
+            'mrch' => new \MongoId(),
+            'name' => 'Circle',
+            'numActivities' => 10,
+            'numComments' => 1,
+            'numPageViews' => 53,
+            'originator' => [
+                '$ref' => 'originators',
+                '$id' => new \MongoId(),
+            ],
+            'primaryTaxon' => [
+                '$ref' => 'taxonomy',
+                '$id' => new \MongoId(),
+            ],
+            'private' => false,
+            'product' => [
+                'type' => 'simple',
+                '$ref' => 'products',
+                '$id' => new \MongoId(),
+            ],
+            'promoAllowCredits' => true,
+            'pt' => 'simple',
+            'returnPolicy' => 14,
+            'seller' => [
+                '$ref' => 'sellers',
+                '$id' => new \MongoId(),
+            ],
+            'shippingDetail' => 'Our circles are delicate',
+            'shippingPrice' => 4.95,
+            'shippingPrices' => [
+                [
+                    'zoneId' => 237,
+                    'price' => 6.95,
+                    'secondaryPrice' => 6.95,
+                ],
+            ],
+            'slug' => 'circle',
+            'status' => 'inactive',
+            'subscription' => false,
+            'tags' => [],
+            'taxonomy' => [
+                [
+                    '$ref' => 'taxonomy',
+                    '$id' => new \MongoId(),
+                ],
+            ],
+            "updatedAt" => new \MongoTimestamp(),
+            'voucher' => false
+        ];
+
+        $collection = $this->getCollection();
+        $collection->insert($arr);
+        $one = $collection->findOne(['_id' => $mongoId]);
+        $one['voucher'] = true;
+
+        $collection->update(['_id' => $mongoId], $one, ['safe' => true, 'upsert' => true]);
+    }
 }
 
 class PrivatePropertiesStub
