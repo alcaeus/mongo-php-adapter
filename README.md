@@ -96,8 +96,6 @@ unserializing them.
 
 ## MongoCollection
 
- - The [aggregate](https://secure.php.net/manual/en/mongocollection.aggregate.php)
- method is not working because of a bug in the underlying library.
  - The [insert](https://php.net/manual/en/mongocollection.insert.php),
  [batchInsert](https://php.net/manual/en/mongocollection.batchinsert.php),
  and [save](https://php.net/manual/en/mongocollection.save.php)
