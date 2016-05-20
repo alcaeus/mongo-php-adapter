@@ -10,6 +10,24 @@ use Alcaeus\MongoDbAdapter\TypeInterface;
  */
 class MongoDateTest extends TestCase
 {
+    public function testTimeZoneDoesNotAlterReturnedDateTime()
+    {
+        $initialTZ = ini_get("date.timezone");
+
+        ini_set("date.timezone", "UTC");
+
+        // Today at 8h 8m 8s
+        $timestamp = mktime (8, 8, 8); $date = new \MongoDate($timestamp);
+
+        $this->assertSame('08:08:08', $date->toDateTime()->format("H:i:s"));
+
+        ini_set("date.timezone", "Europe/Paris");
+
+        $this->assertSame('08:08:08', $date->toDateTime()->format("H:i:s"));
+
+        ini_set("date.timezone", $initialTZ);
+    }
+
     public function testCreate()
     {
         $date = new \MongoDate(1234567890, 123456);
