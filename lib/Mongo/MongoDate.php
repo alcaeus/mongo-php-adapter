@@ -95,6 +95,8 @@ class MongoDate implements TypeInterface
             $datetime = \DateTime::createFromFormat('Y-m-d H:i:s.u', $datetime->format('Y-m-d H:i:s') . '.' . $microSeconds);
         }
 
+        $datetime->setTimezone(new \DateTimeZone("UTC"));
+
         return $datetime;
     }
 
