@@ -93,6 +93,9 @@ unserializing them.
  - The [authenticate](https://secure.php.net/manual/en/mongodb.authenticate.php)
  method is not supported. To connect to a database with authentication, please
  supply the credentials using the connection string.
+ - The `$cmd` collection cannot be used due to an issue in the underlying driver.
+ To run commands, use the [command](https://secure.php.net/manual/en/mongodb.command.php)
+ method instead of querying the virtual `$cmd` collection.
 
 ## MongoCollection
 
