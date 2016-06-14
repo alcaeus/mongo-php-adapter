@@ -600,6 +600,32 @@ class MongoCollectionTest extends TestCase
         ], $result['result']);
     }
 
+    public function testAggregateWithMultiplePilelineOperatorsAsArguments()
+    {
+        $collection = $this->getCollection();
+
+        try {
+            $collection->aggregate(
+                [
+                    '$group' => [
+                        '_id' => '$foo',
+                        'count' => [ '$sum' => 1 ],
+                    ],
+                ],
+                [
+                    '$sort' => ['_id' => 1]
+                ]
+            );
+            $this->assertTrue(true);
+
+        } catch (\MongoResultException $ex) {
+            $msg = 'MongoCollection::aggregate ( array $op [, array $op [, array $... ]] ) should accept variable amount of pipeline operators as argument'
+                . "\n"
+                . $ex;
+            $this->fail($msg);
+        }
+    }
+
     public function testAggregateInvalidPipeline()
     {
         $collection = $this->getCollection();

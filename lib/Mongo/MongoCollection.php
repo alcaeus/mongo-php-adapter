@@ -131,11 +131,12 @@ class MongoCollection
     public function aggregate(array $pipeline, array $op = [])
     {
         if (! TypeConverter::isNumericArray($pipeline)) {
+            $operators = func_get_args();
             $pipeline = [];
             $options = [];
 
             $i = 0;
-            foreach (func_get_args() as $operator) {
+            foreach ($operators as $operator) {
                 $i++;
                 if (! is_array($operator)) {
                     trigger_error("Argument $i is not an array", E_WARNING);
