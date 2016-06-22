@@ -115,4 +115,126 @@ class MongoClientTest extends TestCase
         $client = $this->getClient(null, 'localhost');
         $this->assertNotNull($client);
     }
+
+    /**
+     * @dataProvider dataReadPreferenceOptionsAreInherited
+     */
+    public function testReadPreferenceOptionsAreInherited($options, $uri, $expectedTagsets)
+    {
+        $client = $this->getClient($options, $uri);
+        $collection = $client->selectCollection('test', 'foo');
+
+        $this->assertSame(
+            [
+                'type' => \MongoClient::RP_SECONDARY_PREFERRED,
+                'tagsets' => $expectedTagsets
+            ],
+            $collection->getReadPreference()
+        );
+    }
+
+    public static function dataReadPreferenceOptionsAreInherited()
+    {
+        $options = [
+            'readPreference' => \MongoClient::RP_SECONDARY_PREFERRED,
+            'readPreferenceTags' => 'a:b',
+        ];
+
+        $overriddenOptions = [
+            'readPreference' => \MongoClient::RP_NEAREST,
+            'readPreferenceTags' => 'c:d',
+        ];
+
+        $multipleTagsets = [
+            'readPreference' => \MongoClient::RP_SECONDARY_PREFERRED,
+            'readPreferenceTags' => 'a:b,c:d',
+        ];
+
+        return [
+            'optionsArray' => [
+                'options' => $options,
+                'uri' => 'mongodb://localhost',
+                'expectedTagsets' => [['a' => 'b']],
+            ],
+            'queryString' => [
+                'options' => [],
+                'uri' => 'mongodb://localhost/?' . self::makeOptionString($options),
+                'expectedTagsets' => [['a' => 'b']],
+            ],
+            'multipleInQueryString' => [
+                'options' => [],
+                'uri' => 'mongodb://localhost/?' . self::makeOptionString($options) . '&readPreferenceTags=c:d',
+                'expectedTagsets' => [['a' => 'b'], ['c' => 'd']],
+            ],
+            'overridden' => [
+                'options' => $options,
+                'uri' => 'mongodb://localhost/?' . self::makeOptionString($overriddenOptions),
+                'expectedTagsets' => [['c' => 'd'], ['a' => 'b']],
+            ],
+            'multipleTagsetsOptions' => [
+                'options' => $multipleTagsets,
+                'uri' => 'mongodb://localhost',
+                'expectedTagsets' => [['a' => 'b', 'c' => 'd']],
+            ],
+            'multipleTagsetsQueryString' => [
+                'options' => null,
+                'uri' => 'mongodb://localhost/?' . self::makeOptionString($multipleTagsets),
+                'expectedTagsets' => [['a' => 'b', 'c' => 'd']],
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider dataWriteConcernOptionsAreInherited
+     */
+    public function testWriteConcernOptionsAreInherited($options, $uri)
+    {
+        $client = $this->getClient($options, $uri);
+        $collection = $client->selectCollection('test', 'foo');
+
+        $this->assertSame(['w' => 'majority', 'wtimeout' => 666], $collection->getWriteConcern());
+    }
+
+    public static function dataWriteConcernOptionsAreInherited()
+    {
+        $options = [
+            'w' => 'majority',
+            'wTimeoutMs' => 666,
+        ];
+
+        $overriddenOptions = [
+            'w' => '2',
+            'wTimeoutMs' => 333,
+        ];
+
+        return [
+            'optionsArray' => [
+                'options' => $options,
+                'uri' => 'mongodb://localhost',
+            ],
+            'queryString' => [
+                'options' => [],
+                'uri' => 'mongodb://localhost/?' . self::makeOptionString($options),
+            ],
+            'overridden' => [
+                'options' => $options,
+                'uri' => 'mongodb://localhost/?' . self::makeOptionString($overriddenOptions),
+            ]
+        ];
+    }
+
+    /**
+     * @param array $options
+     * @return string
+     */
+    private static function makeOptionString(array $options)
+    {
+        return implode('&', array_map(
+            function ($key, $value) {
+                return $key . '=' . $value;
+            },
+            array_keys($options),
+            array_values($options)
+        ));
+    }
 }
