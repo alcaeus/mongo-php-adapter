@@ -86,6 +86,8 @@ class MongoClient
             $server = 'mongodb://' . self::DEFAULT_HOST . ':' . self::DEFAULT_PORT;
         }
 
+        $this->applyConnectionOptions($server, $options);
+
         $this->server = $server;
         if (false === strpos($this->server, 'mongodb://')) {
             $this->server = 'mongodb://'.$this->server;
@@ -348,5 +350,88 @@ class MongoClient
             'connected', 'status', 'server', 'persistent'
         ];
     }
-}
 
+    /**
+     * @param $server
+     * @return array
+     */
+    private function extractUrlOptions($server)
+    {
+        $queryOptions = explode('&', parse_url($server, PHP_URL_QUERY));
+
+        $options = [];
+        foreach ($queryOptions as $option) {
+            if (strpos($option, '=') === false) {
+                continue;
+            }
+
+            $keyValue = explode('=', $option);
+            if ($keyValue[0] === 'readPreferenceTags') {
+                $options[$keyValue[0]][] = $this->getReadPreferenceTags($keyValue[1]);
+            } else {
+                $options[$keyValue[0]] = $keyValue[1];
+            }
+        }
+
+        return $options;
+    }
+
+    /**
+     * @param $readPreferenceTagString
+     * @return array
+     */
+    private function getReadPreferenceTags($readPreferenceTagString)
+    {
+        $tagSets = [];
+        foreach (explode(',', $readPreferenceTagString) as $index => $tagSet) {
+            $tags = explode(':', $tagSet);
+            $tagSets[$tags[0]] = $tags[1];
+        }
+
+        return $tagSets;
+    }
+
+    /**
+     * @param string $server
+     * @param array $options
+     */
+    private function applyConnectionOptions($server, array $options)
+    {
+        $urlOptions = $this->extractUrlOptions($server);
+
+        if (isset($urlOptions['wTimeout'])) {
+            $urlOptions['wTimeoutMS'] = $urlOptions['wTimeout'];
+            unset($urlOptions['wTimeout']);
+        }
+
+        if (isset($options['wTimeout'])) {
+            $options['wTimeoutMS'] = $options['wTimeout'];
+            unset($options['wTimeout']);
+        }
+
+        if (isset($options['readPreferenceTags'])) {
+            $options['readPreferenceTags'] = [$this->getReadPreferenceTags($options['readPreferenceTags'])];
+
+            // Special handling for readPreferenceTags which are merged
+            if (isset($urlOptions['readPreferenceTags'])) {
+                $options['readPreferenceTags'] = array_merge($urlOptions['readPreferenceTags'], $options['readPreferenceTags']);
+            }
+        }
+
+        $urlOptions = array_merge($urlOptions, $options);
+
+        if (isset($urlOptions['slaveOkay'])) {
+            $this->setReadPreferenceFromSlaveOkay($urlOptions['slaveOkay']);
+        } elseif (isset($urlOptions['readPreference']) || isset($urlOptions['readPreferenceTags'])) {
+            $readPreference = isset($urlOptions['readPreference']) ? $urlOptions['readPreference'] : null;
+            $tags = isset($urlOptions['readPreferenceTags']) ? $urlOptions['readPreferenceTags'] : null;
+            $this->setReadPreferenceFromParameters($readPreference, $tags);
+        }
+
+        if (isset($urlOptions['w']) || isset($urlOptions['wTimeoutMs'])) {
+            $writeConcern = (isset($urlOptions['w'])) ? $urlOptions['w'] : 1;
+            $wTimeout = (isset($urlOptions['wTimeoutMs'])) ? $urlOptions['wTimeoutMs'] : null;
+            $this->setWriteConcern($writeConcern, $wTimeout);
+        }
+    }
+}

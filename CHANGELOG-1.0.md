@@ -3,7 +3,7 @@ CHANGELOG
 
 This changelog references the relevant changes done in minor version updates.
 
-1.0.4 (xxxx-xx-xx)
+1.0.4 (2016-06-22)
 ------------------
 
 All issues and pull requests under this release may be found under the
@@ -13,6 +13,9 @@ milestone.
  * [#115](https://github.com/alcaeus/mongo-php-adapter/pull/115) fixes an error
  where using the alternate syntax for `MongoCollection::aggregate` would lead to
  empty aggregation pipelines
+ * [#116](https://github.com/alcaeus/mongo-php-adapter/pull/116) fixes a bug
+ where read preference and write concern was not applied if it was passed in the
+ constructor.
 
 1.0.3 (2016-04-13)
 ------------------
