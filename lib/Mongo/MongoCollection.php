@@ -705,12 +705,18 @@ class MongoCollection
     public function getIndexInfo()
     {
         $convertIndex = function(\MongoDB\Model\IndexInfo $indexInfo) {
-            return [
+            $infos = [
                 'v' => $indexInfo->getVersion(),
                 'key' => $indexInfo->getKey(),
                 'name' => $indexInfo->getName(),
                 'ns' => $indexInfo->getNamespace(),
             ];
+
+            if ($indexInfo->isUnique()) {
+                $infos['unique'] = true;
+            }
+
+            return $infos;
         };
 
         return array_map($convertIndex, iterator_to_array($this->collection->listIndexes()));
@@ -1009,4 +1015,3 @@ class MongoCollection
         return ['db', 'name'];
     }
 }
-
