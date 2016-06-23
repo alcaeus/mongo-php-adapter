@@ -1177,6 +1177,7 @@ class MongoCollectionTest extends TestCase
     {
         $collection = $this->getCollection();
         $collection->createIndex(['foo' => 1]);
+        $collection->createIndex(['bar' => 1], ['unique' => true]);
 
         $expected = [
             [
@@ -1191,9 +1192,16 @@ class MongoCollectionTest extends TestCase
                 'name' => 'foo_1',
                 'ns' => 'mongo-php-adapter.test',
             ],
+            [
+                'v' => 1,
+                'key' => ['bar' => 1],
+                'name' => 'bar_1',
+                'ns' => 'mongo-php-adapter.test',
+                'unique' => true,
+            ],
         ];
 
-        $this->assertSame(
+        $this->assertEquals(
             $expected,
             $collection->getIndexInfo()
         );
