@@ -3,6 +3,16 @@ CHANGELOG
 
 This changelog references the relevant changes done in minor version updates.
 
+1.0.5 (xxxx-xx-xx)
+------------------
+
+All issues and pull requests under this release may be found under the
+[1.0.5](https://github.com/alcaeus/mongo-php-adapter/issues?q=milestone%3A1.0.5)
+milestone.
+
+ * [#117](https://github.com/alcaeus/mongo-php-adapter/pull/117) adds a missing
+ flag to indexes when calling `MongoCollection::getIndexInfo`.
+
 1.0.4 (2016-06-22)
 ------------------
 
