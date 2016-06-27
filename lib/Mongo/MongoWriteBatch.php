@@ -18,6 +18,7 @@ if (class_exists('MongoWriteBatch', false)) {
 }
 
 use Alcaeus\MongoDbAdapter\TypeConverter;
+use Alcaeus\MongoDbAdapter\ExceptionConverter;
 use Alcaeus\MongoDbAdapter\Helper\WriteConcernConverter;
 
 /**
@@ -119,15 +120,11 @@ class MongoWriteBatch
 
         try {
             $result = $collection->BulkWrite($this->items, $options);
-            $ok = true;
         } catch (\MongoDB\Driver\Exception\BulkWriteException $e) {
-            $result = $e->getWriteResult();
-            $ok = false;
+            throw ExceptionConverter::toLegacy($e);
         }
 
-        if ($ok === true) {
-            $this->items = [];
-        }
+        $this->items = [];
 
         switch ($this->batchType) {
             case self::COMMAND_UPDATE:
@@ -143,7 +140,7 @@ class MongoWriteBatch
                     'nMatched' => $result->getMatchedCount(),
                     'nModified' => $result->getModifiedCount(),
                     'nUpserted' => $result->getUpsertedCount(),
-                    'ok' => $ok,
+                    'ok' => true,
                 ];
 
                 if (count($upsertedIds)) {
@@ -155,13 +152,13 @@ class MongoWriteBatch
             case self::COMMAND_DELETE:
                 return [
                     'nRemoved' => $result->getDeletedCount(),
-                    'ok' => $ok,
+                    'ok' => true,
                 ];
 
             case self::COMMAND_INSERT:
                 return [
                     'nInserted' => $result->getInsertedCount(),
-                    'ok' => $ok,
+                    'ok' => true,
                 ];
         }
     }
