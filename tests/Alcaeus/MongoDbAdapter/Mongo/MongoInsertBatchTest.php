@@ -34,6 +34,9 @@ class MongoInsertBatchTest extends TestCase
         $this->assertAttributeSame('bar', 'foo', $record);
     }
 
+    /**
+     * @expectedException \MongoWriteConcernException
+     */
     public function testInsertBatchError()
     {
         $collection = $this->getCollection();
@@ -43,22 +46,6 @@ class MongoInsertBatchTest extends TestCase
         $this->assertTrue($batch->add(['foo' => 'bar']));
         $this->assertTrue($batch->add(['foo' => 'bar']));
 
-        $expected = [
-            'writeErrors' => [
-                [
-                    'index' => 1,
-                    'code' => 11000,
-                ]
-            ],
-            'nInserted' => 1,
-            'ok' => true,
-        ];
-
-        try {
-            $batch->execute();
-        } catch (\MongoWriteConcernException $e) {
-            $this->assertSame('Failed write', $e->getMessage());
-            $this->assertArraySubset($expected, $e->getDocument());
-        }
+        $batch->execute();
     }
 }
