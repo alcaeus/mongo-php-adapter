@@ -21,11 +21,34 @@ if (class_exists('MongoWriteConcernException', false)) {
  * <p>(PECL mongo &gt;= 1.5.0)</p>
  * @link http://php.net/manual/en/class.mongowriteconcernexception.php#class.mongowriteconcernexception
  */
-class MongoWriteConcernException extends MongoCursorException {
+class MongoWriteConcernException extends MongoCursorException
+{
+    private $document;
+
+    /**
+     * MongoWriteConcernException constructor.
+     *
+     * @param string $message
+     * @param int $code
+     * @param Exception|null $previous
+     * @param null $document
+     *
+     * @internal The $document parameter is not part of the ext-mongo API
+     */
+    public function __construct($message = '', $code = 0, Exception $previous = null, $document = null)
+    {
+        parent::__construct($message, $code, $previous);
+
+        $this->document = $document;
+    }
+
     /**
      * Get the error document
      * @link http://php.net/manual/en/mongowriteconcernexception.getdocument.php
      * @return array <p>A MongoDB document, if available, as an array.</p>
      */
-    public function getDocument() {}
+    public function getDocument()
+    {
+        return $this->document;
+    }
 }
