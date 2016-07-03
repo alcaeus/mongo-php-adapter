@@ -19,6 +19,9 @@ if (class_exists('MongoWriteBatch', false)) {
 
 use Alcaeus\MongoDbAdapter\TypeConverter;
 use Alcaeus\MongoDbAdapter\Helper\WriteConcernConverter;
+use MongoDB\Driver\Exception\BulkWriteException;
+use MongoDB\Driver\WriteError;
+use MongoDB\Driver\WriteResult;
 
 /**
  * MongoWriteBatch allows you to "batch up" multiple operations (of same type)
@@ -115,55 +118,62 @@ class MongoWriteBatch
             $options['ordered'] = $writeOptions['ordered'];
         }
 
-        $collection = $this->collection->getCollection();
-
         try {
-            $result = $collection->BulkWrite($this->items, $options);
+            $writeResult = $this->collection->getCollection()->bulkWrite($this->items, $options);
+            $resultDocument = [];
             $ok = true;
-        } catch (\MongoDB\Driver\Exception\BulkWriteException $e) {
-            $result = $e->getWriteResult();
+        } catch (BulkWriteException $e) {
+            $writeResult = $e->getWriteResult();
+            $resultDocument = ['writeErrors' => $this->convertWriteErrors($writeResult)];
             $ok = false;
         }
 
-        if ($ok === true) {
-            $this->items = [];
-        }
+        $this->items = [];
 
         switch ($this->batchType) {
             case self::COMMAND_UPDATE:
                 $upsertedIds = [];
-                foreach ($result->getUpsertedIds() as $index => $id) {
+                foreach ($writeResult->getUpsertedIds() as $index => $id) {
                     $upsertedIds[] = [
                         'index' => $index,
                         '_id' => TypeConverter::toLegacy($id)
                     ];
                 }
 
-                $result = [
-                    'nMatched' => $result->getMatchedCount(),
-                    'nModified' => $result->getModifiedCount(),
-                    'nUpserted' => $result->getUpsertedCount(),
-                    'ok' => $ok,
+                $resultDocument += [
+                    'nMatched' => $writeResult->getMatchedCount(),
+                    'nModified' => $writeResult->getModifiedCount(),
+                    'nUpserted' => $writeResult->getUpsertedCount(),
+                    'ok' => true,
                 ];
 
                 if (count($upsertedIds)) {
-                    $result['upserted'] = $upsertedIds;
+                    $resultDocument['upserted'] = $upsertedIds;
                 }
-
-                return $result;
+                break;
 
             case self::COMMAND_DELETE:
-                return [
-                    'nRemoved' => $result->getDeletedCount(),
-                    'ok' => $ok,
+                $resultDocument += [
+                    'nRemoved' => $writeResult->getDeletedCount(),
+                    'ok' => true,
                 ];
+                break;
 
             case self::COMMAND_INSERT:
-                return [
-                    'nInserted' => $result->getInsertedCount(),
-                    'ok' => $ok,
+                $resultDocument += [
+                    'nInserted' => $writeResult->getInsertedCount(),
+                    'ok' => true,
                 ];
+                break;
         }
+
+        if (! $ok) {
+            // Exception code is hardcoded to the value in ext-mongo, see
+            // https://github.com/mongodb/mongo-php-driver-legacy/blob/ab4bc0d90e93b3f247f6bcb386d0abc8d2fa7d74/batch/write.c#L428
+            throw new \MongoWriteConcernException('Failed write', 911, null, $resultDocument);
+        }
+
+        return $resultDocument;
     }
 
     private function validate(array $item)
@@ -213,5 +223,23 @@ class MongoWriteBatch
                 $this->items[] = [$method => [TypeConverter::fromLegacy($item['q'])]];
                 break;
         }
+    }
+
+    /**
+     * @param WriteResult $result
+     * @return array
+     */
+    private function convertWriteErrors(WriteResult $result)
+    {
+        $writeErrors = [];
+        /** @var WriteError $writeError */
+        foreach ($result->getWriteErrors() as $writeError) {
+            $writeErrors[] = [
+                'index' => $writeError->getIndex(),
+                'code' => $writeError->getCode(),
+                'errmsg' => $writeError->getMessage(),
+            ];
+        }
+        return $writeErrors;
     }
 }

@@ -503,7 +503,7 @@ class MongoCollection
             } else {
                 $update = is_array($update) ? $update : [];
                 if (isset($options['update']) && is_array($options['update'])) {
-                    $update = array_merge($update, $options['update']);
+                    $update = $options['update'];
                     unset($options['update']);
                 }
 

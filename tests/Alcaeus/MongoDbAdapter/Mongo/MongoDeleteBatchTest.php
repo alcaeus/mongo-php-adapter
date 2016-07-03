@@ -58,7 +58,6 @@ class MongoDeleteBatchTest extends TestCase
         $this->assertSame(0, $newCollection->count());
     }
 
-
     public function testValidateItem()
     {
         $collection = $this->getCollection();

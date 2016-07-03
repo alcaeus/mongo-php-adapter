@@ -12,6 +12,11 @@ milestone.
 
  * [#117](https://github.com/alcaeus/mongo-php-adapter/pull/117) adds a missing
  flag to indexes when calling `MongoCollection::getIndexInfo`.
+ * [#120](https://github.com/alcaeus/mongo-php-adapter/pull/120) throws the proper
+ `MongoWriteConcernException` when encountering bulk write errors.
+ * [#122](https://github.com/alcaeus/mongo-php-adapter/pull/122) fixes an error in
+ `MongoCollection::findAndModify` when specifying both the `update` parameter as
+ well as the `update` option.
 
 1.0.4 (2016-06-22)
 ------------------

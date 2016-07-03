@@ -39,6 +39,42 @@ class MongoUpdateBatchTest extends TestCase
         $this->assertAttributeSame('foo', 'foo', $record);
     }
 
+    public function testUpdateOneException()
+    {
+        $collection = $this->getCollection();
+        $batch = new \MongoUpdateBatch($collection);
+
+        $document = ['foo' => 'bar'];
+        $collection->insert($document);
+        $document = ['foo' => 'foo'];
+        $collection->insert($document);
+        $collection->createIndex(['foo' => 1], ['unique' => true]);
+
+        $this->assertTrue($batch->add(['q' => ['foo' => 'bar'], 'u' => ['$set' => ['foo' => 'foo']]]));
+
+        $expected = [
+            'writeErrors' => [
+                [
+                    'index' => 0,
+                    'code' => 11000,
+                ]
+            ],
+            'nMatched' => 0,
+            'nModified' => 0,
+            'nUpserted' => 0,
+            'ok' => true,
+        ];
+
+        try {
+            $batch->execute();
+            $this->fail('Expected MongoWriteConcernException');
+        } catch (\MongoWriteConcernException $e) {
+            $this->assertSame('Failed write', $e->getMessage());
+            $this->assertSame(911, $e->getCode());
+            $this->assertArraySubset($expected, $e->getDocument());
+        }
+    }
+
     public function testUpdateMany()
     {
         $collection = $this->getCollection();
@@ -48,7 +84,6 @@ class MongoUpdateBatchTest extends TestCase
         $collection->insert($document);
         unset($document['_id']);
         $collection->insert($document);
-
 
         $this->assertTrue($batch->add(['q' => ['foo' => 'bar'], 'u' => ['$set' => ['foo' => 'foo']], 'multi' => true]));
 
@@ -67,6 +102,42 @@ class MongoUpdateBatchTest extends TestCase
         $this->assertNotNull($record);
         $this->assertObjectHasAttribute('foo', $record);
         $this->assertAttributeSame('foo', 'foo', $record);
+    }
+
+    public function testUpdateManyException()
+    {
+        $collection = $this->getCollection();
+        $batch = new \MongoUpdateBatch($collection);
+
+        $document = ['foo' => 'bar', 'bar' => 'bar'];
+        $collection->insert($document);
+        $document = ['foo' => 'foobar', 'bar' => 'bar'];
+        $collection->insert($document);
+        $collection->createIndex(['foo' => 1], ['unique' => true]);
+
+        $batch->add(['q' => ['bar' => 'bar'], 'u' => ['$set' => ['foo' => 'foo']], 'multi' => true]);
+
+        $expected = [
+            'writeErrors' => [
+                [
+                    'index' => 0,
+                    'code' => 11000,
+                ]
+            ],
+            'nMatched' => 0,
+            'nModified' => 0,
+            'nUpserted' => 0,
+            'ok' => true,
+        ];
+
+        try {
+            $batch->execute();
+            $this->fail('Expected MongoWriteConcernException');
+        } catch (\MongoWriteConcernException $e) {
+            $this->assertSame('Failed write', $e->getMessage());
+            $this->assertSame(911, $e->getCode());
+            $this->assertArraySubset($expected, $e->getDocument());
+        }
     }
 
     public function testUpsert()
