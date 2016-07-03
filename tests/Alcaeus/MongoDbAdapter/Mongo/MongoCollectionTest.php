@@ -1254,6 +1254,35 @@ class MongoCollectionTest extends TestCase
         $this->assertObjectNotHasAttribute('foo', $object);
     }
 
+    public function testFindAndModifyWithUpdateParamAndOption()
+    {
+        $id = '54203e08d51d4a1f868b456e';
+        $collection = $this->getCollection();
+
+        $document = ['_id' => new \MongoId($id), 'foo' => 'bar'];
+        $collection->insert($document);
+
+        $data = ['foo' => 'foo', 'bar' => 'bar'];
+
+        $this->getCollection()->findAndModify(
+            ['_id' => new \MongoId($id)],
+            [$data],
+            [],
+            [
+                'update' => ['$set' => ['foo' => 'foobar']],
+                'upsert' => true,
+            ]
+        );
+
+        $newCollection = $this->getCheckDatabase()->selectCollection('test');
+        $this->assertSame(1, $newCollection->count());
+        $object = $newCollection->findOne();
+
+        $this->assertNotNull($object);
+        $this->assertAttributeSame('foobar', 'foo', $object);
+        $this->assertObjectNotHasAttribute('bar', $object);
+    }
+
     public function testFindAndModifyUpdateReplace()
     {
         $id = '54203e08d51d4a1f868b456e';
