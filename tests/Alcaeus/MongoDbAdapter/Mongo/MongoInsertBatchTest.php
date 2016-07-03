@@ -56,8 +56,10 @@ class MongoInsertBatchTest extends TestCase
 
         try {
             $batch->execute();
+            $this->fail('Expected MongoWriteConcernException');
         } catch (\MongoWriteConcernException $e) {
             $this->assertSame('Failed write', $e->getMessage());
+            $this->assertSame(911, $e->getCode());
             $this->assertArraySubset($expected, $e->getDocument());
         }
     }
