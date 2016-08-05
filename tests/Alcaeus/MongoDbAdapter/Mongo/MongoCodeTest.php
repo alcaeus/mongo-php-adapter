@@ -39,7 +39,7 @@ class MongoCodeTest extends TestCase
         $bsonCode = new \MongoDB\BSON\Javascript('code', ['scope' => 'bleh']);
         $code = new \MongoCode($bsonCode);
 
-        $this->assertAttributeSame('', 'code', $code);
-        $this->assertAttributeSame([], 'scope', $code);
+        $this->assertAttributeSame('code', 'code', $code);
+        $this->assertAttributeSame(['scope' => 'bleh'], 'scope', $code);
     }
 }
