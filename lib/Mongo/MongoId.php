@@ -212,7 +212,7 @@ class MongoId implements Serializable, TypeInterface
             } elseif ($id instanceof self || $id instanceof ObjectID) {
                 $this->objectID = new ObjectID((string) $id);
             } else {
-                $this->objectID = new ObjectId();
+                $this->objectID = new ObjectID();
             }
         } catch (\Exception $e) {
             throw new MongoException('Invalid object ID', 19);

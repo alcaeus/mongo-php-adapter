@@ -3,7 +3,17 @@ CHANGELOG
 
 This changelog references the relevant changes done in minor version updates.
 
-1.0.5 (xxxx-xx-xx)
+1.0.6 (xxxx-xx-xx)
+------------------
+
+All issues and pull requests under this release may be found under the
+[1.0.6](https://github.com/alcaeus/mongo-php-adapter/issues?q=milestone%3A1.0.5)
+milestone.
+
+ * [#126](https://github.com/alcaeus/mongo-php-adapter/pull/126) fixes a class
+ name that was improperly capitalized.
+
+1.0.5 (2016-07-03)
 ------------------
 
 All issues and pull requests under this release may be found under the
