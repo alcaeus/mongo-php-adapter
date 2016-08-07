@@ -131,9 +131,3 @@ unserializing them.
  fields always return 0 for compatibility to MongoCursor. The `firstBatchAt` and
  `firstBatchNumReturned` fields will contain the same value, which is the internal
  position of the iterator.
-
-## Types
-
- - Return values containing objects of the [MongoDB\BSON\Javascript](https://secure.php.net/manual/en/class.mongodb-bson-javascript.php)
- class cannot be converted to full [MongoCode](https://secure.php.net/manual/en/class.mongocode.php)
- objects because there are no accessors for the code and scope properties.

@@ -13,6 +13,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+use Alcaeus\MongoDbAdapter\TypeConverter;
+
 if (class_exists('MongoCode', false)) {
     return;
 }
@@ -37,8 +39,9 @@ class MongoCode implements \Alcaeus\MongoDbAdapter\TypeInterface
     public function __construct($code, array $scope = [])
     {
         if ($code instanceof \MongoDB\BSON\Javascript) {
-            // @todo Use properties from object once they are accessible
-            $code = '';
+            $javascript = $code;
+            $code = $javascript->getCode();
+            $scope = TypeConverter::toLegacy($javascript->getScope());
         }
 
         $this->code = $code;
