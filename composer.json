@@ -9,7 +9,7 @@
         { "name": "Olivier Lechevalier", "email": "olivier.lechevalier@gmail.com" }
     ],
     "require": {
-        "php": "^5.5 || ^7.0",
+        "php": "^5.6 || ^7.0",
         "ext-hash": "*",
         "ext-mongodb": "^1.2.0",
         "mongodb/mongodb": "^1.0.1"
