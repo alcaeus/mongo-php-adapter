@@ -20,7 +20,7 @@ if (class_exists('MongoId', false)) {
 use Alcaeus\MongoDbAdapter\TypeInterface;
 use MongoDB\BSON\ObjectID;
 
-class MongoId implements Serializable, TypeInterface
+class MongoId implements Serializable, TypeInterface, JsonSerializable
 {
     /*
      * @var ObjectID
@@ -198,6 +198,16 @@ class MongoId implements Serializable, TypeInterface
     public static function __set_state(array $props)
     {
 
+    }
+
+    /**
+     * @return stdClass
+     */
+    public function jsonSerialize()
+    {
+        $object = new stdClass();
+        $object->{'$id'} = (string) $this->objectID;
+        return $object;
     }
 
     /**
