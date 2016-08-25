@@ -12,6 +12,8 @@ milestone.
 
  * [#126](https://github.com/alcaeus/mongo-php-adapter/pull/126) fixes a class
  name that was improperly capitalized.
+ * [#130](https://github.com/alcaeus/mongo-php-adapter/pull/130) fixes JSON
+ serialization of `MongoId` objects.
 
 1.0.5 (2016-07-03)
 ------------------
