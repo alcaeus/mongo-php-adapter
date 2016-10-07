@@ -24,6 +24,9 @@ class MongoIdTest extends TestCase
         $unserialized = unserialize($serialized);
         $this->assertInstanceOf('MongoId', $unserialized);
         $this->assertSame($stringId, (string) $unserialized);
+
+        $json = json_encode($id);
+        $this->assertSame(sprintf('{"$id":"%s"}', $stringId), $json);
     }
 
     public function testCreateWithString()
