@@ -766,7 +766,7 @@ class MongoCollection
      * @return array|boolean If w was set, returns an array containing the status of the save.
      * Otherwise, returns a boolean representing if the array was not empty (an empty array will not be inserted).
      */
-    public function save(&$a, array $options = [])
+    public function save($a, array $options = [])
     {
         $id = $this->ensureDocumentHasMongoId($a);
 
