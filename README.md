@@ -13,8 +13,8 @@ compatible with PHP 7.
 # Goal
 
 This library aims to provide a compatibility layer for applications that rely on
-on libraries using ext-mongo (e.g. [Doctrine ODM](https://github.com/doctrine/mongodb-odm))
-but want to migrate to PHP 7 or HHVM on which ext-mongo will not run.
+libraries using ext-mongo (e.g. [Doctrine ODM](https://github.com/doctrine/mongodb-odm))
+but want to migrate to PHP 7 or HHVM on which `ext-mongo` will not run.
 
 You should not be using this library if you do not rely on a library using
 `ext-mongo`. If you are starting a new project, please check out [mongodb/mongodb](https://github.com/mongodb/mongo-php-library).
