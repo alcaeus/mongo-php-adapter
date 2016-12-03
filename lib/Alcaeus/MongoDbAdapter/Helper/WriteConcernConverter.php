@@ -25,7 +25,7 @@ trait WriteConcernConverter
     protected function createWriteConcernFromParameters($wstring, $wtimeout)
     {
         if (! is_string($wstring) && ! is_int($wstring)) {
-            trigger_error("w for WriteConcern must be a string or integer", E_WARNING);
+            trigger_error("w for WriteConcern must be a string or integer", E_USER_WARNING);
             return false;
         }
 

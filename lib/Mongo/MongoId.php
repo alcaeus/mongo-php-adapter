@@ -101,7 +101,7 @@ class MongoId implements Serializable, TypeInterface, JsonSerializable
     public function __set($name, $value)
     {
         if ($name === 'id') {
-            trigger_error("The '\$id' property is read-only", E_DEPRECATED);
+            trigger_error("The '\$id' property is read-only", E_USER_DEPRECATED);
             return;
         }
     }
@@ -121,7 +121,7 @@ class MongoId implements Serializable, TypeInterface, JsonSerializable
     public function __unset($name)
     {
         if ($name === 'id') {
-            trigger_error("The '\$id' property is read-only", E_DEPRECATED);
+            trigger_error("The '\$id' property is read-only", E_USER_DEPRECATED);
             return;
         }
     }

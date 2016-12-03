@@ -106,12 +106,12 @@ trait ReadPreference
                 $mode = \MongoDB\Driver\ReadPreference::RP_NEAREST;
                 break;
             default:
-                trigger_error("The value '$readPreference' is not valid as read preference type", E_WARNING);
+                trigger_error("The value '$readPreference' is not valid as read preference type", E_USER_WARNING);
                 return false;
         }
 
         if ($readPreference == \MongoClient::RP_PRIMARY && count($tags)) {
-            trigger_error("You can't use read preference tags with a read preference of PRIMARY", E_WARNING);
+            trigger_error("You can't use read preference tags with a read preference of PRIMARY", E_USER_WARNING);
             return false;
         }
 

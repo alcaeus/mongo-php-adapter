@@ -30,7 +30,7 @@ class MongoPool
      */
     public static function info()
     {
-        trigger_error('Function MongoPool::info() is deprecated', E_DEPRECATED);
+        trigger_error('Function MongoPool::info() is deprecated', E_USER_DEPRECATED);
         return [];
     }
 
@@ -43,7 +43,7 @@ class MongoPool
      */
     public static function setSize($size)
     {
-        trigger_error('Function MongoPool::info() is deprecated', E_DEPRECATED);
+        trigger_error('Function MongoPool::info() is deprecated', E_USER_DEPRECATED);
         return 1;
     }
 
@@ -55,7 +55,7 @@ class MongoPool
      */
     public static function getSize()
     {
-        trigger_error('Function MongoPool::info() is deprecated', E_DEPRECATED);
+        trigger_error('Function MongoPool::info() is deprecated', E_USER_DEPRECATED);
         return 1;
     }
 }
