@@ -79,7 +79,7 @@ class MongoGridFSFile
         }
 
         if (! $handle = fopen($filename, 'w')) {
-            trigger_error(E_ERROR, 'Can not open the destination file');
+            trigger_error('Can not open the destination file', E_USER_ERROR);
             return 0;
         }
 

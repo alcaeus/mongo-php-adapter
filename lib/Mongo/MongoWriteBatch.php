@@ -107,10 +107,10 @@ class MongoWriteBatch
         }
 
         if (isset($writeOptions['j'])) {
-            trigger_error('j parameter is not supported', E_WARNING);
+            trigger_error('j parameter is not supported', E_USER_WARNING);
         }
         if (isset($writeOptions['fsync'])) {
-            trigger_error('fsync parameter is not supported', E_WARNING);
+            trigger_error('fsync parameter is not supported', E_USER_WARNING);
         }
 
         $options['writeConcern'] = $this->createWriteConcernFromArray($writeOptions);
