@@ -63,7 +63,7 @@ class MongoGridFS extends MongoCollection
     public function __construct(MongoDB $db, $prefix = "fs", $chunks = null)
     {
         if ($chunks) {
-            trigger_error("The 'chunks' argument is deprecated and ignored", E_DEPRECATED);
+            trigger_error("The 'chunks' argument is deprecated and ignored", E_USER_DEPRECATED);
         }
         if (empty($prefix)) {
             throw new \Exception('MongoGridFS::__construct(): invalid prefix');

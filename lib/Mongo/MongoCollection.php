@@ -139,7 +139,7 @@ class MongoCollection
             foreach ($operators as $operator) {
                 $i++;
                 if (! is_array($operator)) {
-                    trigger_error("Argument $i is not an array", E_WARNING);
+                    trigger_error("Argument $i is not an array", E_USER_WARNING);
                     return;
                 }
 
@@ -548,7 +548,7 @@ class MongoCollection
     {
         // Can't typehint for array since MongoGridFS extends and accepts strings
         if (! is_array($query)) {
-            trigger_error(sprintf('MongoCollection::findOne(): expects parameter 1 to be an array or object, %s given', gettype($query)), E_WARNING);
+            trigger_error(sprintf('MongoCollection::findOne(): expects parameter 1 to be an array or object, %s given', gettype($query)), E_USER_WARNING);
             return;
         }
 

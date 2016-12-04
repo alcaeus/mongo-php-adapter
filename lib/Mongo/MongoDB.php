@@ -116,7 +116,7 @@ class MongoDB
     public function __set($name, $value)
     {
         if ($name === 'w' || $name === 'wtimeout') {
-            trigger_error("The '{$name}' property is read-only", E_DEPRECATED);
+            trigger_error("The '{$name}' property is read-only", E_USER_DEPRECATED);
         }
     }
 
