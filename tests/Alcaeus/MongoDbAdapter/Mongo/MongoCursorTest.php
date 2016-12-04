@@ -365,6 +365,6 @@ class MongoCursorTest extends TestCase
      */
     protected function getCollectionMock()
     {
-        return $this->getMock('MongoDB\Collection', [], [], '', false);
+        return $this->createMock('MongoDB\Collection', [], [], '', false);
     }
 }
