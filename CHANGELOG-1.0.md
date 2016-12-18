@@ -3,12 +3,15 @@ CHANGELOG
 
 This changelog references the relevant changes done in minor version updates.
 
-1.0.7 (xxxx-xx-xx)
+1.0.7 (2016-12-18)
 ------------------
 
 All issues and pull requests under this release may be found under the
 [1.0.7](https://github.com/alcaeus/mongo-php-adapter/issues?q=milestone%3A1.0.7)
 milestone.
+
+ * [#139](https://github.com/alcaeus/mongo-php-adapter/pull/139) fixes a wrong
+ error code in calls to `trigger_error`.
 
 1.0.6 (2016-10-07)
 ------------------
