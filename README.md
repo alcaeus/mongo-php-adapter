@@ -30,26 +30,12 @@ root:
 
     $ composer require alcaeus/mongo-php-adapter
 
-This package declares that it provides `ext-mongo`; Composer only allows this
-replacement to apply if `composer.json` or a dependency contain a requirement,
-see [composer/composer#2690](https://github.com/composer/composer/issues/2690).
+If your project already has a dependency on `ext-mongo`, the command above may
+not work. This is due to a bug in composer, see [composer/composer#5030](https://github.com/composer/composer/issues/5030).
 
-Therefore, you either need to have a dependency on a package which requires
-`ext-mongo`, such as `doctrine/mongodb`, in your project:
-
-    "require": {
-        "php": "^7.0",
-        "alcaeus/mongo-php-adapter": "^1.0.0",
-        "doctrine/mongodb": "dev-master"
-    }
-
-or you need to explicitly require `ext-mongo` yourself in `composer.json`:
-
-    "require": {
-        "php": "^7.0",
-        "alcaeus/mongo-php-adapter": "^1.0.0",
-        "ext-mongo": "*"
-    }
+To fix this, you can use the `--ignore-platform-reqs` switch when running the
+above command, or when running `composer update` with no `composer.lock` file
+present.
 
 # Known issues
 
@@ -60,6 +46,13 @@ counterparts in `ext-mongo`. Do not rely on exception messages being the same.
 
 Methods that return a result array containing a `connectionId` field will always
 return `0` as connection ID.
+
+## Errors
+
+All errors and warnings triggered by `ext-mongo` are triggered as `E_USER_WARNING`
+and `E_USER_ERROR` because `trigger_error` doesn't accept the `E_WARNING` and
+`E_USER` codes. If you rely on these error codes in your error handling routines,
+please update your code accordingly.
 
 ## Serialization of objects
 Serialization of any Mongo* objects (e.g. MongoGridFSFile, MongoCursor, etc.)
