@@ -82,16 +82,32 @@ class MongoClient
      */
     public function __construct($server = 'default', array $options = ['connect' => true], array $driverOptions = [])
     {
+        $username = $options['username'];
+        $password = $options['password'];
+        $db = $options['db'];
+
+        unset($options['username']);
+        unset($options['password']);
+        unset($options['db']);
+
+        if (isset($options['replicaSet']) && empty($options['replicaSet'])) {
+            unset($options['replicaSet']);
+        }
+
         if ($server === 'default') {
-            $server = 'mongodb://' . self::DEFAULT_HOST . ':' . self::DEFAULT_PORT;
+            $server = 'mongodb://' . $username . ':' . $password . '@' . self::DEFAULT_HOST . ':' . self::DEFAULT_PORT . '/' . $db;
         }
 
         $this->applyConnectionOptions($server, $options);
 
         $this->server = $server;
+
         if (false === strpos($this->server, 'mongodb://')) {
-            $this->server = 'mongodb://'.$this->server;
+            $this->server = 'mongodb://' . $username . ':' . $password . '@' . $this->server . '/' . $db;
+        } else {
+            $this->server = str_replace('mongodb://', 'mongodb://' . $username . ':' . $password . '@', $this->server) . '/' . $db;
         }
+
         $this->client = new Client($this->server, $options, $driverOptions);
         $info = $this->client->__debugInfo();
         $this->manager = $info['manager'];
