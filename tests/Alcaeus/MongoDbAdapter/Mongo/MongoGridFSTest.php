@@ -287,6 +287,18 @@ class MongoGridFSTest extends TestCase
         $this->assertInstanceOf('MongoGridFSFile', $result);
     }
 
+    public function testFindOneWithLegacyProjectionReturnsFile()
+    {
+        $collection = $this->getGridFS();
+        $this->prepareFile('abcd', ['date' => new \MongoDate()]);
+
+        $result = $collection->findOne([], ['date']);
+
+        $this->assertInstanceOf('MongoGridFSFile', $result);
+        $this->assertCount(2, $result->file);
+        $this->assertArrayHasKey('date', $result->file);
+    }
+
     public function testFindOneWithFilenameReturnsFile()
     {
         $collection = $this->getGridFS();

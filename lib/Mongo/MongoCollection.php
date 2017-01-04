@@ -514,7 +514,7 @@ class MongoCollection
                     unset($options['new']);
                 }
 
-                $options['projection'] = is_array($fields) ? TypeConverter::fromLegacy($fields) : [];
+                $options['projection'] = TypeConverter::convertProjection($fields);
 
                 if (! \MongoDB\is_first_key_operator($update)) {
                     $document = $this->collection->findOneAndReplace($query, $update, $options);
@@ -552,7 +552,7 @@ class MongoCollection
             return;
         }
 
-        $options = ['projection' => TypeConverter::fromLegacy($fields)] + $options;
+        $options = ['projection' => TypeConverter::convertProjection($fields)] + $options;
         try {
             $document = $this->collection->findOne(TypeConverter::fromLegacy($query), $options);
         } catch (\MongoDB\Driver\Exception\Exception $e) {

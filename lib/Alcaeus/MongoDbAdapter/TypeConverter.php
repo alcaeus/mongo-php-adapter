@@ -88,6 +88,26 @@ class TypeConverter
     }
 
     /**
+     * Converts a projection used in find queries.
+     *
+     * This method handles conversion from the legacy syntax (e.g. ['x', 'y', 'z'])
+     * to the new syntax (e.g. ['x' => true, 'y' => true, 'z' => true]). While
+     * this was never documented, the legacy driver applied the same conversion.
+     *
+     * @param array $fields
+     * @return array
+     */
+    public static function convertProjection($fields)
+    {
+        if (! is_array($fields) || $fields === []) {
+            return [];
+        }
+
+        $projection = TypeConverter::isNumericArray($fields) ? array_fill_keys($fields, true) : $fields;
+        return TypeConverter::fromLegacy($projection);
+    }
+
+    /**
      * Helper method to find out if an array has numerical indexes
      *
      * For performance reason, this method checks the first array index only.
