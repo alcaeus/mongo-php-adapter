@@ -1559,8 +1559,6 @@ class MongoCollectionTest extends TestCase
                 'keysPerIndex' => ['mongo-php-adapter.test.$_id_' => 1],
                 'valid' => true,
                 'errors' => [],
-                'warning' => 'Some checks omitted for speed. use {full:true} option to do more thorough scan.',
-                'ok'  => 1.0
             ],
             $result
         );
