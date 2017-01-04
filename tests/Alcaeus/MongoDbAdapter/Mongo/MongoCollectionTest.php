@@ -429,6 +429,35 @@ class MongoCollectionTest extends TestCase
         $this->assertInstanceOf('MongoCursor', $collection->find());
     }
 
+    public function testFindWithProjection()
+    {
+        $document = ['foo' => 'foo', 'bar' => 'bar'];
+        $this->getCollection()->insert($document);
+        unset($document['_id']);
+        $this->getCollection()->insert($document);
+
+        $cursor = $this->getCollection()->find(['foo' => 'foo'], ['bar' => true]);
+        foreach ($cursor as $document) {
+            $this->assertCount(2, $document);
+            $this->assertArraySubset(['bar' => 'bar'], $document);
+        }
+    }
+
+    public function testFindWithLegacyProjection()
+    {
+        $document = ['foo' => 'foo', 'bar' => 'bar'];
+        $this->getCollection()->insert($document);
+        unset($document['_id']);
+        $this->getCollection()->insert($document);
+
+        $cursor = $this->getCollection()->find(['foo' => 'foo'], ['bar']);
+        foreach ($cursor as $document) {
+            $this->assertCount(2, $document);
+            $this->assertArraySubset(['bar' => 'bar'], $document);
+        }
+    }
+
+
     public function testCount()
     {
         $this->prepareData();
@@ -508,6 +537,26 @@ class MongoCollectionTest extends TestCase
 
         $document = $this->getCollection()->findOne(['foo' => 'foo'], ['_id' => false]);
         $this->assertSame(['foo' => 'foo'], $document);
+    }
+
+    public function testFindOneWithProjection()
+    {
+        $document = ['foo' => 'foo', 'bar' => 'bar'];
+        $this->getCollection()->insert($document);
+
+        $document = $this->getCollection()->findOne(['foo' => 'foo'], ['bar' => true]);
+        $this->assertCount(2, $document);
+        $this->assertArraySubset(['bar' => 'bar'], $document);
+    }
+
+    public function testFindOneWithLegacyProjection()
+    {
+        $document = ['foo' => 'foo', 'bar' => 'bar'];
+        $this->getCollection()->insert($document);
+
+        $document = $this->getCollection()->findOne(['foo' => 'foo'], ['bar']);
+        $this->assertCount(2, $document);
+        $this->assertArraySubset(['bar' => 'bar'], $document);
     }
 
     public function testFindOneNotFound()
@@ -1510,8 +1559,6 @@ class MongoCollectionTest extends TestCase
                 'keysPerIndex' => ['mongo-php-adapter.test.$_id_' => 1],
                 'valid' => true,
                 'errors' => [],
-                'warning' => 'Some checks omitted for speed. use {full:true} option to do more thorough scan.',
-                'ok'  => 1.0
             ],
             $result
         );

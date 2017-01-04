@@ -431,7 +431,7 @@ class MongoCursor extends AbstractCursor implements Iterator
      */
     protected function convertProjection()
     {
-        return TypeConverter::fromLegacy($this->projection);
+        return TypeConverter::convertProjection($this->projection);
     }
 
     /**
