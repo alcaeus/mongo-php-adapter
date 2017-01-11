@@ -376,7 +376,8 @@ class MongoDB
      */
     public function getDBRef(array $ref)
     {
-        return MongoDBRef::get($this, $ref);
+        $db = (isset($ref['$db']) && $ref['$db'] !== $this->name) ? $this->connection->selectDB($ref['$db']) : $this;
+        return MongoDBRef::get($db, $ref);
     }
 
     /**

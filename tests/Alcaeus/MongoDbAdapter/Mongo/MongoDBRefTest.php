@@ -116,4 +116,24 @@ class MongoDBRefTest extends TestCase
 
         $this->assertNull(\MongoDBRef::get($db, []));
     }
+
+    public function testGetWithDifferentDatabase()
+    {
+        $database = $this->getDatabase();
+        $collection = $this->getCollection();
+
+        $document = ['foo' => 'bar'];
+
+        $collection->insert($document);
+
+        $ref = [
+            '$ref' => $collection->getName(),
+            '$id' => $document['_id'],
+            '$db' => (string) $database,
+        ];
+
+        $referencedDocument = $this->getClient()->selectDB('foo')->getDBRef($ref);
+
+        $this->assertEquals($document, $referencedDocument);
+    }
 }

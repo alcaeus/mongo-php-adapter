@@ -132,6 +132,26 @@ class MongoCollectionTest extends TestCase
         $this->assertTrue($this->getCollection()->insert($document, ['w' => 0]));
     }
 
+    public function testUnacknowledgedWriteWithBooleanValue()
+    {
+        $document = ['foo' => 'bar'];
+        $this->assertTrue($this->getCollection()->insert($document, ['w' => false]));
+    }
+
+    public function testAcknowledgedWriteConcernWithBool()
+    {
+        $document = ['foo' => 'bar'];
+        $this->assertSame(
+            [
+                'ok' => 1.0,
+                'n' => 0,
+                'err' => null,
+                'errmsg' => null,
+            ],
+            $this->getCollection()->insert($document, ['w' => true])
+        );
+    }
+
     public function testInsertWriteConcernException()
     {
         $this->setExpectedException(
@@ -1222,36 +1242,130 @@ class MongoCollectionTest extends TestCase
         $this->assertSame($expected, $this->getcollection('nonExisting')->deleteIndexes());
     }
 
-    public function testGetIndexInfo()
+    public static function dataGetIndexInfo()
     {
-        $collection = $this->getCollection();
-        $collection->createIndex(['foo' => 1]);
-        $collection->createIndex(['bar' => 1], ['unique' => true]);
-
-        $expected = [
-            [
-                'v' => 1,
-                'key' => ['_id' => 1],
-                'name' => '_id_',
-                'ns' => 'mongo-php-adapter.test',
+        return [
+            'plainIndex' => [
+                'expectedIndex' => [
+                    'v' => 1,
+                    'key' => ['foo' => 1],
+                    'name' => 'foo_1',
+                    'ns' => 'mongo-php-adapter.test',
+                ],
+                'fields' => ['foo' => 1],
+                'options' => [],
             ],
-            [
-                'v' => 1,
-                'key' => ['foo' => 1],
-                'name' => 'foo_1',
-                'ns' => 'mongo-php-adapter.test',
+            'uniqueIndex' => [
+                'expectedIndex' => [
+                    'v' => 1,
+                    'key' => ['foo' => 1],
+                    'name' => 'foo_1',
+                    'ns' => 'mongo-php-adapter.test',
+                    'unique' => true,
+                ],
+                'fields' => ['foo' => 1],
+                'options' => ['unique' => true],
             ],
-            [
-                'v' => 1,
-                'key' => ['bar' => 1],
-                'name' => 'bar_1',
-                'ns' => 'mongo-php-adapter.test',
-                'unique' => true,
+            'sparseIndex' => [
+                'expectedIndex' => [
+                    'v' => 1,
+                    'key' => ['foo' => 1],
+                    'name' => 'foo_1',
+                    'ns' => 'mongo-php-adapter.test',
+                    'sparse' => true,
+                ],
+                'fields' => ['foo' => 1],
+                'options' => ['sparse' => true],
+            ],
+            'ttlIndex' => [
+                'expectedIndex' => [
+                    'v' => 1,
+                    'key' => ['foo' => 1],
+                    'name' => 'foo_1',
+                    'ns' => 'mongo-php-adapter.test',
+                    'expireAfterSeconds' => 86400,
+                ],
+                'fields' => ['foo' => 1],
+                'options' => ['expireAfterSeconds' => 86400],
+            ],
+            'textIndex' => [
+                'expectedIndex' => [
+                    'v' => 1,
+                    'key' => [
+                        '_fts' => 'text',
+                        '_ftsx' => 1,
+                    ],
+                    'name' => 'foo_text',
+                    'ns' => 'mongo-php-adapter.test',
+                    'weights' => [
+                        'foo' => 1,
+                    ],
+                    'default_language' => 'english',
+                    'language_override' => 'language',
+                    'textIndexVersion' => 3,
+                ],
+                'fields' => ['foo' => 'text'],
+                'options' => [],
+            ],
+            'partialFilterExpression' => [
+                'expectedIndex' => [
+                    'v' => 1,
+                    'key' => ['foo' => 1],
+                    'name' => 'foo_1',
+                    'ns' => 'mongo-php-adapter.test',
+                    'partialFilterExpression' => [
+                        'bar' => ['$gt' => 1],
+                    ],
+                ],
+                'fields' => ['foo' => 1],
+                'options' => [
+                    'partialFilterExpression' => ['bar' => ['$gt' => 1]],
+                ],
+            ],
+            'geoSpatial' => [
+                'expectedIndex' => [
+                    'v' => 1,
+                    'key' => ['foo' => '2dsphere'],
+                    'name' => 'foo_2dsphere',
+                    'ns' => 'mongo-php-adapter.test',
+                    '2dsphereIndexVersion' => 3,
+                ],
+                'fields' => ['foo' => '2dsphere'],
+                'options' => [],
+            ],
+            'geoHaystack' => [
+                'expectedIndex' => [
+                    'v' => 1,
+                    'key' => ['foo' => 'geoHaystack', 'bar' => 1],
+                    'name' => 'foo_geoHaystack_bar_1',
+                    'ns' => 'mongo-php-adapter.test',
+                    'bucketSize' => 10,
+                ],
+                'fields' => ['foo' => 'geoHaystack', 'bar' => 1],
+                'options' => ['bucketSize' => 10],
             ],
         ];
+    }
+
+    /**
+     * @dataProvider dataGetIndexInfo
+     */
+    public function testGetIndexInfo($expectedIndex, $fields, $options)
+    {
+        $idIndex = [
+            'v' => 1,
+            'key' => ['_id' => 1],
+            'name' => '_id_',
+            'ns' => 'mongo-php-adapter.test',
+        ];
+
+        $expectedIndexInfo = [$idIndex, $expectedIndex];
+
+        $collection = $this->getCollection();
+        $collection->createIndex($fields, $options);
 
         $this->assertEquals(
-            $expected,
+            $expectedIndexInfo,
             $collection->getIndexInfo()
         );
     }
