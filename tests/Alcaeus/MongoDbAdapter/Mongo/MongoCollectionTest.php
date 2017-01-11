@@ -132,6 +132,26 @@ class MongoCollectionTest extends TestCase
         $this->assertTrue($this->getCollection()->insert($document, ['w' => 0]));
     }
 
+    public function testUnacknowledgedWriteWithBooleanValue()
+    {
+        $document = ['foo' => 'bar'];
+        $this->assertTrue($this->getCollection()->insert($document, ['w' => false]));
+    }
+
+    public function testAcknowledgedWriteConcernWithBool()
+    {
+        $document = ['foo' => 'bar'];
+        $this->assertSame(
+            [
+                'ok' => 1.0,
+                'n' => 0,
+                'err' => null,
+                'errmsg' => null,
+            ],
+            $this->getCollection()->insert($document, ['w' => true])
+        );
+    }
+
     public function testInsertWriteConcernException()
     {
         $this->setExpectedException(

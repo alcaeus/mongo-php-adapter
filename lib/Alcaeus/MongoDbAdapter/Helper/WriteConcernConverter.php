@@ -18,12 +18,17 @@ namespace Alcaeus\MongoDbAdapter\Helper;
 trait WriteConcernConverter
 {
     /**
-     * @param string|int $wstring
+     * @param string|int|bool $wstring
      * @param int $wtimeout
      * @return \MongoDB\Driver\WriteConcern
      */
     protected function createWriteConcernFromParameters($wstring, $wtimeout)
     {
+        // Convert legacy write concern
+        if (is_bool($wstring)) {
+            $wstring = (int) $wstring;
+        }
+
         if (! is_string($wstring) && ! is_int($wstring)) {
             trigger_error("w for WriteConcern must be a string or integer", E_USER_WARNING);
             return false;
