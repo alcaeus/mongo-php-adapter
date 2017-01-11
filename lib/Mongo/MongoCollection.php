@@ -713,8 +713,27 @@ class MongoCollection
                 'ns' => $indexInfo->getNamespace(),
             ];
 
-            if ($indexInfo->isUnique()) {
-                $infos['unique'] = true;
+            $additionalKeys = [
+                'unique',
+                'sparse',
+                'partialFilterExpression',
+                'expireAfterSeconds',
+                'storageEngine',
+                'weights',
+                'default_language',
+                'language_override',
+                'textIndexVersion',
+                'collation',
+                '2dsphereIndexVersion',
+                'bucketSize'
+            ];
+
+            foreach ($additionalKeys as $key) {
+                if (! isset($indexInfo[$key])) {
+                    continue;
+                }
+
+                $infos[$key] = $indexInfo[$key];
             }
 
             return $infos;
