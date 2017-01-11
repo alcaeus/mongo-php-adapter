@@ -10,6 +10,8 @@ All issues and pull requests under this release may be found under the
 [1.0.8](https://github.com/alcaeus/mongo-php-adapter/issues?q=milestone%3A1.0.8)
 milestone.
 
+ * [#150](https://github.com/alcaeus/mongo-php-adapter/pull/150) adds missing
+ options to `MongoCollection::indexInfo`.
  * [#149](https://github.com/alcaeus/mongo-php-adapter/pull/149) fixes calls to
  `MongoDB::getDBRef` with references containing a `$db` field with a different
  value than the current database.
