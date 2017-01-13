@@ -41,6 +41,8 @@ class TypeConverter
         switch (true) {
             case $value instanceof TypeInterface:
                 return $value->toBSONType();
+            case $value instanceof BSON\Type:
+                return $value;
             case is_array($value):
             case is_object($value);
                 $result = [];

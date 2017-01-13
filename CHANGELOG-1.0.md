@@ -3,6 +3,18 @@ CHANGELOG
 
 This changelog references the relevant changes done in minor version updates.
 
+1.0.9 (????-??-??)
+------------------
+
+All issues and pull requests under this release may be found under the
+[1.0.9](https://github.com/alcaeus/mongo-php-adapter/issues?q=milestone%3A1.0.9)
+milestone.
+
+ * [#155](https://github.com/alcaeus/mongo-php-adapter/pull/155) fixes the handling
+ of BSON types when converting legacy types to BSON types.
+ * [#154](https://github.com/alcaeus/mongo-php-adapter/pull/154) makes the `options`
+ parameter in `MongoDB::createCollection` optional.
+
 1.0.8 (2017-01-11)
 ------------------
 
