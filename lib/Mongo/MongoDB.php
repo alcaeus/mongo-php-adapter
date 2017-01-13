@@ -290,7 +290,7 @@ class MongoDB
      * @param array $options
      * @return MongoCollection Returns a collection object representing the new collection.
      */
-    public function createCollection($name, $options)
+    public function createCollection($name, $options = [])
     {
         try {
             if (isset($options['capped'])) {
