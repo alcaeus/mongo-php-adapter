@@ -55,6 +55,24 @@ class MongoDBTest extends TestCase
         $database->selectCollection('foo' . chr(0));
     }
 
+    public function testCreateCollectionWithoutOptions()
+    {
+        $database = $this->getDatabase();
+
+        $collection = $database->createCollection('test');
+        $this->assertInstanceOf('MongoCollection', $collection);
+
+        $checkDatabase = $this->getCheckDatabase();
+        foreach ($checkDatabase->listCollections() as $collectionInfo) {
+            if ($collectionInfo->getName() === 'test') {
+                $this->assertFalse($collectionInfo->isCapped());
+                return;
+            }
+        }
+
+        $this->fail('Did not find expected collection');
+    }
+
     public function testCreateCollection()
     {
         $database = $this->getDatabase();
