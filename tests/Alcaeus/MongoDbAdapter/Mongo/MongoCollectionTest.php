@@ -2,6 +2,7 @@
 
 namespace Alcaeus\MongoDbAdapter\Tests\Mongo;
 
+use MongoDB\BSON\Regex;
 use MongoDB\Driver\ReadPreference;
 use Alcaeus\MongoDbAdapter\Tests\TestCase;
 
@@ -1783,6 +1784,27 @@ class MongoCollectionTest extends TestCase
         $items = iterator_to_array($cursor, false);
         $this->assertCount(1, $items);
         $this->assertCount(1, $items[0]['loveItems']);
+    }
+
+    public static function dataFindWithRegex()
+    {
+        return [
+            'MongoRegex' => [new \MongoRegex('/^foo.*/i')],
+            'BSONRegex' => [new Regex('^foo.*', 'i')],
+        ];
+    }
+
+    /**
+     * @dataProvider dataFindWithRegex
+     */
+    public function testFindWithRegex($regex)
+    {
+        $this->skipTestIf(extension_loaded('mongo'));
+        $document = ['name' => 'FOO 123'];
+        $this->getCollection()->insert($document);
+
+        $cursor = $this->getCollection()->find(['name' => $regex]);
+        $this->assertSame(1, $cursor->count());
     }
 }
 
