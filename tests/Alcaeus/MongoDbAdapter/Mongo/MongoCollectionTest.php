@@ -478,6 +478,39 @@ class MongoCollectionTest extends TestCase
     }
 
     /**
+     * @dataProvider dataFindWithProjectionAndNumericKeys
+     */
+    public function testFindWithProjectionAndNumericKeys($data, $projection, $expected)
+    {
+        $this->getCollection()->insert($data);
+
+        $document = $this->getCollection()->findOne([], $projection);
+        unset($document['_id']);
+        $this->assertSame($expected, $document);
+    }
+
+    public static function dataFindWithProjectionAndNumericKeys()
+    {
+        return [
+            'sequentialIntegersStartingWithZero' => [
+                ['0' => 'foo', '1' => 'bar', '2' => 'foobar'],
+                [0 => true, 1 => true],
+                ['0' => 'foo', '1' => 'bar'],
+            ],
+            'sequentialIntegersStartingWithOne' => [
+                ['0' => 'foo', '1' => 'bar', '2' => 'foobar'],
+                [1 => true, 2 => true],
+                ['1' => 'bar', '2' => 'foobar'],
+            ],
+            'nonSequentialIntegers' => [
+                ['0' => 'foo', '1' => 'bar', '2' => 'foobar'],
+                [1 => true, 3 => true],
+                ['0' => 'foo', '2' => 'foobar'],
+            ]
+        ];
+    }
+
+    /**
      * @dataProvider dataFindWithProjectionExcludeId
      */
     public function testFindWithProjectionExcludeId($projection)
