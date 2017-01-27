@@ -94,6 +94,7 @@ class MongoClient
 
         if (isset($options['replicaSet']) && !empty($options['replicaSet'])) {
             $replicaSet = $options['replicaSet'];
+            unset($options['replicaSet']);
         }
 
         if ($server === 'default') {
