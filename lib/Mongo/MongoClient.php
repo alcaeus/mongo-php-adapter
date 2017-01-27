@@ -32,13 +32,13 @@ class MongoClient
     use Helper\WriteConcern;
 
     const VERSION = '1.6.12';
-    const DEFAULT_HOST = "localhost" ;
-    const DEFAULT_PORT = 27017 ;
-    const RP_PRIMARY = "primary" ;
-    const RP_PRIMARY_PREFERRED = "primaryPreferred" ;
-    const RP_SECONDARY = "secondary" ;
-    const RP_SECONDARY_PREFERRED = "secondaryPreferred" ;
-    const RP_NEAREST = "nearest" ;
+    const DEFAULT_HOST = "localhost";
+    const DEFAULT_PORT = 27017;
+    const RP_PRIMARY = "primary";
+    const RP_PRIMARY_PREFERRED = "primaryPreferred";
+    const RP_SECONDARY = "secondary";
+    const RP_SECONDARY_PREFERRED = "secondaryPreferred";
+    const RP_NEAREST = "nearest";
 
     /**
      * @var bool
@@ -90,8 +90,10 @@ class MongoClient
         unset($options['password']);
         unset($options['db']);
 
-        if (isset($options['replicaSet']) && empty($options['replicaSet'])) {
-            unset($options['replicaSet']);
+        $replicaSet = null;
+
+        if (isset($options['replicaSet']) && !empty($options['replicaSet'])) {
+            $replicaSet = $options['replicaSet'];
         }
 
         if ($server === 'default') {
@@ -106,6 +108,10 @@ class MongoClient
             $this->server = 'mongodb://' . $username . ':' . $password . '@' . $this->server . '/' . $db;
         } else {
             $this->server = str_replace('mongodb://', 'mongodb://' . $username . ':' . $password . '@', $this->server) . '/' . $db;
+        }
+
+        if ($replicaSet) {
+            $this->server .= '?replicaSet=' . $replicaSet;
         }
 
         $this->client = new Client($this->server, $options, $driverOptions);
@@ -234,7 +240,7 @@ class MongoClient
             $results[$key] = [
                 'host' => $server->getHost(),
                 'port' => $server->getPort(),
-                'health' => (int) $info['ok'],
+                'health' => (int)$info['ok'],
                 'state' => $state,
                 'ping' => $server->getLatency(),
                 'lastPing' => null,
@@ -252,7 +258,7 @@ class MongoClient
      * @param int|MongoInt64 $id The ID of the cursor to kill.
      * @return bool
      */
-    public function killCursor($server_hash , $id)
+    public function killCursor($server_hash, $id)
     {
         $this->notImplemented();
     }
