@@ -450,34 +450,58 @@ class MongoCollectionTest extends TestCase
         $this->assertInstanceOf('MongoCursor', $collection->find());
     }
 
-    public function testFindWithProjection()
+    /**
+     * @dataProvider dataFindWithProjection
+     */
+    public function testFindWithProjection($projection)
     {
         $document = ['foo' => 'foo', 'bar' => 'bar'];
         $this->getCollection()->insert($document);
         unset($document['_id']);
         $this->getCollection()->insert($document);
 
-        $cursor = $this->getCollection()->find(['foo' => 'foo'], ['bar' => true]);
+        $cursor = $this->getCollection()->find(['foo' => 'foo'], $projection);
         foreach ($cursor as $document) {
             $this->assertCount(2, $document);
+            $this->assertArrayHasKey('_id', $document);
             $this->assertArraySubset(['bar' => 'bar'], $document);
         }
     }
 
-    public function testFindWithLegacyProjection()
+    public static function dataFindWithProjection()
+    {
+        return [
+            'projection' => [['bar' => true]],
+            'intProjection' => [['bar' => 1]],
+            'legacyProjection' => [['bar']],
+        ];
+    }
+
+    /**
+     * @dataProvider dataFindWithProjectionExcludeId
+     */
+    public function testFindWithProjectionExcludeId($projection)
     {
         $document = ['foo' => 'foo', 'bar' => 'bar'];
         $this->getCollection()->insert($document);
         unset($document['_id']);
         $this->getCollection()->insert($document);
 
-        $cursor = $this->getCollection()->find(['foo' => 'foo'], ['bar']);
+        $cursor = $this->getCollection()->find(['foo' => 'foo'], $projection);
         foreach ($cursor as $document) {
-            $this->assertCount(2, $document);
+            $this->assertCount(1, $document);
+            $this->assertArrayNotHasKey('_id', $document);
             $this->assertArraySubset(['bar' => 'bar'], $document);
         }
     }
 
+    public static function dataFindWithProjectionExcludeId()
+    {
+        return [
+            'projection' => [['_id' => false, 'bar' => true]],
+            'intProjection' => [['_id' => 0, 'bar' => 1]],
+        ];
+    }
 
     public function testCount()
     {
