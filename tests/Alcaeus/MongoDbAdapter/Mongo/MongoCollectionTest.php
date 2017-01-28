@@ -492,22 +492,23 @@ class MongoCollectionTest extends TestCase
     public static function dataFindWithProjectionAndNumericKeys()
     {
         return [
-            'sequentialIntegersStartingWithZero' => [
-                ['0' => 'foo', '1' => 'bar', '2' => 'foobar'],
-                [0 => true, 1 => true],
-                ['0' => 'foo', '1' => 'bar'],
-            ],
             'sequentialIntegersStartingWithOne' => [
                 ['0' => 'foo', '1' => 'bar', '2' => 'foobar'],
                 [1 => true, 2 => true],
                 ['1' => 'bar', '2' => 'foobar'],
             ],
             'nonSequentialIntegers' => [
-                ['0' => 'foo', '1' => 'bar', '2' => 'foobar'],
+                ['0' => 'foo', '1' => 'bar', '2' => 'foobar', '3' => 'barfoo'],
                 [1 => true, 3 => true],
-                ['0' => 'foo', '2' => 'foobar'],
+                ['1' => 'bar', '3' => 'barfoo'],
             ]
         ];
+    }
+
+    public function testFindWithProjectionAndSequentialNumericKeys()
+    {
+        $this->setExpectedException(\MongoException::class, 'field names must be strings', 8);
+        $this->getCollection()->findOne([], [true, false]);
     }
 
     /**
