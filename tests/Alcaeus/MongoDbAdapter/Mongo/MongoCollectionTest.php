@@ -450,34 +450,92 @@ class MongoCollectionTest extends TestCase
         $this->assertInstanceOf('MongoCursor', $collection->find());
     }
 
-    public function testFindWithProjection()
+    /**
+     * @dataProvider dataFindWithProjection
+     */
+    public function testFindWithProjection($projection)
     {
         $document = ['foo' => 'foo', 'bar' => 'bar'];
         $this->getCollection()->insert($document);
         unset($document['_id']);
         $this->getCollection()->insert($document);
 
-        $cursor = $this->getCollection()->find(['foo' => 'foo'], ['bar' => true]);
+        $cursor = $this->getCollection()->find(['foo' => 'foo'], $projection);
         foreach ($cursor as $document) {
             $this->assertCount(2, $document);
+            $this->assertArrayHasKey('_id', $document);
             $this->assertArraySubset(['bar' => 'bar'], $document);
         }
     }
 
-    public function testFindWithLegacyProjection()
+    public static function dataFindWithProjection()
+    {
+        return [
+            'projection' => [['bar' => true]],
+            'intProjection' => [['bar' => 1]],
+            'legacyProjection' => [['bar']],
+        ];
+    }
+
+    /**
+     * @dataProvider dataFindWithProjectionAndNumericKeys
+     */
+    public function testFindWithProjectionAndNumericKeys($data, $projection, $expected)
+    {
+        $this->getCollection()->insert($data);
+
+        $document = $this->getCollection()->findOne([], $projection);
+        unset($document['_id']);
+        $this->assertSame($expected, $document);
+    }
+
+    public static function dataFindWithProjectionAndNumericKeys()
+    {
+        return [
+            'sequentialIntegersStartingWithOne' => [
+                ['0' => 'foo', '1' => 'bar', '2' => 'foobar'],
+                [1 => true, 2 => true],
+                ['1' => 'bar', '2' => 'foobar'],
+            ],
+            'nonSequentialIntegers' => [
+                ['0' => 'foo', '1' => 'bar', '2' => 'foobar', '3' => 'barfoo'],
+                [1 => true, 3 => true],
+                ['1' => 'bar', '3' => 'barfoo'],
+            ]
+        ];
+    }
+
+    public function testFindWithProjectionAndSequentialNumericKeys()
+    {
+        $this->setExpectedException(\MongoException::class, 'field names must be strings', 8);
+        $this->getCollection()->findOne([], [true, false]);
+    }
+
+    /**
+     * @dataProvider dataFindWithProjectionExcludeId
+     */
+    public function testFindWithProjectionExcludeId($projection)
     {
         $document = ['foo' => 'foo', 'bar' => 'bar'];
         $this->getCollection()->insert($document);
         unset($document['_id']);
         $this->getCollection()->insert($document);
 
-        $cursor = $this->getCollection()->find(['foo' => 'foo'], ['bar']);
+        $cursor = $this->getCollection()->find(['foo' => 'foo'], $projection);
         foreach ($cursor as $document) {
-            $this->assertCount(2, $document);
+            $this->assertCount(1, $document);
+            $this->assertArrayNotHasKey('_id', $document);
             $this->assertArraySubset(['bar' => 'bar'], $document);
         }
     }
 
+    public static function dataFindWithProjectionExcludeId()
+    {
+        return [
+            'projection' => [['_id' => false, 'bar' => true]],
+            'intProjection' => [['_id' => 0, 'bar' => 1]],
+        ];
+    }
 
     public function testCount()
     {
