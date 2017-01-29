@@ -98,6 +98,8 @@ class TypeConverter
      *
      * @param array $fields
      * @return array
+     *
+     * @throws \MongoException
      */
     public static function convertProjection($fields)
     {
@@ -105,7 +107,21 @@ class TypeConverter
             return [];
         }
 
-        $projection = TypeConverter::isNumericArray($fields) ? array_fill_keys($fields, true) : $fields;
+        if (! TypeConverter::isNumericArray($fields)) {
+            $projection = TypeConverter::fromLegacy($fields);
+        } else {
+            $projection = array_fill_keys(
+                array_map(function ($field) {
+                    if (!is_string($field)) {
+                        throw new \MongoException('field names must be strings', 8);
+                    }
+
+                    return $field;
+                }, $fields),
+                true
+            );
+        }
+
         return TypeConverter::fromLegacy($projection);
     }
 
@@ -122,7 +138,14 @@ class TypeConverter
      */
     public static function isNumericArray(array $array)
     {
-        return $array === [] || is_numeric(array_keys($array)[0]);
+        if ($array === []) {
+            return true;
+        }
+
+        $keys = array_keys($array);
+        // array_keys gives us a clean numeric array with keys, so we expect an
+        // array like [0 => 0, 1 => 1, 2 => 2, ..., n => n]
+        return array_values($keys) === array_keys($keys);
     }
 
     /**

@@ -40,4 +40,23 @@ class TypeConverterTest extends TestCase
             ],
         ];
     }
+
+    /**
+     * @dataProvider dataIsNumericArray
+     */
+    public function testIsNumericArray($expected, $array)
+    {
+        $this->assertSame($expected, TypeConverter::isNumericArray($array));
+    }
+
+    public static function dataIsNumericArray()
+    {
+        return [
+            'emptyArray' => [true, []],
+            'arrayWithSequentialIndices' => [true, [1, 2, 3]],
+            'arrayWithSequentialIndicesOneBased' => [false, [1 => 1, 2, 3]],
+            'arrayWithStringKeys' => [false, ['foo' => 'bar']],
+            'arrayWithRandomNumbers' => [false, [15 => 'foo', 20 => 'bar']],
+        ];
+    }
 }
