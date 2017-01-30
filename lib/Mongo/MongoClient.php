@@ -90,13 +90,7 @@ class MongoClient
         unset($options['password']);
         unset($options['db']);
 
-        $replicaSet = null;
-
-        if (isset($options['replicaSet']) && !empty($options['replicaSet'])) {
-            $replicaSet = $options['replicaSet'];
-        }
-
-        if (isset($options['replicaSet'])) {
+        if (isset($options['replicaSet']) && empty($options['replicaSet'])) {
             unset($options['replicaSet']);
         }
 
@@ -112,10 +106,6 @@ class MongoClient
             $this->server = 'mongodb://' . $username . ':' . $password . '@' . $this->server . '/' . $db;
         } else {
             $this->server = str_replace('mongodb://', 'mongodb://' . $username . ':' . $password . '@', $this->server) . '/' . $db;
-        }
-
-        if ($replicaSet) {
-            $this->server .= '?replicaSet=' . $replicaSet;
         }
 
         $this->client = new Client($this->server, $options, $driverOptions);
