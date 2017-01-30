@@ -94,6 +94,9 @@ class MongoClient
 
         if (isset($options['replicaSet']) && !empty($options['replicaSet'])) {
             $replicaSet = $options['replicaSet'];
+        }
+
+        if (isset($options['replicaSet'])) {
             unset($options['replicaSet']);
         }
 
