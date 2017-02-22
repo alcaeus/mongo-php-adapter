@@ -275,7 +275,7 @@ class MongoCollection
      * @throws MongoCursorTimeoutException if the "w" option is set to a value greater than one and the operation takes longer than MongoCursor::$timeout milliseconds to complete. This does not kill the operation on the server, it is a client-side timeout. The operation in MongoCollection::$wtimeout is milliseconds.
      * @return bool|array Returns an array containing the status of the insertion if the "w" option is set.
      */
-    public function insert(&$a, array $options = [])
+    public function insert($a, array $options = [])
     {
         if (! $this->ensureDocumentHasMongoId($a)) {
             trigger_error(sprintf('%s(): expects parameter %d to be an array or object, %s given', __METHOD__, 1, gettype($a)), E_USER_WARNING);
@@ -316,7 +316,7 @@ class MongoCollection
      * @throws MongoCursorException
      * @return mixed If "safe" is set, returns an associative array with the status of the inserts ("ok") and any error that may have occured ("err"). Otherwise, returns TRUE if the batch insert was successfully sent, FALSE otherwise.
      */
-    public function batchInsert(array &$a, array $options = [])
+    public function batchInsert(array $a, array $options = [])
     {
         if (empty($a)) {
             throw new \MongoException('No write ops were included in the batch');
