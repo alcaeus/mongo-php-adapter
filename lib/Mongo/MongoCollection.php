@@ -37,7 +37,7 @@ class MongoCollection
     /**
      * @var MongoDB
      */
-    public $db = NULL;
+    public $db = null;
 
     /**
      * @var string
@@ -170,7 +170,7 @@ class MongoCollection
                 'waitedMS' => 0,
             ];
         } catch (\MongoDB\Driver\Exception\Exception $e) {
-            throw ExceptionConverter::toLegacy($e,'MongoResultException');
+            throw ExceptionConverter::toLegacy($e, 'MongoResultException');
         }
     }
 
@@ -254,7 +254,7 @@ class MongoCollection
      * @param bool $scan_data Only validate indices, not the base collection.
      * @return array Returns the database's evaluation of this object.
      */
-    public function validate($scan_data = FALSE)
+    public function validate($scan_data = false)
     {
         $command = [
             'validate' => $this->name,
@@ -335,7 +335,7 @@ class MongoCollection
                     }
                 }
             } catch (MongoException $e) {
-                if ( ! $continueOnError) {
+                if (! $continueOnError) {
                     throw $e;
                 }
             }
@@ -374,7 +374,7 @@ class MongoCollection
      * @throws MongoCursorException
      * @return boolean
      */
-    public function update(array $criteria , array $newobj, array $options = [])
+    public function update(array $criteria, array $newobj, array $options = [])
     {
         $multiple = isset($options['multiple']) ? $options['multiple'] : false;
         $isReplace = ! \MongoDB\is_first_key_operator($newobj);
@@ -705,7 +705,7 @@ class MongoCollection
      */
     public function getIndexInfo()
     {
-        $convertIndex = function(\MongoDB\Model\IndexInfo $indexInfo) {
+        $convertIndex = function (\MongoDB\Model\IndexInfo $indexInfo) {
             $infos = [
                 'v' => $indexInfo->getVersion(),
                 'key' => $indexInfo->getKey(),
@@ -982,7 +982,7 @@ class MongoCollection
      */
     private function ensureDocumentHasMongoId(&$document)
     {
-        $checkKeys = function($array) {
+        $checkKeys = function ($array) {
             foreach (array_keys($array) as $key) {
                 if (empty($key) && $key !== 0) {
                     throw new \MongoException('zero-length keys are not allowed, did you use $ with double quotes?');

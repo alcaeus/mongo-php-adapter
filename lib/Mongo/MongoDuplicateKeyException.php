@@ -21,6 +21,7 @@ if (class_exists('MongoDuplicateKeyException', false)) {
  * <p>(PECL mongo &gt;= 1.5.0)</p>
  * @link http://php.net/manual/en/class.mongoduplicatekeyexception.php
  */
-class MongoDuplicateKeyException extends MongoWriteConcernException {
+class MongoDuplicateKeyException extends MongoWriteConcernException
+{
 
 }

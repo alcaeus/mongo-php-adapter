@@ -17,6 +17,7 @@ if (class_exists('MongoConnectionException', false)) {
     return;
 }
 
-class MongoConnectionException extends MongoException {
+class MongoConnectionException extends MongoException
+{
 
 }

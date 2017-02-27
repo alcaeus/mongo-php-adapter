@@ -123,7 +123,7 @@ class MongoLog
      * <ul>
      * @return boolean Returns <b>TRUE</b> on success or <b>FALSE</b> on failure.
      */
-    public static function setCallback(callable $log_function )
+    public static function setCallback(callable $log_function)
     {
         self::$callback = $log_function;
         return true;

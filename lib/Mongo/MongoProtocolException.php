@@ -20,4 +20,6 @@ if (class_exists('MongoProtocolException', false)) {
 /**
  * <p>(PECL mongo &gt;= 1.5.0)</p>
  */
-class MongoProtocolException extends MongoException {}
+class MongoProtocolException extends MongoException
+{
+}

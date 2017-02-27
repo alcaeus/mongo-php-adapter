@@ -21,4 +21,6 @@ if (class_exists('MongoExecutionTimeoutException', false)) {
  * <p>(PECL mongo &gt;= 1.5.0)</p>
  * @link http://php.net/manual/en/class.mongoexecutiontimeoutexception.php
  */
-class MongoExecutionTimeoutException extends MongoException {}
+class MongoExecutionTimeoutException extends MongoException
+{
+}
