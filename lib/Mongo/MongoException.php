@@ -17,5 +17,6 @@ if (class_exists('MongoException', false)) {
     return;
 }
 
-class MongoException extends Exception {
+class MongoException extends Exception
+{
 }

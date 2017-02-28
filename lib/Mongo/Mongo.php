@@ -105,7 +105,7 @@ class Mongo extends MongoClient
      * @param bool $ok
      * @return bool returns the former value of slaveOkay for this instance.
      */
-    public function setSlaveOkay ($ok)
+    public function setSlaveOkay($ok)
     {
         $this->notImplemented();
     }

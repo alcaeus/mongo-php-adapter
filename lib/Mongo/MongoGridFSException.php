@@ -17,6 +17,7 @@ if (class_exists('MongoGridFSException', false)) {
     return;
 }
 
-class MongoGridFSException extends MongoException {
+class MongoGridFSException extends MongoException
+{
 
 }

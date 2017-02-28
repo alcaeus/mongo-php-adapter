@@ -258,7 +258,7 @@ class MongoDB
      * @param bool $backup_original_files [optional] <p>If original files should be backed up.</p>
      * @return array <p>Returns db response.</p>
      */
-    public function repair($preserve_cloned_files = FALSE, $backup_original_files = FALSE)
+    public function repair($preserve_cloned_files = false, $backup_original_files = false)
     {
         $command = [
             'repairDatabase' => 1,
@@ -534,14 +534,14 @@ class MongoDB
                 throw new \Exception('Database name contains invalid characters');
             }
         }
-
     }
 
     /**
      * @param bool $includeSystemCollections
      * @return Closure
      */
-    private function getSystemCollectionFilterClosure($includeSystemCollections = false) {
+    private function getSystemCollectionFilterClosure($includeSystemCollections = false)
+    {
         return function (CollectionInfo $collectionInfo) use ($includeSystemCollections) {
             return $includeSystemCollections || ! preg_match('#^system\.#', $collectionInfo->getName());
         };

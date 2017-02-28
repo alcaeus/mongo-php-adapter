@@ -197,7 +197,6 @@ class MongoId implements Serializable, TypeInterface, JsonSerializable
      */
     public static function __set_state(array $props)
     {
-
     }
 
     /**
