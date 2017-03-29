@@ -47,7 +47,6 @@ trait WriteConcern
             'w' => $this->writeConcern->getW(),
             'wtimeout' => $this->writeConcern->getWtimeout(),
         ];
-
     }
 
     /**

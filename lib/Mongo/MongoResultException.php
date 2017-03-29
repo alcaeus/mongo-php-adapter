@@ -22,15 +22,16 @@ if (class_exists('MongoResultException', false)) {
  * @link http://php.net/manual/en/class.mongoresultexception.php#mongoresultexception.props.document
  *
  */
-class MongoResultException extends MongoException {
+class MongoResultException extends MongoException
+{
     /**
      * Retrieve the full result document
      * http://php.net/manual/en/mongoresultexception.getdocument.php
      * @return array <p>The full result document as an array, including partial data if available and additional keys.</p>
      */
-    public function getDocument () {}
+    public function getDocument()
+    {
+    }
 
     public $document;
-
-
 }

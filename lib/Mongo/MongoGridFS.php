@@ -291,7 +291,6 @@ class MongoGridFS extends MongoCollection
                 $this->delete($file['_id']);
                 throw new MongoGridFSException('Could not store file: ' . $e->getMessage(), 0, $e);
             }
-
         }
 
         return $file['_id'];
@@ -339,8 +338,8 @@ class MongoGridFS extends MongoCollection
     {
         try {
             $this->chunks->createIndex(['files_id' => 1, 'n' => 1], ['unique' => true]);
-        } catch (MongoDuplicateKeyException $e) {}
-
+        } catch (MongoDuplicateKeyException $e) {
+        }
     }
 
     /**

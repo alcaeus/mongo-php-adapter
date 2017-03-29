@@ -236,7 +236,7 @@ class MongoClient
      * @param int|MongoInt64 $id The ID of the cursor to kill.
      * @return bool
      */
-    public function killCursor($server_hash , $id)
+    public function killCursor($server_hash, $id)
     {
         $this->notImplemented();
     }
