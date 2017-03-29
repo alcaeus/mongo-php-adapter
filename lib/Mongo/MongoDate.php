@@ -92,7 +92,7 @@ class MongoDate implements TypeInterface
 
         $microSeconds = $this->truncateMicroSeconds($this->usec);
         if ($microSeconds > 0) {
-            $datetime = \DateTime::createFromFormat('Y-m-d H:i:s.u', $datetime->format('Y-m-d H:i:s') . '.' . $microSeconds);
+            $datetime = \DateTime::createFromFormat('Y-m-d H:i:s.u', $datetime->format('Y-m-d H:i:s') . '.' . str_pad($microSeconds, 6, '0', STR_PAD_LEFT));
         }
 
         $datetime->setTimezone(new \DateTimeZone("UTC"));
