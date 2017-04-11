@@ -1241,8 +1241,12 @@ class MongoCollectionTest extends TestCase
             'nIndexesWas' => 2,
             'errmsg' => 'index not found with name [bar_1]',
             'ok' => 0.0,
-            'code' => 27,
         ];
+
+        if (version_compare($this->getServerVersion(), '3.4.0', '>=')) {
+            $expected['code'] = 27;
+        }
+
         $this->assertEquals($expected, $this->getCollection()->deleteIndex('bar'));
 
         $this->assertCount(2, iterator_to_array($newCollection->listIndexes()));
@@ -1296,17 +1300,23 @@ class MongoCollectionTest extends TestCase
         $expected = [
             'ok' => 0.0,
             'errmsg' => 'ns not found',
-            'code' => 26,
         ];
-        $this->assertSame($expected, $this->getcollection('nonExisting')->deleteIndexes());
+
+        if (version_compare($this->getServerVersion(), '3.4.0', '>=')) {
+            $expected['code'] = 26;
+        }
+
+        $this->assertSame($expected, $this->getCollection('nonExisting')->deleteIndexes());
     }
 
-    public static function dataGetIndexInfo()
+    public function dataGetIndexInfo()
     {
+        $indexVersion = $this->getDefaultIndexVersion();
+
         return [
             'plainIndex' => [
                 'expectedIndex' => [
-                    'v' => 1,
+                    'v' => $indexVersion,
                     'key' => ['foo' => 1],
                     'name' => 'foo_1',
                     'ns' => 'mongo-php-adapter.test',
@@ -1316,7 +1326,7 @@ class MongoCollectionTest extends TestCase
             ],
             'uniqueIndex' => [
                 'expectedIndex' => [
-                    'v' => 1,
+                    'v' => $indexVersion,
                     'key' => ['foo' => 1],
                     'name' => 'foo_1',
                     'ns' => 'mongo-php-adapter.test',
@@ -1327,7 +1337,7 @@ class MongoCollectionTest extends TestCase
             ],
             'sparseIndex' => [
                 'expectedIndex' => [
-                    'v' => 1,
+                    'v' => $indexVersion,
                     'key' => ['foo' => 1],
                     'name' => 'foo_1',
                     'ns' => 'mongo-php-adapter.test',
@@ -1338,7 +1348,7 @@ class MongoCollectionTest extends TestCase
             ],
             'ttlIndex' => [
                 'expectedIndex' => [
-                    'v' => 1,
+                    'v' => $indexVersion,
                     'key' => ['foo' => 1],
                     'name' => 'foo_1',
                     'ns' => 'mongo-php-adapter.test',
@@ -1349,7 +1359,7 @@ class MongoCollectionTest extends TestCase
             ],
             'textIndex' => [
                 'expectedIndex' => [
-                    'v' => 1,
+                    'v' => $indexVersion,
                     'key' => [
                         '_fts' => 'text',
                         '_ftsx' => 1,
@@ -1361,14 +1371,14 @@ class MongoCollectionTest extends TestCase
                     ],
                     'default_language' => 'english',
                     'language_override' => 'language',
-                    'textIndexVersion' => 3,
+                    'textIndexVersion' => version_compare($this->getServerVersion(), '3.2.0', '>=') ? 3 : 2,
                 ],
                 'fields' => ['foo' => 'text'],
                 'options' => [],
             ],
             'partialFilterExpression' => [
                 'expectedIndex' => [
-                    'v' => 1,
+                    'v' => $indexVersion,
                     'key' => ['foo' => 1],
                     'name' => 'foo_1',
                     'ns' => 'mongo-php-adapter.test',
@@ -1383,18 +1393,18 @@ class MongoCollectionTest extends TestCase
             ],
             'geoSpatial' => [
                 'expectedIndex' => [
-                    'v' => 1,
+                    'v' => $indexVersion,
                     'key' => ['foo' => '2dsphere'],
                     'name' => 'foo_2dsphere',
                     'ns' => 'mongo-php-adapter.test',
-                    '2dsphereIndexVersion' => 3,
+                    '2dsphereIndexVersion' => version_compare($this->getServerVersion(), '3.2.0', '>=') ? 3 : 2,
                 ],
                 'fields' => ['foo' => '2dsphere'],
                 'options' => [],
             ],
             'geoHaystack' => [
                 'expectedIndex' => [
-                    'v' => 1,
+                    'v' => $indexVersion,
                     'key' => ['foo' => 'geoHaystack', 'bar' => 1],
                     'name' => 'foo_geoHaystack_bar_1',
                     'ns' => 'mongo-php-adapter.test',
@@ -1412,7 +1422,7 @@ class MongoCollectionTest extends TestCase
     public function testGetIndexInfo($expectedIndex, $fields, $options)
     {
         $idIndex = [
-            'v' => 1,
+            'v' => $this->getDefaultIndexVersion(),
             'key' => ['_id' => 1],
             'name' => '_id_',
             'ns' => 'mongo-php-adapter.test',

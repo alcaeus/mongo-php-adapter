@@ -163,4 +163,23 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
             $this->markTestSkipped('Test only applies when running against mongo-php-adapter');
         }
     }
+
+    /**
+     * @return string
+     */
+    protected function getServerVersion()
+    {
+        $serverInfo = $this->getDatabase()->command(['buildinfo' => true]);
+        return $serverInfo['version'];
+    }
+
+    /**
+     * Indexes created in MongoDB 3.4 default to v: 2.
+     * @return int
+     * @see https://docs.mongodb.com/manual/release-notes/3.4-compatibility/#backwards-incompatible-features
+     */
+    protected function getDefaultIndexVersion()
+    {
+        return version_compare($this->getServerVersion(), '3.4.0', '>=') ? 2 : 1;
+    }
 }
