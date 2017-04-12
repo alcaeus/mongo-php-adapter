@@ -63,7 +63,8 @@ class MongoDeleteBatchTest extends TestCase
         $collection = $this->getCollection();
         $batch = new \MongoDeleteBatch($collection);
 
-        $this->setExpectedException('Exception', "Expected \$item to contain 'q' key");
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage("Expected \$item to contain 'q' key");
 
         $batch->add([]);
     }

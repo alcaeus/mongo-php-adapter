@@ -24,14 +24,16 @@ class MongoClientTest extends TestCase
 
     public function testSelectDBWithEmptyName()
     {
-        $this->setExpectedException('Exception', 'Database name cannot be empty');
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Database name cannot be empty');
 
         $this->getClient()->selectDB('');
     }
 
     public function testSelectDBWithInvalidName()
     {
-        $this->setExpectedException('Exception', 'Database name contains invalid characters');
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Database name contains invalid characters');
 
         $this->getClient()->selectDB('/');
     }

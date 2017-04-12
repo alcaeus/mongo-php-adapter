@@ -180,7 +180,8 @@ class MongoUpdateBatchTest extends TestCase
         $collection = $this->getCollection();
         $batch = new \MongoUpdateBatch($collection);
 
-        $this->setExpectedException('Exception', "Expected \$item to contain 'q' key");
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage("Expected \$item to contain 'q' key");
 
         $batch->add([]);
     }
