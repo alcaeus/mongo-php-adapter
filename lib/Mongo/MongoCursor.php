@@ -178,7 +178,31 @@ class MongoCursor extends AbstractCursor implements Iterator
      */
     public function explain()
     {
-        $this->notImplemented();
+        $optionNames = [
+            'allowPartialResults',
+            'batchSize',
+            'cursorType',
+            'limit',
+            'maxTimeMS',
+            'noCursorTimeout',
+            'projection',
+            'skip',
+            'sort',
+        ];
+
+        $options = $this->getOptions($optionNames);
+
+        $command = [
+            'explain' => [
+                'find' => $this->collection->getCollectionName(),
+                'filter' => $this->query,
+            ] + $options,
+        ];
+
+        $explained = TypeConverter::toLegacy(iterator_to_array($this->db->command($command))[0]);
+        unset($explained['ok']);
+
+        return $explained;
     }
 
     /**

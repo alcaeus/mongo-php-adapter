@@ -102,8 +102,6 @@ unserializing them.
  method is not yet implemented.
 
 ## MongoCursor
- - The [explain](https://php.net/manual/en/mongocursor.explain.php)
- method is not yet implemented.
  - The [info](https://php.net/manual/en/mongocursor.info.php) method does not
  reliably fill all fields in the cursor information. This includes the `numReturned`
  and `server` keys once the cursor has started iterating. The `numReturned` field
