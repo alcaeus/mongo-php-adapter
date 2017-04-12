@@ -8,7 +8,7 @@ matrix:
   fast_finish: true
   include:
     - php: 5.6
-      env: DRIVER_VERSION=stable LEGACY_DRIVER_VERSION=stable COMPOSER_FLAGS="--prefer-dist --prefer-lowest" SERVER_VERSION=3.0 COLUMNS=80
+      env: DRIVER_VERSION=stable LEGACY_DRIVER_VERSION=stable COMPOSER_FLAGS="--prefer-dist --prefer-lowest" SERVER_VERSION=3.0
       addons:
         apt:
           sources:

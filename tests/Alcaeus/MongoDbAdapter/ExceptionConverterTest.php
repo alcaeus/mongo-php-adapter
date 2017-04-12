@@ -4,8 +4,9 @@ namespace Alcaeus\MongoDbAdapter\Tests;
 
 use MongoDB\Driver\Exception;
 use Alcaeus\MongoDbAdapter\ExceptionConverter;
+use PHPUnit\Framework\TestCase;
 
-class ExceptionConverterTest extends \PHPUnit_Framework_TestCase
+class ExceptionConverterTest extends TestCase
 {
     /**
      * @dataProvider exceptionProvider

@@ -17,14 +17,16 @@ class MongoDBTest extends TestCase
 
     public function testEmptyDatabaseName()
     {
-        $this->setExpectedException('Exception', 'Database name cannot be empty');
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Database name cannot be empty');
 
         new \MongoDB($this->getClient(), '');
     }
 
     public function testInvalidDatabaseName()
     {
-        $this->setExpectedException('Exception', 'Database name contains invalid characters');
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Database name contains invalid characters');
 
         new \MongoDB($this->getClient(), '/');
     }
@@ -41,7 +43,8 @@ class MongoDBTest extends TestCase
     {
         $database = $this->getDatabase();
 
-        $this->setExpectedException('Exception', 'Collection name cannot be empty');
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Collection name cannot be empty');
 
         $database->selectCollection('');
     }
@@ -50,7 +53,8 @@ class MongoDBTest extends TestCase
     {
         $database = $this->getDatabase();
 
-        $this->setExpectedException('Exception', 'Collection name cannot contain null bytes');
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Collection name cannot contain null bytes');
 
         $database->selectCollection('foo' . chr(0));
     }
@@ -257,7 +261,7 @@ class MongoDBTest extends TestCase
 
         $this->failMaxTimeMS();
 
-        $this->setExpectedException('MongoExecutionTimeoutException');
+        $this->expectException(\MongoExecutionTimeoutException::class);
 
         $database->getCollectionNames(['maxTimeMS' => 1]);
     }
@@ -286,7 +290,7 @@ class MongoDBTest extends TestCase
 
         $this->failMaxTimeMS();
 
-        $this->setExpectedException('MongoExecutionTimeoutException');
+        $this->expectException(\MongoExecutionTimeoutException::class);
 
         $database->getCollectionInfo(['maxTimeMS' => 1]);
     }
@@ -342,7 +346,7 @@ class MongoDBTest extends TestCase
     {
         $this->failMaxTimeMS();
 
-        $this->setExpectedException('MongoExecutionTimeoutException');
+        $this->expectException(\MongoExecutionTimeoutException::class);
 
         $this->getDatabase()->listCollections(['maxTimeMS' => 1]);
     }
