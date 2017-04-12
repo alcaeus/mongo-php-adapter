@@ -360,6 +360,41 @@ class MongoCursorTest extends TestCase
         $this->assertSame(['type' => \MongoClient::RP_SECONDARY, 'tagsets' => [['a' => 'b']]], $cursor->getReadPreference());
     }
 
+    public function testExplain()
+    {
+        $this->prepareData();
+
+        $collection = $this->getCollection();
+        $cursor = $collection->find(['foo' => 'bar'], ['_id' => false])->skip(1)->limit(3);
+
+        $expected = [
+            'queryPlanner' => [
+                'plannerVersion' => 1,
+                'namespace' => 'mongo-php-adapter.test',
+                'indexFilterSet' => false,
+                'parsedQuery' => [
+                    'foo' => ['$eq' => 'bar']
+                ],
+                'winningPlan' => [],
+                'rejectedPlans' => [],
+            ],
+            'executionStats' => [
+                'executionSuccess' => true,
+                'nReturned' => 1,
+                'totalKeysExamined' => 0,
+                'totalDocsExamined' => 3,
+                'executionStages' => [],
+                'allPlansExecution' => [],
+            ],
+            'serverInfo' => [
+                'port' => 27017,
+            ],
+        ];
+
+        $this->assertArraySubset($expected, $cursor->explain());
+    }
+
+
     /**
      * @return \PHPUnit_Framework_MockObject_MockObject
      */
