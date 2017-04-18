@@ -28,14 +28,6 @@ if (class_exists('Mongo', false)) {
 class Mongo extends MongoClient
 {
     /**
-     * Dummy constructor to throw an exception
-     */
-    public function __construct()
-    {
-        $this->notImplemented();
-    }
-
-    /**
      * Get pool size for connection pools
      *
      * @link http://php.net/manual/en/mongo.getpoolsize.php
