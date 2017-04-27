@@ -3,6 +3,17 @@ CHANGELOG
 
 This changelog references the relevant changes done in minor version updates.
 
+1.0.11 (2017-04-27)
+-------------------
+
+All issues and pull requests under this release may be found under the
+[1.0.11](https://github.com/alcaeus/mongo-php-adapter/issues?q=milestone%3A1.0.11)
+milestone.
+
+ * [#170](https://github.com/alcaeus/mongo-php-adapter/pull/170) fixes a 
+ `MongoCursor` object passing a `batchSize` of 0 by default, causing errors in
+ sharded setups.
+
 1.0.10 (2017-03-29)
 -------------------
 
