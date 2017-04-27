@@ -332,7 +332,7 @@ class MongoCursorTest extends TestCase
             'started_iterating' => false,
         ];
 
-        $this->assertEquals($expected, $cursor->info());
+        $this->assertSame($expected, $cursor->info());
 
         // Ensure cursor started iterating
         iterator_to_array($cursor);
@@ -348,7 +348,45 @@ class MongoCursorTest extends TestCase
             'connection_type_desc' => 'STANDALONE'
         ];
 
-        $this->assertEquals($expected, $cursor->info());
+        $this->assertSame($expected, $cursor->info());
+    }
+
+    public function testCursorInfoWithBatchSize()
+    {
+        $this->prepareData();
+
+        $collection = $this->getCollection();
+        $cursor = $collection->find(['foo' => 'bar'], ['_id' => false])->skip(1)->limit(3);
+        $cursor->batchSize(1);
+
+        $expected = [
+            'ns' => 'mongo-php-adapter.test',
+            'limit' => 3,
+            'batchSize' => 1,
+            'skip' => 1,
+            'flags' => 0,
+            'query' => ['foo' => 'bar'],
+            'fields' => ['_id' => false],
+            'started_iterating' => false,
+        ];
+
+        $this->assertSame($expected, $cursor->info());
+
+        // Ensure cursor started iterating
+        iterator_to_array($cursor);
+
+        $expected['started_iterating'] = true;
+        $expected += [
+            'id' => 0,
+            'at' => 1,
+            'numReturned' => 1,
+            'server' => 'localhost:27017;-;.;' . getmypid(),
+            'host' => 'localhost',
+            'port' => 27017,
+            'connection_type_desc' => 'STANDALONE'
+        ];
+
+        $this->assertSame($expected, $cursor->info());
     }
 
     public function testReadPreferenceIsInherited()

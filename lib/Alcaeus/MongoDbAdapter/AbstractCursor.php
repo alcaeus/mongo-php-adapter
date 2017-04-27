@@ -27,9 +27,9 @@ abstract class AbstractCursor
     use ReadPreference;
 
     /**
-     * @var int
+     * @var int|null
      */
-    protected $batchSize = 0;
+    protected $batchSize = null;
 
     /**
      * @var Collection
@@ -205,7 +205,7 @@ abstract class AbstractCursor
      * Limits the number of elements returned in one batch.
      *
      * @link http://docs.php.net/manual/en/mongocursor.batchsize.php
-     * @param int $batchSize The number of results to return per batch
+     * @param int|null $batchSize The number of results to return per batch
      * @return $this Returns this cursor.
      */
     public function batchSize($batchSize)

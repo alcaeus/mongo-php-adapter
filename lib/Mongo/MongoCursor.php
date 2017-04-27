@@ -468,7 +468,7 @@ class MongoCursor extends AbstractCursor implements Iterator
         return [
             'ns' => $this->ns,
             'limit' => $this->limit,
-            'batchSize' => $this->batchSize,
+            'batchSize' => (int) $this->batchSize,
             'skip' => $this->skip,
             'flags' => $this->flags,
             'query' => $this->query,
