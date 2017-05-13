@@ -210,6 +210,16 @@ class MongoId implements Serializable, TypeInterface, JsonSerializable
     }
 
     /**
+     * @return stdClass
+     */
+    public function jsonSerialize()
+    {
+        $object = new stdClass();
+        $object->{'$id'} = (string) $this->objectID;
+        return $object;
+    }
+
+    /**
      * @param $id
      * @throws MongoException
      */
