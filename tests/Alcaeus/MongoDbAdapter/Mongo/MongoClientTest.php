@@ -225,6 +225,32 @@ class MongoClientTest extends TestCase
         ];
     }
 
+    public function testConnectWithUsernameAndPassword()
+    {
+        $this->expectException(\MongoConnectionException::class);
+        $this->expectExceptionMessage('Authentication failed');
+
+        $client = $this->getClient(['username' => 'alcaeus', 'password' => 'mySuperSecurePassword']);
+        $collection = $client->selectCollection('test', 'foo');
+
+        $document = ['foo' => 'bar'];
+
+        $collection->insert($document);
+    }
+    
+    public function testConnectWithUsernameAndPasswordInConnectionUrl()
+    {
+        $this->expectException(\MongoConnectionException::class);
+        $this->expectExceptionMessage('Authentication failed');
+
+        $client = $this->getClient([], 'mongodb://alcaeus:mySuperSecurePassword@localhost');
+        $collection = $client->selectCollection('test', 'foo');
+
+        $document = ['foo' => 'bar'];
+
+        $collection->insert($document);
+    }
+
     /**
      * @param array $options
      * @return string
