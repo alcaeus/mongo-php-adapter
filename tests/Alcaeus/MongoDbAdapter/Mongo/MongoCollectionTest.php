@@ -133,6 +133,7 @@ class MongoCollectionTest extends TestCase
 
         $this->expectException(\MongoDuplicateKeyException::class);
         $this->expectExceptionMessageRegExp('/E11000 duplicate key error .* mongo-php-adapter\.test/');
+        $this->expectExceptionCode(11000);
         $collection->insert($document);
     }
 
@@ -235,11 +236,13 @@ class MongoCollectionTest extends TestCase
 
     public function testBatchInsertException()
     {
-        $this->expectException(\MongoDuplicateKeyException::class);
-        $this->expectExceptionMessageRegExp('/E11000 duplicate key error .* mongo-php-adapter.test.*_id_/');
-
         $id = new \MongoId();
         $documents = [['_id' => $id, 'foo' => 'bar'], ['_id' => $id, 'foo' => 'bleh']];
+
+        $this->expectException(\MongoDuplicateKeyException::class);
+        $this->expectExceptionMessageRegExp('/E11000 duplicate key error .* mongo-php-adapter.test.*_id_/');
+        $this->expectExceptionCode(11000);
+
         $this->getCollection()->batchInsert($documents);
     }
 
