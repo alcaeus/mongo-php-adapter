@@ -132,7 +132,7 @@ class MongoGridFS extends MongoCollection
     public function findOne($query = [], array $fields = [], array $options = [])
     {
         if (! is_array($query)) {
-            $query = ['filename' => (string) $query];
+            $query = ['filename' => $query];
         }
 
         $items = iterator_to_array($this->find($query, $fields)->limit(1));
