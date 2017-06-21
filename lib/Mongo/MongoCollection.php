@@ -660,17 +660,22 @@ class MongoCollection
      *
      * @link http://www.php.net/manual/en/mongocollection.deleteindex.php
      * @param string|array $keys Field or fields from which to delete the index.
+     * @param bool $keysAsIndexNames treat keys explicitly as index names
      * @return array Returns the database response.
      */
-    public function deleteIndex($keys)
+    public function deleteIndex($keys, $keysAsIndexNames = false)
     {
         if (is_string($keys)) {
             $indexName = $keys;
-            if (! preg_match('#_-?1$#', $indexName)) {
-                $indexName .= '_1';
+            if (!$keysAsIndexNames) {
+                if (!preg_match('#_-?1$#', $indexName)) {
+                    $indexName .= '_1';
+                }
             }
         } elseif (is_array($keys)) {
-            $indexName = \MongoDB\generate_index_name($keys);
+            if (!$keysAsIndexNames) {
+                $indexName = \MongoDB\generate_index_name($keys);
+            }
         } else {
             throw new \InvalidArgumentException();
         }
