@@ -1,5 +1,5 @@
-CHANGELOG
-=========
+CHANGELOG for 1.0.x
+===================
 
 This changelog references the relevant changes done in minor version updates.
 
