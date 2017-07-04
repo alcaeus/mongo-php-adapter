@@ -405,7 +405,12 @@ class MongoDB
     {
         try {
             $cursor = new \MongoCommandCursor($this->connection, $this->name, $data);
-            $cursor->setReadPreference($this->getReadPreference());
+
+            if (!empty($data['new']) || !empty($data['upsert'])) {
+                $cursor->setReadPreference(\MongoClient::RP_PRIMARY);
+            } else {
+                $cursor->setReadPreference($this->getReadPreference());
+            }
 
             return iterator_to_array($cursor)[0];
         } catch (\MongoDB\Driver\Exception\Exception $e) {
