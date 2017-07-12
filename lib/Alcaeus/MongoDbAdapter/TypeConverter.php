@@ -175,6 +175,10 @@ class TypeConverter
                 return new \MongoDate($value);
             case $value instanceof Model\BSONDocument:
             case $value instanceof Model\BSONArray:
+
+            	if($value->sec && $value->usec)
+            		return new \MongoDate($value->sec, $value->usec);
+
                 return array_map(
                     ['self', 'toLegacy'],
                     $value->getArrayCopy()
