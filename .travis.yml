@@ -8,7 +8,7 @@ matrix:
   fast_finish: true
   include:
     - php: 5.6
-      env: DRIVER_VERSION=stable LEGACY_DRIVER_VERSION=stable COMPOSER_FLAGS="--prefer-dist --prefer-lowest" SERVER_VERSION=3.0
+      env: DRIVER_VERSION=stable LEGACY_DRIVER_VERSION=stable COMPOSER_FLAGS="--prefer-dist --prefer-lowest"
       addons:
         apt:
           sources:
@@ -17,7 +17,7 @@ matrix:
             - "mongodb-upstart"
           packages: ['mongodb-org-server']
     - php: 5.6
-      env: DRIVER_VERSION=stable SERVER_VERSION=3.4
+      env: DRIVER_VERSION=stable
       addons:
         apt:
           sources:
@@ -26,7 +26,7 @@ matrix:
             - "mongodb-upstart"
           packages: ['mongodb-org-server']
     - php: 7.0
-      env: DRIVER_VERSION=stable SERVER_VERSION=3.4
+      env: DRIVER_VERSION=stable
       addons:
         apt:
           sources:
@@ -35,7 +35,16 @@ matrix:
             - "mongodb-upstart"
           packages: ['mongodb-org-server']
     - php: 7.1
-      env: DRIVER_VERSION=stable SERVER_VERSION=3.4
+      env: DRIVER_VERSION=stable
+      addons:
+        apt:
+          sources:
+            - sourceline: "deb [arch=amd64] https://repo.mongodb.org/apt/ubuntu precise/mongodb-org/3.4 multiverse"
+              key_url: "https://www.mongodb.org/static/pgp/server-3.4.asc"
+            - "mongodb-upstart"
+          packages: ['mongodb-org-server']
+    - php: 7.2
+      env: DRIVER_VERSION=stable
       addons:
         apt:
           sources:
