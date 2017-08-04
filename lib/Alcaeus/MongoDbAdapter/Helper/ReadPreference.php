@@ -110,7 +110,7 @@ trait ReadPreference
                 return false;
         }
 
-        if ($readPreference == \MongoClient::RP_PRIMARY && count($tags)) {
+        if ($readPreference == \MongoClient::RP_PRIMARY && !empty($tags)) {
             trigger_error("You can't use read preference tags with a read preference of PRIMARY", E_USER_WARNING);
             return false;
         }
