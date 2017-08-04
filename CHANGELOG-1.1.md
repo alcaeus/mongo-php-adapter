@@ -3,6 +3,16 @@ CHANGELOG for 1.1.x
 
 This changelog references the relevant changes done in minor version updates.
 
+1.1.2 (2017-08-04)
+------------------
+
+All issues and pull requests under this release may be found under the
+[1.1.2](https://github.com/alcaeus/mongo-php-adapter/issues?q=milestone%3A1.1.2)
+milestone.
+
+ * [#184](https://github.com/alcaeus/mongo-php-adapter/pull/184) fixes an invalid
+ call to `count` which causes warnings on PHP 7.2.
+
 1.1.1 (2017-06-30)
 ------------------
 
