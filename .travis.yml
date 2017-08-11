@@ -1,8 +1,27 @@
+dist: trusty
 sudo: false
 language: php
 
 services:
   - mongodb
+
+php:
+  - 5.6
+  - 7.0
+  - 7.1
+  - 7.2
+
+env:
+  global:
+    - DRIVER_VERSION="stable"
+
+addons:
+  apt:
+    sources:
+      - sourceline: "deb [arch=amd64] https://repo.mongodb.org/apt/ubuntu trusty/mongodb-org/3.4 multiverse"
+        key_url: "https://www.mongodb.org/static/pgp/server-3.4.asc"
+      - "mongodb-upstart"
+    packages: ['mongodb-org-server']
 
 matrix:
   fast_finish: true
@@ -12,44 +31,8 @@ matrix:
       addons:
         apt:
           sources:
-            - sourceline: "deb [arch=amd64] https://repo.mongodb.org/apt/ubuntu precise/mongodb-org/3.0 multiverse"
+            - sourceline: "deb [arch=amd64] https://repo.mongodb.org/apt/ubuntu trusty/mongodb-org/3.0 multiverse"
               key_url: "https://www.mongodb.org/static/pgp/server-3.0.asc"
-            - "mongodb-upstart"
-          packages: ['mongodb-org-server']
-    - php: 5.6
-      env: DRIVER_VERSION=stable
-      addons:
-        apt:
-          sources:
-            - sourceline: "deb [arch=amd64] https://repo.mongodb.org/apt/ubuntu precise/mongodb-org/3.4 multiverse"
-              key_url: "https://www.mongodb.org/static/pgp/server-3.4.asc"
-            - "mongodb-upstart"
-          packages: ['mongodb-org-server']
-    - php: 7.0
-      env: DRIVER_VERSION=stable
-      addons:
-        apt:
-          sources:
-            - sourceline: "deb [arch=amd64] https://repo.mongodb.org/apt/ubuntu precise/mongodb-org/3.4 multiverse"
-              key_url: "https://www.mongodb.org/static/pgp/server-3.4.asc"
-            - "mongodb-upstart"
-          packages: ['mongodb-org-server']
-    - php: 7.1
-      env: DRIVER_VERSION=stable
-      addons:
-        apt:
-          sources:
-            - sourceline: "deb [arch=amd64] https://repo.mongodb.org/apt/ubuntu precise/mongodb-org/3.4 multiverse"
-              key_url: "https://www.mongodb.org/static/pgp/server-3.4.asc"
-            - "mongodb-upstart"
-          packages: ['mongodb-org-server']
-    - php: 7.2
-      env: DRIVER_VERSION=stable
-      addons:
-        apt:
-          sources:
-            - sourceline: "deb [arch=amd64] https://repo.mongodb.org/apt/ubuntu precise/mongodb-org/3.4 multiverse"
-              key_url: "https://www.mongodb.org/static/pgp/server-3.4.asc"
             - "mongodb-upstart"
           packages: ['mongodb-org-server']
 
