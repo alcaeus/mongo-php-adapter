@@ -35,6 +35,8 @@ matrix:
               key_url: "https://www.mongodb.org/static/pgp/server-3.0.asc"
             - "mongodb-upstart"
           packages: ['mongodb-org-server']
+    - php: 7.1
+      env: DRIVER_VERSION="1.3.0beta1"
 
 before_install:
   - pecl install -f mongodb-${DRIVER_VERSION}
