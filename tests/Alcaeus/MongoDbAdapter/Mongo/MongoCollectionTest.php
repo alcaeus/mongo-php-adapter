@@ -665,7 +665,7 @@ class MongoCollectionTest extends TestCase
     {
         $this->expectException(\MongoConnectionException::class);
 
-        $client = $this->getClient([], 'mongodb://localhost:28888?connectTimeoutMS=1');
+        $client = $this->getClient([], 'mongodb://localhost:28888/?connectTimeoutMS=1');
         $collection = $client->selectCollection('mongo-php-adapter', 'test');
 
         $collection->findOne();
