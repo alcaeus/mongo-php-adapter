@@ -7,6 +7,9 @@ use PHPUnit\Framework\TestCase as BaseTestCase;
 
 abstract class TestCase extends BaseTestCase
 {
+    const INDEX_VERSION_1 = 1;
+    const INDEX_VERSION_2 = 2;
+
     protected function tearDown()
     {
         $this->getCheckDatabase()->drop();
@@ -175,12 +178,27 @@ abstract class TestCase extends BaseTestCase
     }
 
     /**
+     * @return string
+     */
+    protected function getFeatureCompatibilityVersion()
+    {
+        $featureCompatibilityVersion = $this->getClient()->selectDB('admin')->command(['getParameter' => true, 'featureCompatibilityVersion' => true]);
+        return isset($featureCompatibilityVersion['featureCompatibilityVersion']) ? $featureCompatibilityVersion['featureCompatibilityVersion'] : '3.2';
+    }
+
+    /**
      * Indexes created in MongoDB 3.4 default to v: 2.
      * @return int
      * @see https://docs.mongodb.com/manual/release-notes/3.4-compatibility/#backwards-incompatible-features
      */
     protected function getDefaultIndexVersion()
     {
-        return version_compare($this->getServerVersion(), '3.4.0', '>=') ? 2 : 1;
+        if (version_compare($this->getServerVersion(), '3.4.0', '<')) {
+            self::INDEX_VERSION_1;
+        }
+
+        // Check featureCompatibilityFlag
+        $compatibilityVersion = $this->getFeatureCompatibilityVersion();
+        return $compatibilityVersion === '3.4' ? self::INDEX_VERSION_2 : self::INDEX_VERSION_1;
     }
 }
