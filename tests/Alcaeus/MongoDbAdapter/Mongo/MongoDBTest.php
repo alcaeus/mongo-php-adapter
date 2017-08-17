@@ -126,7 +126,8 @@ class MongoDBTest extends TestCase
             'code' => 13,
         ];
 
-        $this->assertEquals($expected, $db->command(['listDatabases' => 1]));
+        // Using assertArraySubset because newer versions (3.4.7?) also return `codeName`
+        $this->assertArraySubset($expected, $db->command(['listDatabases' => 1]));
     }
 
     public function testCommandCursorTimeout()
