@@ -126,7 +126,8 @@ class MongoDBTest extends TestCase
             'code' => 13,
         ];
 
-        $this->assertEquals($expected, $db->command(['listDatabases' => 1]));
+        // Using assertArraySubset because newer versions (3.4.7?) also return `codeName`
+        $this->assertArraySubset($expected, $db->command(['listDatabases' => 1]));
     }
 
     public function testCommandCursorTimeout()
@@ -273,7 +274,24 @@ class MongoDBTest extends TestCase
 
         foreach ($this->getDatabase()->getCollectionInfo() as $collectionInfo) {
             if ($collectionInfo['name'] === 'test') {
-                $this->assertSame(['name' => 'test', 'options' => []], $collectionInfo);
+                $expected = [
+                    'name' => 'test',
+                    'options' => []
+                ];
+
+                if (version_compare($this->getServerVersion(), '3.4.0', '>=')) {
+                    $expected += [
+                        'type' => 'collection',
+                        'info' => ['readOnly' => false],
+                        'idIndex' => [
+                            'v' => $this->getDefaultIndexVersion(),
+                            'key' => ['_id' => 1],
+                            'name' => '_id_',
+                            'ns' => (string) $this->getCollection(),
+                        ],
+                    ];
+                }
+                $this->assertEquals($expected, $collectionInfo);
                 return;
             }
         }

@@ -143,10 +143,19 @@ class MongoDB
         }
 
         $getCollectionInfo = function (CollectionInfo $collectionInfo) {
-            return [
-                'name' => $collectionInfo->getName(),
-                'options' => $collectionInfo->getOptions(),
-            ];
+            // @todo do away with __debugInfo once https://jira.mongodb.org/browse/PHPLIB-226 is fixed
+            $info = $collectionInfo->__debugInfo();
+
+            return array_filter(
+                [
+                    'name' => $collectionInfo->getName(),
+                    'type' => isset($info['type']) ? $info['type'] : null,
+                    'options' => $collectionInfo->getOptions(),
+                    'info' => isset($info['info']) ? (array) $info['info'] : null,
+                    'idIndex' => isset($info['idIndex']) ? (array) $info['idIndex'] : null,
+                ],
+                function ($item) { return $item !== null; }
+            );
         };
 
         $eligibleCollections = array_filter(

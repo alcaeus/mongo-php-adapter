@@ -10,10 +10,12 @@ use Alcaeus\MongoDbAdapter\TypeInterface;
  */
 class MongoBinDataTest extends TestCase
 {
+    const GUID = '0123456789abcdef';
+
     public function testCreate()
     {
-        $bin = new \MongoBinData('foo', \MongoBinData::FUNC);
-        $this->assertAttributeSame('foo', 'bin', $bin);
+        $bin = new \MongoBinData(self::GUID, \MongoBinData::FUNC);
+        $this->assertAttributeSame(self::GUID, 'bin', $bin);
         $this->assertAttributeSame(\MongoBinData::FUNC, 'type', $bin);
 
         $this->assertSame('<Mongo Binary Data>', (string)$bin);
@@ -31,7 +33,7 @@ class MongoBinDataTest extends TestCase
         $bsonBinary = $bin->toBSONType();
         $this->assertInstanceOf('MongoDB\BSON\Binary', $bsonBinary);
 
-        $this->assertSame('foo', $bsonBinary->getData());
+        $this->assertSame(self::GUID, $bsonBinary->getData());
         $this->assertSame(\MongoDB\BSON\Binary::TYPE_FUNCTION, $bsonBinary->getType());
     }
 
@@ -39,10 +41,10 @@ class MongoBinDataTest extends TestCase
     {
         $this->skipTestUnless(in_array(TypeInterface::class, class_implements('MongoBinData')));
 
-        $bsonBinary = new \MongoDB\BSON\Binary('foo', \MongoDB\BSON\Binary::TYPE_UUID);
+        $bsonBinary = new \MongoDB\BSON\Binary(self::GUID, \MongoDB\BSON\Binary::TYPE_UUID);
         $bin = new \MongoBinData($bsonBinary);
 
-        $this->assertAttributeSame('foo', 'bin', $bin);
+        $this->assertAttributeSame(self::GUID, 'bin', $bin);
         $this->assertAttributeSame(\MongoBinData::UUID_RFC4122, 'type', $bin);
     }
 }

@@ -34,7 +34,7 @@ class MongoCollectionTest extends TestCase
             'errmsg' => null,
         ];
         $document = ['foo' => 'bar'];
-        $this->assertSame($expected, $collection->insert($document));
+        $this->assertEquals($expected, $collection->insert($document));
 
         $this->assertInstanceOf('MongoId', $document['_id']);
         $id = (string) $document['_id'];
@@ -152,7 +152,7 @@ class MongoCollectionTest extends TestCase
     public function testAcknowledgedWriteConcernWithBool()
     {
         $document = ['foo' => 'bar'];
-        $this->assertSame(
+        $this->assertEquals(
             [
                 'ok' => 1.0,
                 'n' => 0,
@@ -316,7 +316,7 @@ class MongoCollectionTest extends TestCase
         ];
 
         $result = $this->getCollection()->update(['foo' => 'bar'], ['$set' => ['foo' => 'foo']]);
-        $this->assertSame($expected, $result);
+        $this->assertEquals($expected, $result);
 
         $this->assertSame(1, $this->getCheckDatabase()->selectCollection('test')->count(['foo' => 'foo']));
     }
@@ -340,7 +340,7 @@ class MongoCollectionTest extends TestCase
         ];
 
         $result = $this->getCollection()->update(['foo' => 'bar'], ['foo' => 'foo']);
-        $this->assertSame($expected, $result);
+        $this->assertEquals($expected, $result);
 
         $this->assertSame(1, $this->getCheckDatabase()->selectCollection('test')->count(['foo' => 'foo']));
         $this->assertSame(1, $this->getCheckDatabase()->selectCollection('test')->count(['bar' => 'foo']));
@@ -387,7 +387,7 @@ class MongoCollectionTest extends TestCase
         ];
 
         $result = $this->getCollection()->update(['change' => true], ['$set' => ['foo' => 'foo']], ['multiple' => true]);
-        $this->assertSame($expected, $result);
+        $this->assertEquals($expected, $result);
 
         $this->assertSame(3, $this->getCheckDatabase()->selectCollection('test')->count(['foo' => 'foo']));
     }
@@ -420,7 +420,7 @@ class MongoCollectionTest extends TestCase
         ];
 
         $result = $this->getCollection()->remove(['foo' => 'bar']);
-        $this->assertSame($expected, $result);
+        $this->assertEquals($expected, $result);
 
         $this->assertSame(1, $this->getCheckDatabase()->selectCollection('test')->count());
     }
@@ -441,7 +441,7 @@ class MongoCollectionTest extends TestCase
         ];
 
         $result = $this->getCollection()->remove(['foo' => 'bar'], ['justOne' => true]);
-        $this->assertSame($expected, $result);
+        $this->assertEquals($expected, $result);
 
         $this->assertSame(2, $this->getCheckDatabase()->selectCollection('test')->count());
     }
@@ -665,7 +665,7 @@ class MongoCollectionTest extends TestCase
     {
         $this->expectException(\MongoConnectionException::class);
 
-        $client = $this->getClient([], 'mongodb://localhost:28888?connectTimeoutMS=1');
+        $client = $this->getClient([], 'mongodb://localhost:28888/?connectTimeoutMS=1');
         $collection = $client->selectCollection('mongo-php-adapter', 'test');
 
         $collection->findOne();
@@ -976,7 +976,7 @@ class MongoCollectionTest extends TestCase
         $insertDocument = ['_id' => new \MongoId($id), 'foo' => 'bar'];
         $saveDocument = ['_id' => new \MongoId($id), 'foo' => 'foo'];
         $collection->insert($insertDocument);
-        $this->assertSame($expected, $collection->save($saveDocument));
+        $this->assertEquals($expected, $collection->save($saveDocument));
 
         $newCollection = $this->getCheckDatabase()->selectCollection('test');
         $this->assertSame(1, $newCollection->count());
@@ -1267,7 +1267,8 @@ class MongoCollectionTest extends TestCase
             $expected['code'] = 27;
         }
 
-        $this->assertEquals($expected, $this->getCollection()->deleteIndex('bar'));
+        // Using assertArraySubset because newer versions (3.4.7?) also return `codeName`
+        $this->assertArraySubset($expected, $this->getCollection()->deleteIndex('bar'));
 
         $this->assertCount(2, iterator_to_array($newCollection->listIndexes()));
     }
@@ -1326,7 +1327,8 @@ class MongoCollectionTest extends TestCase
             $expected['code'] = 26;
         }
 
-        $this->assertSame($expected, $this->getCollection('nonExisting')->deleteIndexes());
+        // Using assertArraySubset because newer versions (3.4.7?) also return `codeName`
+        $this->assertArraySubset($expected, $this->getCollection('nonExisting')->deleteIndexes());
     }
 
     public function dataGetIndexInfo()

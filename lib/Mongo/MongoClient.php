@@ -86,6 +86,10 @@ class MongoClient
             $server = 'mongodb://' . self::DEFAULT_HOST . ':' . self::DEFAULT_PORT;
         }
 
+        if (isset($options['readPreferenceTags'])) {
+            $options['readPreferenceTags'] = [$this->getReadPreferenceTags($options['readPreferenceTags'])];
+        }
+
         $this->applyConnectionOptions($server, $options);
 
         $this->server = $server;
@@ -409,13 +413,10 @@ class MongoClient
             unset($options['wTimeout']);
         }
 
-        if (isset($options['readPreferenceTags'])) {
-            $options['readPreferenceTags'] = [$this->getReadPreferenceTags($options['readPreferenceTags'])];
-
-            // Special handling for readPreferenceTags which are merged
-            if (isset($urlOptions['readPreferenceTags'])) {
-                $options['readPreferenceTags'] = array_merge($urlOptions['readPreferenceTags'], $options['readPreferenceTags']);
-            }
+        // Special handling for readPreferenceTags which are merged
+        if (isset($options['readPreferenceTags']) && isset($urlOptions['readPreferenceTags'])) {
+            $options['readPreferenceTags'] = array_merge($urlOptions['readPreferenceTags'], $options['readPreferenceTags']);
+            unset($urlOptions['readPreferenceTags']);
         }
 
         $urlOptions = array_merge($urlOptions, $options);
