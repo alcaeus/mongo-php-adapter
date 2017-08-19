@@ -64,7 +64,19 @@ class MongoCommandCursor extends AbstractCursor implements MongoCursorInterface
                 }
             }
 
-            $this->cursor = $this->db->command($convertedCommand, $this->getOptions());
+            $originalReadPreference = null;
+            if (!$this->supportsReadPreference()) {
+                $originalReadPreference = $this->readPreference;
+                $this->setReadPreference(\MongoClient::RP_PRIMARY);
+            }
+
+            try {
+                $this->cursor = $this->db->command($convertedCommand, $this->getOptions());
+            } finally {
+                if ($originalReadPreference) {
+                    $this->readPreference = $originalReadPreference;
+                }
+            }
         }
 
         return $this->cursor;
@@ -111,5 +123,40 @@ class MongoCommandCursor extends AbstractCursor implements MongoCursorInterface
     public function __sleep()
     {
         return ['command'] + parent::__sleep();
+    }
+
+    /**
+     * @see https://github.com/mongodb/mongo-php-driver-legacy/blob/1.6.14/db.c#L51
+     * @return bool
+     */
+    private function supportsReadPreference()
+    {
+        if ($this->command === []) {
+            return false;
+        }
+
+        $firstKey = array_keys($this->command)[0];
+        switch ($firstKey) {
+            case 'count':
+            case 'group':
+            case 'dbStats':
+            case 'geoNear':
+            case 'geoWalk':
+            case 'distinct':
+            case 'aggregate':
+            case 'collStats':
+            case 'geoSearch':
+            case 'parallelCollectionScan':
+                return true;
+
+            case 'mapreduce':
+            case 'mapReduce':
+                return (isset($this->command['out']) &&
+                    is_array($this->command['out']) &&
+                    array_key_exists('inline', $this->command['out']));
+
+            default:
+                return false;
+        }
     }
 }
