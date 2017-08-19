@@ -3,6 +3,17 @@ CHANGELOG for 1.1.x
 
 This changelog references the relevant changes done in minor version updates.
 
+1.1.3 (xxxx-xx-xx)
+------------------
+
+All issues and pull requests under this release may be found under the
+[1.1.3](https://github.com/alcaeus/mongo-php-adapter/issues?q=milestone%3A1.1.3)
+milestone.
+
+ * [#186](https://github.com/alcaeus/mongo-php-adapter/pull/186) fixes errors when
+ using the 1.3 beta version of `ext-mongodb`. It also fixes an issue where new
+ fields in `MongoDB::listCollections` were not properly reported.
+
 1.1.2 (2017-08-04)
 ------------------
 
