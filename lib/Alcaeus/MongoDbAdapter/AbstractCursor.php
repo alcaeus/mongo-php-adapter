@@ -381,6 +381,7 @@ abstract class AbstractCursor
     protected function reset()
     {
         $this->startedIterating = false;
+        $this->cursorNeedsAdvancing = true;
         $this->cursor = null;
         $this->iterator = null;
         $this->storeIteratorState();
