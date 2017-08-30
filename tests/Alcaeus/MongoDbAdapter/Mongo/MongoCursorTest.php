@@ -478,9 +478,6 @@ class MongoCursorTest extends TestCase
                 'plannerVersion' => 1,
                 'namespace' => 'mongo-php-adapter.test',
                 'indexFilterSet' => false,
-                'parsedQuery' => [
-                    'foo' => new \MongoRegex('/^b/')
-                ],
                 'winningPlan' => [],
                 'rejectedPlans' => [],
             ],
