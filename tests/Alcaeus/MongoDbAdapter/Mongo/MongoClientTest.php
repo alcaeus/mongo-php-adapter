@@ -71,6 +71,15 @@ class MongoClientTest extends TestCase
         );
     }
 
+    public function testGetHostsExceptionHandling()
+    {
+        $this->expectException(\MongoConnectionException::class);
+        $this->expectExceptionMessageRegExp('/No suitable servers found/');
+
+        $client = $this->getClient(null, 'mongodb://fake_host');
+        $client->getHosts();
+    }
+
     public function testReadPreference()
     {
         $client = $this->getClient();
