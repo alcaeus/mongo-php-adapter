@@ -392,6 +392,26 @@ class MongoCollectionTest extends TestCase
         $this->assertSame(3, $this->getCheckDatabase()->selectCollection('test')->count(['foo' => 'foo']));
     }
 
+    public function testUpdateWhichDoesntMatchQuery()
+    {
+        $document = ['foo' => 'bar'];
+        $this->getCollection()->insert($document);
+
+        $expected = [
+            'ok' => 1.0,
+            'nModified' => 0,
+            'n' => 0,
+            'err' => null,
+            'errmsg' => null,
+            'updatedExisting' => false,
+        ];
+
+        $result = $this->getCollection()->update(['foo' => 'bar22'], ['$set' => ['foo' => 'foo']]);
+        $this->assertEquals($expected, $result);
+
+        $this->assertSame(1, $this->getCheckDatabase()->selectCollection('test')->count(['foo' => 'bar']));
+    }
+
     public function testUnacknowledgedUpdate()
     {
         $document = ['foo' => 'bar'];
