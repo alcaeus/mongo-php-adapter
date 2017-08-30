@@ -276,7 +276,7 @@ abstract class AbstractCursor
             $converter = 'convert' . ucfirst($option);
             $value = method_exists($this, $converter) ? $this->$converter() : $this->$option;
 
-            if ($value === null || ($option === 'projection' && $value === [])) {
+            if ($value === null) {
                 continue;
             }
 
