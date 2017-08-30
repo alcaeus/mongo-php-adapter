@@ -122,3 +122,16 @@ unserializing them.
  fields always return 0 for compatibility to MongoCursor. The `firstBatchAt` and
  `firstBatchNumReturned` fields will contain the same value, which is the internal
  position of the iterator.
+
+# Development
+
+If you are working on patches to this driver, you can run the unit tests by following these steps from the root of the repo directory:
+
+    $ composer install
+    $ vendor/phpunit/phpunit/phpunit --verbose
+
+It assumes that the the `localhost` is running a mongod server. Here is a sample command to start mongod for these tests:
+
+    $ mongod --smallfiles --fork --logpath /var/log/mongod.log --setParameter enableTestCommands=1
+
+The tests also assume PHP 5.6+ and the `ext-mongodb` extension being available.
