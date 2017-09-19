@@ -97,14 +97,14 @@ class TypeConverter
      * this was never documented, the legacy driver applied the same conversion.
      *
      * @param array $fields
-     * @return array
+     * @return array|null
      *
      * @throws \MongoException
      */
     public static function convertProjection($fields)
     {
         if (! is_array($fields) || $fields === []) {
-            return [];
+            return null;
         }
 
         if (! TypeConverter::isNumericArray($fields)) {

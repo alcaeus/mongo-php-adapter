@@ -195,7 +195,7 @@ class MongoCursor extends AbstractCursor implements Iterator
         $command = [
             'explain' => [
                 'find' => $this->collection->getCollectionName(),
-                'filter' => $this->query,
+                'filter' => TypeConverter::fromLegacy($this->query),
             ] + $options,
         ];
 

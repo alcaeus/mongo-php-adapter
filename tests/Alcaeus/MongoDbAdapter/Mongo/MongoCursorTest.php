@@ -432,6 +432,71 @@ class MongoCursorTest extends TestCase
         $this->assertArraySubset($expected, $cursor->explain());
     }
 
+    public function testExplainWithEmptyProjection()
+    {
+        $this->prepareData();
+
+        $collection = $this->getCollection();
+        $cursor = $collection->find(['foo' => 'bar']);
+
+        $expected = [
+            'queryPlanner' => [
+                'plannerVersion' => 1,
+                'namespace' => 'mongo-php-adapter.test',
+                'indexFilterSet' => false,
+                'parsedQuery' => [
+                    'foo' => ['$eq' => 'bar']
+                ],
+                'winningPlan' => [],
+                'rejectedPlans' => [],
+            ],
+            'executionStats' => [
+                'executionSuccess' => true,
+                'nReturned' => 2,
+                'totalKeysExamined' => 0,
+                'totalDocsExamined' => 3,
+                'executionStages' => [],
+                'allPlansExecution' => [],
+            ],
+            'serverInfo' => [
+                'port' => 27017,
+            ],
+        ];
+
+        $this->assertArraySubset($expected, $cursor->explain());
+    }
+
+    public function testExplainConvertsQuery()
+    {
+        $this->prepareData();
+
+        $collection = $this->getCollection();
+        $cursor = $collection->find(['foo' => new \MongoRegex('/^b/')]);
+
+        $expected = [
+            'queryPlanner' => [
+                'plannerVersion' => 1,
+                'namespace' => 'mongo-php-adapter.test',
+                'indexFilterSet' => false,
+                'winningPlan' => [],
+                'rejectedPlans' => [],
+            ],
+            'executionStats' => [
+                'executionSuccess' => true,
+                'nReturned' => 2,
+                'totalKeysExamined' => 0,
+                'totalDocsExamined' => 3,
+                'executionStages' => [],
+                'allPlansExecution' => [],
+            ],
+            'serverInfo' => [
+                'port' => 27017,
+            ],
+        ];
+
+        $this->assertArraySubset($expected, $cursor->explain());
+    }
+
 
     /**
      * @return \PHPUnit_Framework_MockObject_MockObject
