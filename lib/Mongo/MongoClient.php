@@ -336,8 +336,12 @@ class MongoClient
      */
     private function forceConnect()
     {
-        $command = new \MongoDB\Driver\Command(['ping' => 1]);
-        $this->manager->executeCommand('db', $command);
+        try {
+            $command = new \MongoDB\Driver\Command(['ping' => 1]);
+            $this->manager->executeCommand('db', $command);
+        } catch (\MongoDB\Driver\Exception\Exception $e) {
+            throw ExceptionConverter::toLegacy($e);
+        }
     }
 
     private function notImplemented()

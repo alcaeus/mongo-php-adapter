@@ -402,6 +402,29 @@ class MongoCollectionTest extends TestCase
         $this->assertTrue($this->getCollection()->update($document, ['$set' => ['foo' => 'foo']], ['w' => 0]));
     }
 
+    public function testUpdateWithInvalidKey()
+    {
+        $document = ['foo' => 'bar'];
+        $this->getCollection()->insert($document);
+
+        $update_document = ['*' => 'foo'];
+        $this->getCollection()->update($document, $update_document);
+
+        $this->assertSame(1, $this->getCollection()->count(['*' => 'foo']));
+    }
+
+    public function testUpdateWithEmptyKey()
+    {
+        $document = ['foo' => 'bar'];
+        $this->getCollection()->insert($document);
+
+        $this->expectException(\MongoException::class);
+        $this->expectExceptionMessage('zero-length keys are not allowed, did you use $ with double quotes?');
+
+        $update_document = ['' => 'foo'];
+        $this->getCollection()->update($document, $update_document);
+    }
+
     public function testRemoveMultiple()
     {
         $document = ['change' => true, 'foo' => 'bar'];

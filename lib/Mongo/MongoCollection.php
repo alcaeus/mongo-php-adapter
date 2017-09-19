@@ -376,6 +376,8 @@ class MongoCollection
      */
     public function update(array $criteria, array $newobj, array $options = [])
     {
+        $this->checkKeys($newobj);
+
         $multiple = isset($options['multiple']) ? $options['multiple'] : false;
         $isReplace = ! \MongoDB\is_first_key_operator($newobj);
 
@@ -976,26 +978,27 @@ class MongoCollection
         return $options;
     }
 
+    private function checkKeys($array)
+    {
+        foreach (array_keys($array) as $key) {
+            if (empty($key) && $key !== 0) {
+                throw new \MongoException('zero-length keys are not allowed, did you use $ with double quotes?');
+            }
+        }
+    }
+
     /**
      * @param array|object $document
      * @return MongoId
      */
     private function ensureDocumentHasMongoId(&$document)
     {
-        $checkKeys = function ($array) {
-            foreach (array_keys($array) as $key) {
-                if (empty($key) && $key !== 0) {
-                    throw new \MongoException('zero-length keys are not allowed, did you use $ with double quotes?');
-                }
-            }
-        };
-
         if (is_array($document)) {
             if (! isset($document['_id'])) {
                 $document['_id'] = new \MongoId();
             }
 
-            $checkKeys($document);
+            $this->checkKeys($document);
 
             return $document['_id'];
         } elseif (is_object($document)) {
@@ -1010,7 +1013,7 @@ class MongoCollection
                 $document->_id = new \MongoId();
             }
 
-            $checkKeys((array) $document);
+            $this->checkKeys((array) $document);
 
             return $document->_id;
         }
