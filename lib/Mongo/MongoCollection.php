@@ -371,8 +371,9 @@ class MongoCollection
      * @param array $criteria Description of the objects to update.
      * @param array $newobj The object with which to update the matching records.
      * @param array $options
-     * @throws MongoCursorException
-     * @return boolean
+     * @return bool|array
+     * @throws MongoException
+     * @throws MongoWriteConcernException
      */
     public function update(array $criteria, array $newobj, array $options = [])
     {
@@ -410,7 +411,7 @@ class MongoCollection
             'n' => $result->getMatchedCount(),
             'err' => null,
             'errmsg' => null,
-            'updatedExisting' => $result->getUpsertedCount() == 0,
+            'updatedExisting' => $result->getUpsertedCount() == 0 && $result->getModifiedCount() > 0,
         ];
     }
 
@@ -813,7 +814,7 @@ class MongoCollection
                 'n' => $result->getUpsertedCount() + $result->getModifiedCount(),
                 'err' => null,
                 'errmsg' => null,
-                'updatedExisting' => $result->getUpsertedCount() == 0,
+                'updatedExisting' => $result->getUpsertedCount() == 0 && $result->getModifiedCount() > 0,
             ];
             if ($result->getUpsertedId() !== null) {
                 $resultArray['upserted'] = TypeConverter::toLegacy($result->getUpsertedId());
