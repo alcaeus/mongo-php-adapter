@@ -282,9 +282,7 @@ class MongoCollection
             return;
         }
 
-        if (! count((array)$a)) {
-            throw new \MongoException('document must be an array or object');
-        }
+        $this->mustBeArrayOrObject($a);
 
         try {
             $result = $this->collection->insertOne(
@@ -368,16 +366,19 @@ class MongoCollection
      * Update records based on a given criteria
      *
      * @link http://www.php.net/manual/en/mongocollection.update.php
-     * @param array $criteria Description of the objects to update.
-     * @param array $newobj The object with which to update the matching records.
+     * @param array|object $criteria Description of the objects to update.
+     * @param array|object $newobj The object with which to update the matching records.
      * @param array $options
      * @return bool|array
      * @throws MongoException
      * @throws MongoWriteConcernException
      */
-    public function update(array $criteria, array $newobj, array $options = [])
+    public function update($criteria, $newobj, array $options = [])
     {
-        $this->checkKeys($newobj);
+        $this->mustBeArrayOrObject($criteria);
+        $this->mustBeArrayOrObject($newobj);
+
+        $this->checkKeys((array) $newobj);
 
         $multiple = isset($options['multiple']) ? $options['multiple'] : false;
         $isReplace = ! \MongoDB\is_first_key_operator($newobj);
@@ -979,11 +980,15 @@ class MongoCollection
         return $options;
     }
 
-    private function checkKeys($array)
+    private function checkKeys(array $array)
     {
-        foreach (array_keys($array) as $key) {
+        foreach ($array as $key => $value) {
             if (empty($key) && $key !== 0) {
                 throw new \MongoException('zero-length keys are not allowed, did you use $ with double quotes?');
+            }
+
+            if (is_object($value) || is_array($value)) {
+                $this->checkKeys((array) $value);
             }
         }
     }
@@ -1037,5 +1042,12 @@ class MongoCollection
     public function __sleep()
     {
         return ['db', 'name'];
+    }
+
+    private function mustBeArrayOrObject($a)
+    {
+        if (!is_array($a) && !is_object($a)) {
+            throw new \MongoException('document must be an array or object');
+        }
     }
 }

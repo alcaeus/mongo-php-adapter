@@ -124,7 +124,7 @@ abstract class TestCase extends BaseTestCase
         $result = $adminDb->command($doc);
         $arr = current($result->toArray());
         if (empty($arr->ok)) {
-            throw new RuntimeException("Failpoint failed");
+            throw new \RuntimeException("Failpoint failed");
         }
 
         return true;

@@ -103,12 +103,22 @@ class MongoCollectionTest extends TestCase
         $this->assertSame(1, $this->getCollection()->count(['*' => 'foo']));
     }
 
-    public function testInsertWithEmptyKey()
+    public function getDocumentsWithEmptyKey()
+    {
+        return [
+            'array' => [['' => 'foo']],
+            'object' => [(object) ['' => 'foo']],
+        ];
+    }
+
+    /**
+     * @dataProvider getDocumentsWithEmptyKey
+     */
+    public function testInsertWithEmptyKey($document)
     {
         $this->expectException(\MongoException::class);
         $this->expectExceptionMessage('zero-length keys are not allowed, did you use $ with double quotes?');
 
-        $document = ['' => 'foo'];
         $this->getCollection()->insert($document);
     }
 
@@ -263,12 +273,15 @@ class MongoCollectionTest extends TestCase
         $this->assertSame(1, $this->getCollection()->count(['*' => 'foo']));
     }
 
-    public function testBatchInsertWithEmptyKey()
+    /**
+     * @dataProvider getDocumentsWithEmptyKey
+     */
+    public function testBatchInsertWithEmptyKey($document)
     {
         $this->expectException(\MongoException::class);
         $this->expectExceptionMessage('zero-length keys are not allowed, did you use $ with double quotes?');
 
-        $documents = [['' => 'foo']];
+        $documents = [$document];
         $this->getCollection()->batchInsert($documents);
     }
 
@@ -433,7 +446,10 @@ class MongoCollectionTest extends TestCase
         $this->assertSame(1, $this->getCollection()->count(['*' => 'foo']));
     }
 
-    public function testUpdateWithEmptyKey()
+    /**
+     * @dataProvider getDocumentsWithEmptyKey
+     */
+    public function testUpdateWithEmptyKey($updateDocument)
     {
         $document = ['foo' => 'bar'];
         $this->getCollection()->insert($document);
@@ -441,8 +457,21 @@ class MongoCollectionTest extends TestCase
         $this->expectException(\MongoException::class);
         $this->expectExceptionMessage('zero-length keys are not allowed, did you use $ with double quotes?');
 
-        $update_document = ['' => 'foo'];
-        $this->getCollection()->update($document, $update_document);
+        $this->getCollection()->update($document, $updateDocument);
+    }
+
+    /**
+     * @dataProvider getDocumentsWithEmptyKey
+     */
+    public function testAtomicUpdateWithEmptyKey($updateDocument)
+    {
+        $document = ['foo' => 'bar'];
+        $this->getCollection()->insert($document);
+
+        $this->expectException(\MongoException::class);
+        $this->expectExceptionMessage('zero-length keys are not allowed, did you use $ with double quotes?');
+
+        $this->getCollection()->update($document, ['$set' => $updateDocument]);
     }
 
     public function testRemoveMultiple()
