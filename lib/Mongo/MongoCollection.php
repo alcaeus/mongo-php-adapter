@@ -282,9 +282,7 @@ class MongoCollection
             return;
         }
 
-        if (! count((array)$a)) {
-            throw new \MongoException('document must be an array or object');
-        }
+        $this->mustBeArrayOrObject($a);
 
         try {
             $result = $this->collection->insertOne(
@@ -1037,5 +1035,12 @@ class MongoCollection
     public function __sleep()
     {
         return ['db', 'name'];
+    }
+
+    private function mustBeArrayOrObject($a)
+    {
+        if (!is_array($a) && !is_object($a)) {
+            throw new \MongoException('document must be an array or object');
+        }
     }
 }
