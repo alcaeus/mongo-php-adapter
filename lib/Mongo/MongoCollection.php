@@ -366,16 +366,19 @@ class MongoCollection
      * Update records based on a given criteria
      *
      * @link http://www.php.net/manual/en/mongocollection.update.php
-     * @param array $criteria Description of the objects to update.
-     * @param array $newobj The object with which to update the matching records.
+     * @param array|object $criteria Description of the objects to update.
+     * @param array|object $newobj The object with which to update the matching records.
      * @param array $options
      * @return bool|array
      * @throws MongoException
      * @throws MongoWriteConcernException
      */
-    public function update(array $criteria, array $newobj, array $options = [])
+    public function update($criteria, $newobj, array $options = [])
     {
-        $this->checkKeys($newobj);
+        $this->mustBeArrayOrObject($criteria);
+        $this->mustBeArrayOrObject($newobj);
+
+        $this->checkKeys((array) $newobj);
 
         $multiple = isset($options['multiple']) ? $options['multiple'] : false;
         $isReplace = ! \MongoDB\is_first_key_operator($newobj);
