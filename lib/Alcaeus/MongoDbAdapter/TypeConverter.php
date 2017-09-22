@@ -47,7 +47,7 @@ class TypeConverter
             case is_object($value):
                 $result = [];
 
-                foreach ($value as $key => $item) {
+                foreach ((array)$value as $key => $item) {
                     $result[$key] = self::fromLegacy($item);
                 }
 
