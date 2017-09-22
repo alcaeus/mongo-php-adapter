@@ -980,11 +980,15 @@ class MongoCollection
         return $options;
     }
 
-    private function checkKeys($array)
+    private function checkKeys(array $array)
     {
-        foreach (array_keys($array) as $key) {
+        foreach ($array as $key => $value) {
             if (empty($key) && $key !== 0) {
                 throw new \MongoException('zero-length keys are not allowed, did you use $ with double quotes?');
+            }
+
+            if (is_object($value) || is_array($value)) {
+                $this->checkKeys((array) $value);
             }
         }
     }
