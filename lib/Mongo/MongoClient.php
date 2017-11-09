@@ -100,6 +100,9 @@ class MongoClient
             unset($options['replicaSet']);
         }
 
+        $options['serverSelectionTimeoutMS'] = 10000;
+        $options['serverSelectionTryOnce'] = false;
+
         if ($server === 'default') {
             $server = 'mongodb://' . $username . ':' . $password . '@' . self::DEFAULT_HOST . ':' . self::DEFAULT_PORT . '/' . $db;
         }
