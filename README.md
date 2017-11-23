@@ -33,9 +33,23 @@ root:
 If your project already has a dependency on `ext-mongo`, the command above may
 not work. This is due to a bug in composer, see [composer/composer#5030](https://github.com/composer/composer/issues/5030).
 
-To fix this, you can use the `--ignore-platform-reqs` switch when running the
-above command, or when running `composer update` with no `composer.lock` file
-present.
+To fix this, you can use next ways:
+ - The `--ignore-platform-reqs` switch when running the above command, or
+ when running `composer update` with no `composer.lock` file present. Please
+ keep in mind that this switch completely disables platform requirements check.
+ - Update/create [config.platform section](https://getcomposer.org/doc/06-config.md#platform)
+ in your composer.json file with, for example `"ext-mongo": "1.6.14"`. This setting disables check
+ only for old mongo extension. For example:
+
+```javascript
+    ...
+    "config": {
+        "platform": {
+            "ext-mongo": "1.6.14"
+        }
+    }
+    ...
+```
 
 # Known issues
 
