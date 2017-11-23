@@ -38,14 +38,14 @@ To fix this, you can use next ways:
  when running `composer update` with no `composer.lock` file present. Please
  keep in mind that this switch completely disables platform requirements check.
  - Update/create [config.platform section](https://getcomposer.org/doc/06-config.md#platform)
- in your composer.json file with, for example `"ext-mongo": "1.8.0"`. This setting disables check
+ in your composer.json file with, for example `"ext-mongo": "1.6.14"`. This setting disables check
  only for old mongo extension. For example:
 
 ```javascript
     ...
     "config": {
         "platform": {
-            "ext-mongo": "1.8.0"
+            "ext-mongo": "1.6.14"
         }
     }
     ...
