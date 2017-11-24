@@ -13,11 +13,13 @@ compatible with PHP 7.
 # Goal
 
 This library aims to provide a compatibility layer for applications that rely on
-libraries using ext-mongo (e.g. [Doctrine ODM](https://github.com/doctrine/mongodb-odm))
-but want to migrate to PHP 7 or HHVM on which `ext-mongo` will not run.
+libraries using ext-mongo, e.g.
+[Doctrine MongoDB ODM](https://github.com/doctrine/mongodb-odm), but want to
+migrate to PHP 7 or HHVM on which `ext-mongo` will not run.
 
 You should not be using this library if you do not rely on a library using
-`ext-mongo`. If you are starting a new project, please check out [mongodb/mongodb](https://github.com/mongodb/mongo-php-library).
+`ext-mongo`. If you are starting a new project, please check out
+[mongodb/mongodb](https://github.com/mongodb/mongo-php-library).
 
 # Installation
 
@@ -28,14 +30,11 @@ The preferred method of installing this library is with
 [Composer](https://getcomposer.org/) by running the following from your project
 root:
 
-    $ composer require alcaeus/mongo-php-adapter
+    $ composer config "platform.ext-mongo" "1.6.16" && composer require alcaeus/mongo-php-adapter
 
-If your project already has a dependency on `ext-mongo`, the command above may
-not work. This is due to a bug in composer, see [composer/composer#5030](https://github.com/composer/composer/issues/5030).
-
-To fix this, you can use the `--ignore-platform-reqs` switch when running the
-above command, or when running `composer update` with no `composer.lock` file
-present.
+The above command first marks the `mongo` extension as installed, then requires
+this adapter. This is to work around a bug in composer, see
+[composer/composer#5030](https://github.com/composer/composer/issues/5030).
 
 # Known issues
 
