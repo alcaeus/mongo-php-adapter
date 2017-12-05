@@ -32,13 +32,13 @@ class MongoClient
     use Helper\WriteConcern;
 
     const VERSION = '1.6.12';
-    const DEFAULT_HOST = "localhost" ;
-    const DEFAULT_PORT = 27017 ;
-    const RP_PRIMARY = "primary" ;
-    const RP_PRIMARY_PREFERRED = "primaryPreferred" ;
-    const RP_SECONDARY = "secondary" ;
-    const RP_SECONDARY_PREFERRED = "secondaryPreferred" ;
-    const RP_NEAREST = "nearest" ;
+    const DEFAULT_HOST = "localhost";
+    const DEFAULT_PORT = 27017;
+    const RP_PRIMARY = "primary";
+    const RP_PRIMARY_PREFERRED = "primaryPreferred";
+    const RP_SECONDARY = "secondary";
+    const RP_SECONDARY_PREFERRED = "secondaryPreferred";
+    const RP_NEAREST = "nearest";
 
     /**
      * @var bool
@@ -82,8 +82,29 @@ class MongoClient
      */
     public function __construct($server = 'default', array $options = ['connect' => true], array $driverOptions = [])
     {
+        $username = $options['username'];
+        $password = $options['password'];
+        $db = $options['db'];
+
+        unset($options['username']);
+        unset($options['password']);
+        unset($options['db']);
+
+        $replicaSet = null;
+
+        if (isset($options['replicaSet']) && !empty($options['replicaSet'])) {
+            $replicaSet = $options['replicaSet'];
+        }
+
+        if (isset($options['replicaSet'])) {
+            unset($options['replicaSet']);
+        }
+
+        $options['serverSelectionTimeoutMS'] = 60000;
+        $options['serverSelectionTryOnce'] = false;
+
         if ($server === 'default') {
-            $server = 'mongodb://' . self::DEFAULT_HOST . ':' . self::DEFAULT_PORT;
+            $server = 'mongodb://' . $username . ':' . $password . '@' . self::DEFAULT_HOST . ':' . self::DEFAULT_PORT . '/' . $db;
         }
 
         if (isset($options['readPreferenceTags'])) {
@@ -93,9 +114,17 @@ class MongoClient
         $this->applyConnectionOptions($server, $options);
 
         $this->server = $server;
+
         if (false === strpos($this->server, 'mongodb://')) {
-            $this->server = 'mongodb://'.$this->server;
+            $this->server = 'mongodb://' . $username . ':' . $password . '@' . $this->server . '/' . $db;
+        } else {
+            $this->server = str_replace('mongodb://', 'mongodb://' . $username . ':' . $password . '@', $this->server) . '/' . $db;
         }
+
+        if ($replicaSet) {
+            $this->server .= '?replicaSet=' . $replicaSet;
+        }
+
         $this->client = new Client($this->server, $options, $driverOptions);
         $info = $this->client->__debugInfo();
         $this->manager = $info['manager'];
@@ -222,7 +251,7 @@ class MongoClient
             $results[$key] = [
                 'host' => $server->getHost(),
                 'port' => $server->getPort(),
-                'health' => (int) $info['ok'],
+                'health' => (int)$info['ok'],
                 'state' => $state,
                 'ping' => $server->getLatency(),
                 'lastPing' => null,
