@@ -420,4 +420,10 @@ abstract class AbstractCursor
 
         return $this->current;
     }
+
+    public function freeMemory()
+    {
+        unset($this->iterator);
+        unset($this->cursor);
+    }
 }
