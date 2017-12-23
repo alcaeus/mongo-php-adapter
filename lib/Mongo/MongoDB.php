@@ -154,7 +154,9 @@ class MongoDB
                     'info' => isset($info['info']) ? (array) $info['info'] : null,
                     'idIndex' => isset($info['idIndex']) ? (array) $info['idIndex'] : null,
                 ],
-                function ($item) { return $item !== null; }
+                function ($item) {
+                    return $item !== null;
+                }
             );
         };
 

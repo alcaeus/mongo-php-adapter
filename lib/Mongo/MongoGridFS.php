@@ -207,7 +207,7 @@ class MongoGridFS extends MongoCollection
         try {
             $file = $this->insertFile($record, $options);
         } catch (MongoException $e) {
-            throw new MongoGridFSException('Could not store file: '. $e->getMessage(), $e->getCode(), $e);
+            throw new MongoGridFSException('Could not store file: ' . $e->getMessage(), $e->getCode(), $e);
         }
 
         try {

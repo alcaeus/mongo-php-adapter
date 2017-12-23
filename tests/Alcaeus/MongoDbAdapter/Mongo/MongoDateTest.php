@@ -17,7 +17,8 @@ class MongoDateTest extends TestCase
         ini_set("date.timezone", "UTC");
 
         // Today at 8h 8m 8s
-        $timestamp = mktime (8, 8, 8); $date = new \MongoDate($timestamp);
+        $timestamp = mktime(8, 8, 8);
+        $date = new \MongoDate($timestamp);
 
         $this->assertSame('08:08:08', $date->toDateTime()->format("H:i:s"));
 

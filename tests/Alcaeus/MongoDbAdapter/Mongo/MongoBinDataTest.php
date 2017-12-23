@@ -18,7 +18,7 @@ class MongoBinDataTest extends TestCase
         $this->assertAttributeSame(self::GUID, 'bin', $bin);
         $this->assertAttributeSame(\MongoBinData::FUNC, 'type', $bin);
 
-        $this->assertSame('<Mongo Binary Data>', (string)$bin);
+        $this->assertSame('<Mongo Binary Data>', (string) $bin);
 
         return $bin;
     }

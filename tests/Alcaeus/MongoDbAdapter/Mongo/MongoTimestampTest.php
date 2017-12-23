@@ -63,6 +63,6 @@ class MongoTimestampTest extends TestCase
         $bsonTimestamp = new \MongoDB\BSON\Timestamp(12345, 67890);
         $timestamp = new \MongoTimestamp(67890, 12345);
 
-        $this->assertSame((string) $bsonTimestamp, (string)$timestamp->toBSONType());
+        $this->assertSame((string) $bsonTimestamp, (string) $timestamp->toBSONType());
     }
 }

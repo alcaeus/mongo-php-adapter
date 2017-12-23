@@ -8,7 +8,8 @@ class MongoLogTest extends Testcase
 {
     public function testSetCallback()
     {
-        $foo = function() {};
+        $foo = function () {
+        };
         $this->assertTrue(\MongoLog::setCallback($foo));
         $this->assertSame($foo, \MongoLog::getCallback());
     }
