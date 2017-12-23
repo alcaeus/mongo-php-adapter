@@ -58,6 +58,12 @@ jobs:
             - "mongodb-upstart"
           packages: ['mongodb-org-server']
 
+    - stage: Code Quality
+      env: CODING_STANDARDS
+      php: 7.1
+      script:
+        - ./vendor/bin/phpcs
+
 cache:
   directories:
     - $HOME/.composer/cache
