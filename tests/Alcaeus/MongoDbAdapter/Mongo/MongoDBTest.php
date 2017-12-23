@@ -180,7 +180,6 @@ class MongoDBTest extends TestCase
 
         $this->assertSame(ReadPreference::RP_SECONDARY, $readPreference->getMode());
         $this->assertSame([['a' => 'b']], $readPreference->getTagSets());
-
     }
 
     public function testReadPreferenceIsInherited()

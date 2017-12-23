@@ -139,7 +139,7 @@ abstract class TestCase extends BaseTestCase
             /* command not found */
             if ($e->getCode() == 59) {
                 $this->markTestSkipped(
-                  'This test require the mongo daemon to be started with the test flag: --setParameter enableTestCommands=1'
+                    'This test require the mongo daemon to be started with the test flag: --setParameter enableTestCommands=1'
                 );
             }
         }

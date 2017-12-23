@@ -1061,7 +1061,8 @@ class MongoCollectionTest extends TestCase
         $this->assertAttributeSame('foo', 'foo', $object);
     }
 
-    public function testSavingShouldReplaceTheWholeDocument() {
+    public function testSavingShouldReplaceTheWholeDocument()
+    {
         $id = '54203e08d51d4a1f868b456e';
         $collection = $this->getCollection();
 

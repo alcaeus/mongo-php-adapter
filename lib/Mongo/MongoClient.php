@@ -32,13 +32,13 @@ class MongoClient
     use Helper\WriteConcern;
 
     const VERSION = '1.6.12';
-    const DEFAULT_HOST = "localhost" ;
-    const DEFAULT_PORT = 27017 ;
-    const RP_PRIMARY = "primary" ;
-    const RP_PRIMARY_PREFERRED = "primaryPreferred" ;
-    const RP_SECONDARY = "secondary" ;
-    const RP_SECONDARY_PREFERRED = "secondaryPreferred" ;
-    const RP_NEAREST = "nearest" ;
+    const DEFAULT_HOST = "localhost";
+    const DEFAULT_PORT = 27017;
+    const RP_PRIMARY = "primary";
+    const RP_PRIMARY_PREFERRED = "primaryPreferred";
+    const RP_SECONDARY = "secondary";
+    const RP_SECONDARY_PREFERRED = "secondaryPreferred";
+    const RP_NEAREST = "nearest";
 
     /**
      * @var bool
@@ -94,7 +94,7 @@ class MongoClient
 
         $this->server = $server;
         if (false === strpos($this->server, 'mongodb://')) {
-            $this->server = 'mongodb://'.$this->server;
+            $this->server = 'mongodb://' . $this->server;
         }
         $this->client = new Client($this->server, $options, $driverOptions);
         $info = $this->client->__debugInfo();
@@ -352,7 +352,7 @@ class MongoClient
     /**
      * @return array
      */
-    function __sleep()
+    public function __sleep()
     {
         return [
             'connected', 'status', 'server', 'persistent'

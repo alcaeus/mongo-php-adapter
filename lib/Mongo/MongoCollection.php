@@ -888,14 +888,14 @@ class MongoCollection
         $command = [
             'group' => [
                 'ns' => $this->name,
-                '$reduce' => (string)$reduce,
+                '$reduce' => (string) $reduce,
                 'initial' => $initial,
                 'cond' => $condition,
             ],
         ];
 
         if ($keys instanceof MongoCode) {
-            $command['group']['$keyf'] = (string)$keys;
+            $command['group']['$keyf'] = (string) $keys;
         } else {
             $command['group']['key'] = $keys;
         }
@@ -904,7 +904,7 @@ class MongoCollection
         }
         if (array_key_exists('finalize', $condition)) {
             if ($condition['finalize'] instanceof MongoCode) {
-                $condition['finalize'] = (string)$condition['finalize'];
+                $condition['finalize'] = (string) $condition['finalize'];
             }
             $command['group']['finalize'] = $condition['finalize'];
         }

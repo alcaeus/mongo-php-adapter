@@ -83,7 +83,7 @@ class MongoWriteBatch
     public function add($item)
     {
         if (is_object($item)) {
-            $item = (array)$item;
+            $item = (array) $item;
         }
 
         $this->validate($item);
