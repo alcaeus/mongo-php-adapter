@@ -11,7 +11,7 @@ php:
   - 7.1
 
 env:
-  matrix:
+  global:
     - DRIVER_VERSION="stable"
 
 addons:
