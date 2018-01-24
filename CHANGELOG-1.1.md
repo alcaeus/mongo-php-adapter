@@ -3,6 +3,16 @@ CHANGELOG for 1.1.x
 
 This changelog references the relevant changes done in minor version updates.
 
+1.1.4 (2019-01-24)
+------------------
+
+All issues and pull requests under this release may be found under the
+[1.1.4](https://github.com/alcaeus/mongo-php-adapter/issues?q=milestone%3A1.1.4)
+milestone.
+
+ * [#214](https://github.com/alcaeus/mongo-php-adapter/pull/214) fixes the
+return values of MongoBatch calls with unacknowledged write concerns.
+
 1.1.3 (2017-09-24)
 ------------------
 
