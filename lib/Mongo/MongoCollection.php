@@ -593,7 +593,7 @@ class MongoCollection
           'criteria' => 0,
           'options' => 2,
           'operation' => 'findOne'
-      ], function () use ($query, $update, $fields, $options) {
+      ], function () use ($query, $fields, $options) {
         // Can't typehint for array since MongoGridFS extends and accepts strings
         if (! is_array($query)) {
             trigger_error(sprintf('MongoCollection::findOne(): expects parameter 1 to be an array or object, %s given', gettype($query)), E_USER_WARNING);
@@ -612,7 +612,7 @@ class MongoCollection
         }
 
         return $document;
-      });
+      }, func_get_args());
     }
 
     /**

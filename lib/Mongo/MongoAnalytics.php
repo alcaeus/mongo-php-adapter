@@ -10,63 +10,60 @@ trait MongoAnalytics {
     }
 
     public function eavesdrop($opts = ['criteria' => 0, 'options' => 1], $fnc, $args = []) {
-      if (isset($opts['readArgs']) && $opts['readArgs']) {
-          $criteria = isset($opts['criteria']) ? $args[$opts['criteria']] ?? [] : [];
-          $options = isset($opts['options']) ? ($args[$opts['options']] ?? []) : [];
-          $op = is_array($fnc) && !isset($opts['operation']) ?
-              ($fnc[1] ?? null) : (isset($opts['operation']) ? ($args[$opts['operation']] ?? null) : null);
+      if (isset($opts['readArgs']) && !$opts['readArgs']) {
+        $criteria = $opts['criteria'] ?? [];
+        $options = $opts['options'] ?? [];
+        $op = $opts['operation'] ?: null;
+        $name = $opts['name'] ?? $this->name;
       } else {
-          $criteria = $opts['criteria'] ?? [];
-          $options = $opts['options'] ?? [];
-          $op = $opts['operation'] ?: null;
+        $criteria = isset($opts['criteria']) ? $args[$opts['criteria']] ?? [] : [];
+        $options = isset($opts['options']) ? ($args[$opts['options']] ?? []) : [];
+        $op = is_array($fnc) && !isset($opts['operation']) ?
+            ($fnc[1] ?? null) : (isset($opts['operation']) ? ($opts['operation'] ?? null) : null);
+        $name = $opts['name'] ?? $this->name;
       }
 
-      return $this->analyticalDataCapture($op ?: 'unknownOperation', $criteria, $options, $fnc);
+      return $this->analyticalDataCapture($op ?: 'unknownOperation', $criteria, $options, $fnc, $name);
     }
 
     private function analyticalNormalization(&$criteria) {
       if (is_array($criteria)) {
           array_walk($criteria, function (&$ref) {
             if (is_array($ref)) {
-                $this->normalizecriteria($ref);
+                $this->analyticalNormalization($ref);
                 return;
             }
             $ref = null;
           });
-          uksort($criteria, strcasecmp($a, $b));
+          ksort($criteria);
           return;
       }
       $criteria = null;
     }
 
-    private function analyticalDataCapture($op = 'criteria', $criteria = [], $options = [], $call = null) {
-        try {
-            return $this->internalAnalyticalDataCapture($op, $criteria, $options, $call);
-        } catch (Exception $e) {
-            if ($call) return $call();
-        }
-        return function () { /* noop */ };
-    }
-
-    private function internalAnalyticalDataCapture($op = 'criteria', $criteria = [], $options = [], $call = null) {
+    private function analyticalDataCapture($op = 'criteria', $criteria = [], $options = [], $call = null, $name = null) {
         $payload = ["criteria" => $criteria, "options" => $options];
-        $this->normalizecriteria($payload);
+        $this->analyticalNormalization($payload);
+
         $redis = $this->analyticalStore();
 
-        $serialized = json_encode($criteria);
-        $redisKey = sprintf("mongodb/%s/%s/%s", $this->name, $op, md5($serialized));
+        $serialized = json_encode($payload);
+        $redisKey = sprintf("mongodb/%s/%s/%s", $name ?: $this->name, $op, md5($serialized));
 
-        $this->redis->incr("$redisKey/count");
-        $this->redis->set("$redisKey/criteria", $serialized);
+        $redis->incr("$redisKey/count");
+        $redis->set("$redisKey/criteria", $serialized);
 
         $time = strtotime("+1 hour 00:00");
-        $this->redis->expireat("$redisKey/count", $time);
-        $this->redis->expireat("$redisKey/criteria", $time);
+        $redis->expireat("$redisKey/count", $time);
+        $redis->expireat("$redisKey/criteria", $time);
 
-        $init = time();
+        $init = microtime(true);
 
-        $onEnd = function () use ($redisKey, $init) {
-          $this->redis->incr("$redisKey/execution", time() - $init);
+        $onEnd = function () use ($redisKey, $init, $redis, $time, $serialized) {
+          $redis->setnx("$redisKey/time", 0);
+          $diff = $diff = ceil((microtime(true) - $init) * 1000);
+          $redis->incrby("$redisKey/time", $diff);
+          $redis->expireat("$redisKey/time", $time);
         };
 
         if ($call) {
