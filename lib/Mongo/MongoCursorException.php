@@ -19,5 +19,4 @@ if (class_exists('MongoCursorException', false)) {
 
 class MongoCursorException extends MongoException
 {
-
 }

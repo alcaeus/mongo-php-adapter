@@ -23,5 +23,4 @@ if (class_exists('MongoDuplicateKeyException', false)) {
  */
 class MongoDuplicateKeyException extends MongoWriteConcernException
 {
-
 }

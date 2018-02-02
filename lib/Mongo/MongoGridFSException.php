@@ -19,5 +19,4 @@ if (class_exists('MongoGridFSException', false)) {
 
 class MongoGridFSException extends MongoException
 {
-
 }

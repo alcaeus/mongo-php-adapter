@@ -30,6 +30,8 @@ use MongoDB\Operation\Find;
  */
 class MongoCursor extends AbstractCursor implements Iterator
 {
+    use MongoAnalytics;
+
     /**
      * @var bool
      */
@@ -135,21 +137,50 @@ class MongoCursor extends AbstractCursor implements Iterator
      */
     public function count($foundOnly = false)
     {
-        $optionNames = ['hint', 'maxTimeMS'];
-        if ($foundOnly) {
-            $optionNames = array_merge($optionNames, ['limit', 'skip']);
-        }
+        return $this->eavesdrop([
+        'readArgs' => false,
+        'criteria' => $this->query,
+        'options' => array_merge(['foundOnly'=> $foundOnly], $this->options),
+        'operation' => 'count',
+        'name' => $this->collection->getCollectionName()
+      ], function () use ($foundOnly) {
+          $optionNames = ['hint', 'maxTimeMS'];
+          if ($foundOnly) {
+              $optionNames = array_merge($optionNames, ['limit', 'skip']);
+          }
 
-        $options = $this->getOptions($optionNames) + $this->options;
-        try {
-            $count = $this->collection->count(TypeConverter::fromLegacy($this->query), $options);
-        } catch (\MongoDB\Driver\Exception\ExecutionTimeoutException $e) {
-            throw new MongoCursorTimeoutException($e->getMessage(), $e->getCode(), $e);
-        } catch (\MongoDB\Driver\Exception\Exception $e) {
-            throw ExceptionConverter::toLegacy($e);
-        }
+          $options = $this->getOptions($optionNames) + $this->options;
+          try {
+              $count = $this->collection->count(TypeConverter::fromLegacy($this->query), $options);
+          } catch (\MongoDB\Driver\Exception\ExecutionTimeoutException $e) {
+              throw new MongoCursorTimeoutException($e->getMessage(), $e->getCode(), $e);
+          } catch (\MongoDB\Driver\Exception\Exception $e) {
+              throw ExceptionConverter::toLegacy($e);
+          }
 
-        return $count;
+          return $count;
+      });
+    }
+
+    /**
+     * @return \Iterator
+     */
+    protected function ensureIterator()
+    {
+        return $this->eavesdrop([
+            'readArgs' => false,
+            'criteria' => $this->query,
+            'options' => $this->options,
+            'operation' => 'count',
+            'name' => $this->collection->getCollectionName()
+        ], function () {
+            // MongoDB\Driver\Cursor needs to be wrapped into a \Generator so that a valid \Iterator with working implementations of
+            // next, current, valid, key and rewind is returned. These methods don't work if we wrap the Cursor inside an \IteratorIterator
+            if ($this->iterator === null) {
+                $this->iterator = $this->wrapTraversable($this->ensureCursor());
+            }
+            return $this->iterator;
+        });
     }
 
     /**
@@ -161,7 +192,6 @@ class MongoCursor extends AbstractCursor implements Iterator
     protected function doQuery()
     {
         $options = $this->getOptions() + $this->options;
-
         try {
             $this->cursor = $this->collection->find(TypeConverter::fromLegacy($this->query), $options);
         } catch (\MongoDB\Driver\Exception\ExecutionTimeoutException $e) {
@@ -250,6 +280,7 @@ class MongoCursor extends AbstractCursor implements Iterator
             $this->ensureIterator()->next();
             $this->cursorNeedsAdvancing = false;
         }
+
 
         return $this->ensureIterator()->valid();
     }
@@ -469,6 +500,8 @@ class MongoCursor extends AbstractCursor implements Iterator
 
         return $this->cursor;
     }
+
+
 
     /**
      * @param \Traversable $traversable
