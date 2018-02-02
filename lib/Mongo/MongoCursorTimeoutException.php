@@ -19,5 +19,4 @@ if (class_exists('MongoCursorTimeoutException', false)) {
 
 class MongoCursorTimeoutException extends MongoCursorException
 {
-
 }

@@ -137,28 +137,28 @@ class MongoCursor extends AbstractCursor implements Iterator
      */
     public function count($foundOnly = false)
     {
-      return $this->eavesdrop([
+        return $this->eavesdrop([
         'readArgs' => false,
         'criteria' => $this->query,
         'options' => ['foundOnly'=> $foundOnly],
         'operation' => 'count',
         'name' => $this->collection->getCollectionName()
       ], function () use ($foundOnly) {
-        $optionNames = ['hint', 'maxTimeMS'];
-        if ($foundOnly) {
-            $optionNames = array_merge($optionNames, ['limit', 'skip']);
-        }
+          $optionNames = ['hint', 'maxTimeMS'];
+          if ($foundOnly) {
+              $optionNames = array_merge($optionNames, ['limit', 'skip']);
+          }
 
-        $options = $this->getOptions($optionNames) + $this->options;
-        try {
-            $count = $this->collection->count(TypeConverter::fromLegacy($this->query), $options);
-        } catch (\MongoDB\Driver\Exception\ExecutionTimeoutException $e) {
-            throw new MongoCursorTimeoutException($e->getMessage(), $e->getCode(), $e);
-        } catch (\MongoDB\Driver\Exception\Exception $e) {
-            throw ExceptionConverter::toLegacy($e);
-        }
+          $options = $this->getOptions($optionNames) + $this->options;
+          try {
+              $count = $this->collection->count(TypeConverter::fromLegacy($this->query), $options);
+          } catch (\MongoDB\Driver\Exception\ExecutionTimeoutException $e) {
+              throw new MongoCursorTimeoutException($e->getMessage(), $e->getCode(), $e);
+          } catch (\MongoDB\Driver\Exception\Exception $e) {
+              throw ExceptionConverter::toLegacy($e);
+          }
 
-        return $count;
+          return $count;
       });
     }
 
@@ -170,22 +170,21 @@ class MongoCursor extends AbstractCursor implements Iterator
      */
     protected function doQuery()
     {
-      $options = $this->getOptions() + $this->options;
-      return $this->eavesdrop([
+        $options = $this->getOptions() + $this->options;
+        return $this->eavesdrop([
         'readArgs' => false,
         'criteria' => $this->query,
         'options' => $options,
         'operation' => 'find',
         'name' => $this->collection->getCollectionName()
       ], function () use ($options) {
-
-        try {
-            $this->cursor = $this->collection->find(TypeConverter::fromLegacy($this->query), $options);
-        } catch (\MongoDB\Driver\Exception\ExecutionTimeoutException $e) {
-            throw new MongoCursorTimeoutException($e->getMessage(), $e->getCode(), $e);
-        } catch (\MongoDB\Driver\Exception\Exception $e) {
-            throw ExceptionConverter::toLegacy($e);
-        }
+          try {
+              $this->cursor = $this->collection->find(TypeConverter::fromLegacy($this->query), $options);
+          } catch (\MongoDB\Driver\Exception\ExecutionTimeoutException $e) {
+              throw new MongoCursorTimeoutException($e->getMessage(), $e->getCode(), $e);
+          } catch (\MongoDB\Driver\Exception\Exception $e) {
+              throw ExceptionConverter::toLegacy($e);
+          }
       });
     }
 

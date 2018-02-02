@@ -19,5 +19,4 @@ if (class_exists('MongoConnectionException', false)) {
 
 class MongoConnectionException extends MongoException
 {
-
 }
