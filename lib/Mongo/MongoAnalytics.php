@@ -49,24 +49,23 @@ trait MongoAnalytics
     {
         $payload = ["criteria" => $criteria, "options" => $options];
         $this->analyticalNormalization($payload);
-
-        $redis = $this->analyticalStore();
-
+        $init = microtime(true);
         $serialized = json_encode($payload);
         $redisKey = sprintf("mongodb/%s/%s/%s", $name ?: $this->name, $op, md5($serialized));
 
-        $redis->incr("$redisKey/count");
-        $redis->set("$redisKey/criteria", $serialized);
+        $onEnd = function () use ($serialized, $redisKey, $init) {
+            $diff = ceil((microtime(true) - $init) * 1000);
+            if ($diff < 10) return;
 
-        $time = strtotime("+1 hour 00:00");
-        $redis->expireat("$redisKey/count", $time);
-        $redis->expireat("$redisKey/criteria", $time);
+            $time = strtotime("+1 hour 00:00");
+            $redis = $this->analyticalStore();
 
-        $init = microtime(true);
-
-        $onEnd = function () use ($redisKey, $init, $redis, $time, $serialized) {
+            $redis->incr("$redisKey/count");
+            $redis->set("$redisKey/criteria", $serialized);
+            $redis->expireat("$redisKey/count", $time);
+            $redis->expireat("$redisKey/criteria", $time);
             $redis->setnx("$redisKey/time", 0);
-            $diff = $diff = ceil((microtime(true) - $init) * 1000);
+
             $redis->incrby("$redisKey/time", $diff);
             $redis->expireat("$redisKey/time", $time);
         };

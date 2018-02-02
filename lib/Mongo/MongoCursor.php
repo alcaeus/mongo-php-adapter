@@ -140,7 +140,7 @@ class MongoCursor extends AbstractCursor implements Iterator
         return $this->eavesdrop([
         'readArgs' => false,
         'criteria' => $this->query,
-        'options' => ['foundOnly'=> $foundOnly],
+        'options' => array_merge(['foundOnly'=> $foundOnly], $this->options),
         'operation' => 'count',
         'name' => $this->collection->getCollectionName()
       ], function () use ($foundOnly) {
@@ -163,6 +163,27 @@ class MongoCursor extends AbstractCursor implements Iterator
     }
 
     /**
+     * @return \Iterator
+     */
+    protected function ensureIterator()
+    {
+        return $this->eavesdrop([
+            'readArgs' => false,
+            'criteria' => $this->query,
+            'options' => $this->options,
+            'operation' => 'count',
+            'name' => $this->collection->getCollectionName()
+        ], function () {
+            // MongoDB\Driver\Cursor needs to be wrapped into a \Generator so that a valid \Iterator with working implementations of
+            // next, current, valid, key and rewind is returned. These methods don't work if we wrap the Cursor inside an \IteratorIterator
+            if ($this->iterator === null) {
+                $this->iterator = $this->wrapTraversable($this->ensureCursor());
+            }
+            return $this->iterator;
+        });
+    }
+
+    /**
      * Execute the query
      * @link http://www.php.net/manual/en/mongocursor.doquery.php
      * @throws MongoConnectionException if it cannot reach the database.
@@ -171,21 +192,13 @@ class MongoCursor extends AbstractCursor implements Iterator
     protected function doQuery()
     {
         $options = $this->getOptions() + $this->options;
-        return $this->eavesdrop([
-        'readArgs' => false,
-        'criteria' => $this->query,
-        'options' => $options,
-        'operation' => 'find',
-        'name' => $this->collection->getCollectionName()
-      ], function () use ($options) {
-          try {
-              $this->cursor = $this->collection->find(TypeConverter::fromLegacy($this->query), $options);
-          } catch (\MongoDB\Driver\Exception\ExecutionTimeoutException $e) {
-              throw new MongoCursorTimeoutException($e->getMessage(), $e->getCode(), $e);
-          } catch (\MongoDB\Driver\Exception\Exception $e) {
-              throw ExceptionConverter::toLegacy($e);
-          }
-      });
+        try {
+            $this->cursor = $this->collection->find(TypeConverter::fromLegacy($this->query), $options);
+        } catch (\MongoDB\Driver\Exception\ExecutionTimeoutException $e) {
+            throw new MongoCursorTimeoutException($e->getMessage(), $e->getCode(), $e);
+        } catch (\MongoDB\Driver\Exception\Exception $e) {
+            throw ExceptionConverter::toLegacy($e);
+        }
     }
 
     /**
@@ -267,6 +280,7 @@ class MongoCursor extends AbstractCursor implements Iterator
             $this->ensureIterator()->next();
             $this->cursorNeedsAdvancing = false;
         }
+
 
         return $this->ensureIterator()->valid();
     }
@@ -486,6 +500,8 @@ class MongoCursor extends AbstractCursor implements Iterator
 
         return $this->cursor;
     }
+
+
 
     /**
      * @param \Traversable $traversable
