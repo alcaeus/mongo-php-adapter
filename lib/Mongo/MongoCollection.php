@@ -392,7 +392,7 @@ class MongoCollection
       return $this->eavesdrop([
           'criteria' => 0,
           'options' => 2,
-          'operation' => 'remove'
+          'operation' => 'update'
       ], function () use ($criteria, $newobj, $options) {
 
         $this->mustBeArrayOrObject($criteria);
@@ -589,6 +589,11 @@ class MongoCollection
      */
     public function findOne($query = [], array $fields = [], array $options = [])
     {
+      return $this->eavesdrop([
+          'criteria' => 0,
+          'options' => 2,
+          'operation' => 'findOne'
+      ], function () use ($query, $update, $fields, $options) {
         // Can't typehint for array since MongoGridFS extends and accepts strings
         if (! is_array($query)) {
             trigger_error(sprintf('MongoCollection::findOne(): expects parameter 1 to be an array or object, %s given', gettype($query)), E_USER_WARNING);
@@ -607,6 +612,7 @@ class MongoCollection
         }
 
         return $document;
+      });
     }
 
     /**

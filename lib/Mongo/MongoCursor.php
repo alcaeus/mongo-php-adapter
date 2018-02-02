@@ -175,7 +175,7 @@ class MongoCursor extends AbstractCursor implements Iterator
         'readArgs' => false,
         'criteria' => $this->query,
         'options' => $options,
-        'operation' => 'count',
+        'operation' => 'find',
         'name' => $this->collection->getCollectionName()
       ], function () use ($options) {
 
