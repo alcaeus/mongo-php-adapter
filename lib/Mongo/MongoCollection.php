@@ -31,6 +31,8 @@ class MongoCollection
     use Helper\SlaveOkay;
     use Helper\WriteConcern;
 
+    use MongoAnalytics;
+
     const ASCENDING = 1;
     const DESCENDING = -1;
 
@@ -48,6 +50,12 @@ class MongoCollection
      * @var \MongoDB\Collection
      */
     protected $collection;
+
+
+    /**
+     * @var Array|null
+     */
+    protected static $debugConfig;
 
     /**
      * Creates a new collection
@@ -130,6 +138,11 @@ class MongoCollection
      */
     public function aggregate(array $pipeline, array $op = [])
     {
+      return $this->eavesdrop([
+          'criteria' => 0,
+          'options' => 1,
+          'operation' => 'aggregate'
+        ], function () use ($pipeline, $op) {
         if (! TypeConverter::isNumericArray($pipeline)) {
             $operators = func_get_args();
             $pipeline = [];
@@ -172,6 +185,7 @@ class MongoCollection
         } catch (\MongoDB\Driver\Exception\Exception $e) {
             throw ExceptionConverter::toLegacy($e, 'MongoResultException');
         }
+      }, func_get_args());
     }
 
     /**
@@ -375,6 +389,12 @@ class MongoCollection
      */
     public function update($criteria, $newobj, array $options = [])
     {
+      return $this->eavesdrop([
+          'criteria' => 0,
+          'options' => 2,
+          'operation' => 'remove'
+      ], function () use ($criteria, $newobj, $options) {
+
         $this->mustBeArrayOrObject($criteria);
         $this->mustBeArrayOrObject($newobj);
 
@@ -414,6 +434,7 @@ class MongoCollection
             'errmsg' => null,
             'updatedExisting' => $result->getUpsertedCount() == 0 && $result->getModifiedCount() > 0,
         ];
+      }, func_get_args());
     }
 
     /**
@@ -427,32 +448,38 @@ class MongoCollection
      * @return bool|array Returns an array containing the status of the removal
      * if the "w" option is set. Otherwise, returns TRUE.
      */
-    public function remove(array $criteria = [], array $options = [])
-    {
-        $multiple = isset($options['justOne']) ? !$options['justOne'] : true;
-        $method = $multiple ? 'deleteMany' : 'deleteOne';
+     public function remove(array $criteria = [], array $options = [])
+     {
+         return $this->eavesdrop([
+             'criteria' => 0,
+             'options' => 1,
+             'operation' => 'remove'
+         ], function () use ($criteria, $options) {
+             $multiple = isset($options['justOne']) ? !$options['justOne'] : true;
+             $method = $multiple ? 'deleteMany' : 'deleteOne';
 
-        try {
-            /** @var \MongoDB\DeleteResult $result */
-            $result = $this->collection->$method(
-                TypeConverter::fromLegacy($criteria),
-                $this->convertWriteConcernOptions($options)
-            );
-        } catch (\MongoDB\Driver\Exception\Exception $e) {
-            throw ExceptionConverter::toLegacy($e);
-        }
+             try {
+                 /** @var \MongoDB\DeleteResult $result */
+                    $result = $this->collection->$method(
+                        TypeConverter::fromLegacy($criteria),
+                        $this->convertWriteConcernOptions($options)
+                    );
+             } catch (\MongoDB\Driver\Exception\Exception $e) {
+                 throw ExceptionConverter::toLegacy($e);
+             }
 
-        if (! $result->isAcknowledged()) {
-            return true;
-        }
+             if (! $result->isAcknowledged()) {
+                 return true;
+             }
 
-        return [
-            'ok' => 1.0,
-            'n' => $result->getDeletedCount(),
-            'err' => null,
-            'errmsg' => null
-        ];
-    }
+             return [
+                    'ok' => 1.0,
+                    'n' => $result->getDeletedCount(),
+                    'err' => null,
+                    'errmsg' => null
+                ];
+              }, func_get_args());
+     }
 
     /**
      * Querys this collection
@@ -480,11 +507,17 @@ class MongoCollection
      */
     public function distinct($key, array $query = [])
     {
+      return $this->eavesdrop([
+          'criteria' => 1,
+          'options' => 0,
+          'operation' => 'distinct'
+        ], function () use ($key, $query) {
         try {
             return array_map([TypeConverter::class, 'toLegacy'], $this->collection->distinct($key, TypeConverter::fromLegacy($query)));
         } catch (\MongoDB\Driver\Exception\Exception $e) {
             return false;
         }
+      }, func_get_args());
     }
 
     /**
@@ -499,6 +532,11 @@ class MongoCollection
      */
     public function findAndModify(array $query, array $update = null, array $fields = null, array $options = [])
     {
+      return $this->eavesdrop([
+          'criteria' => 0,
+          'options' => 3,
+          'operation' => 'findAndModify'
+      ], function () use ($query, $update, $fields, $options) {
         $query = TypeConverter::fromLegacy($query);
         try {
             if (isset($options['remove'])) {
@@ -537,6 +575,7 @@ class MongoCollection
         }
 
         return $document;
+      }, func_get_args());
     }
 
     /**
@@ -756,6 +795,11 @@ class MongoCollection
      */
     public function count($query = [], $options = [])
     {
+      return $this->eavesdrop([
+          'criteria' => 0,
+          'options' => 1,
+          'operation' => 'count'
+        ], function () use ($query, $options) {
         try {
             // Handle legacy mode - limit and skip as second and third parameters, respectively
             if (! is_array($options)) {
@@ -775,6 +819,7 @@ class MongoCollection
         } catch (\MongoDB\Driver\Exception\Exception $e) {
             throw ExceptionConverter::toLegacy($e);
         }
+      }, func_get_args());
     }
 
     /**

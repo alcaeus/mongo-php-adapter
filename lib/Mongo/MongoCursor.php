@@ -30,6 +30,8 @@ use MongoDB\Operation\Find;
  */
 class MongoCursor extends AbstractCursor implements Iterator
 {
+    use MongoAnalytics;
+
     /**
      * @var bool
      */
@@ -135,6 +137,13 @@ class MongoCursor extends AbstractCursor implements Iterator
      */
     public function count($foundOnly = false)
     {
+      return $this->eavesdrop([
+        'readArgs' => false,
+        'criteria' => $this->query,
+        'options' => ['foundOnly'=> $foundOnly],
+        'operation' => 'count',
+        'name' => $this->collection->getCollectionName()
+      ], function () use ($foundOnly) {
         $optionNames = ['hint', 'maxTimeMS'];
         if ($foundOnly) {
             $optionNames = array_merge($optionNames, ['limit', 'skip']);
@@ -150,6 +159,7 @@ class MongoCursor extends AbstractCursor implements Iterator
         }
 
         return $count;
+      });
     }
 
     /**
@@ -160,7 +170,14 @@ class MongoCursor extends AbstractCursor implements Iterator
      */
     protected function doQuery()
     {
-        $options = $this->getOptions() + $this->options;
+      $options = $this->getOptions() + $this->options;
+      return $this->eavesdrop([
+        'readArgs' => false,
+        'criteria' => $this->query,
+        'options' => $options,
+        'operation' => 'count',
+        'name' => $this->collection->getCollectionName()
+      ], function () use ($options) {
 
         try {
             $this->cursor = $this->collection->find(TypeConverter::fromLegacy($this->query), $options);
@@ -169,6 +186,7 @@ class MongoCursor extends AbstractCursor implements Iterator
         } catch (\MongoDB\Driver\Exception\Exception $e) {
             throw ExceptionConverter::toLegacy($e);
         }
+      });
     }
 
     /**
