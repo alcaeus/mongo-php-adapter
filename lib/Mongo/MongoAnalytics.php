@@ -9,7 +9,7 @@ trait MongoAnalytics {
 
     }
 
-    public function eavesdrop($opts = ['criteria' => 0, 'options' => 1], $fnc, $args) {
+    public function eavesdrop($opts = ['criteria' => 0, 'options' => 1], $fnc, $args = []) {
       if (isset($opts['readArgs']) && $opts['readArgs']) {
           $criteria = isset($opts['criteria']) ? $args[$opts['criteria']] ?? [] : [];
           $options = isset($opts['options']) ? ($args[$opts['options']] ?? []) : [];
