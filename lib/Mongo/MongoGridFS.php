@@ -13,6 +13,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+use Alcaeus\MongoDbAdapter\ExceptionConverter;
+use Alcaeus\MongoDbAdapter\TypeConverter;
+
 if (class_exists('MongoGridFS', false)) {
     return;
 }
@@ -50,6 +53,11 @@ class MongoGridFS extends MongoCollection
     private $defaultChunkSize = 261120;
 
     /**
+     * @var \MongoDB\GridFS\Bucket
+     */
+    private $bucket;
+
+    /**
      * Files as stored across two collections, the first containing file meta
      * information, the second containing chunks of the actual file. By default,
      * fs.files and fs.chunks are the collection names used.
@@ -70,9 +78,10 @@ class MongoGridFS extends MongoCollection
         }
 
         $this->database = $db;
+        $this->bucket = $db->getDb()->selectGridFSBucket(['bucketName' => $prefix]);
         $this->prefix = (string) $prefix;
-        $this->filesName = $prefix . '.files';
-        $this->chunksName = $prefix . '.chunks';
+        $this->filesName = $this->bucket->getFilesCollection()->getCollectionName();
+        $this->chunksName = $this->bucket->getChunksCollection()->getCollectionName();
 
         $this->chunks = $db->selectCollection($this->chunksName);
 
@@ -88,10 +97,13 @@ class MongoGridFS extends MongoCollection
      */
     public function delete($id)
     {
-        $this->createChunksIndex();
+        try {
+            $this->bucket->delete(TypeConverter::fromLegacy($id));
+        } catch (\MongoDB\Driver\Exception\Exception $e) {
+            throw ExceptionConverter::toLegacy($e);
+        }
 
-        $this->chunks->remove(['files_id' => $id], ['justOne' => false]);
-        return parent::remove(['_id' => $id]);
+        return true;
     }
 
     /**
@@ -101,8 +113,9 @@ class MongoGridFS extends MongoCollection
      */
     public function drop()
     {
-        $this->chunks->drop();
-        return parent::drop();
+        $this->bucket->drop();
+
+        return [];
     }
 
     /**
@@ -176,8 +189,6 @@ class MongoGridFS extends MongoCollection
      */
     public function remove(array $criteria = [], array $options = [])
     {
-        $this->createChunksIndex();
-
         $matchingFiles = parent::find($criteria, ['_id' => 1]);
         $ids = [];
         foreach ($matchingFiles as $file) {
@@ -197,27 +208,19 @@ class MongoGridFS extends MongoCollection
      */
     public function storeBytes($bytes, array $extra = [], array $options = [])
     {
-        $this->createChunksIndex();
+        $filename = isset($extra['filename']) ? $extra['filename'] : 'random' . rand();
+        $stream = $this->bucket->openUploadStream($filename);
+        $id = $this->bucket->getFileIdForStream($stream);
 
-        $record = $extra + [
-            'length' => mb_strlen($bytes, '8bit'),
-            'md5' => md5($bytes),
-        ];
+        fwrite($stream, $bytes);
+        fclose($stream);
 
-        try {
-            $file = $this->insertFile($record, $options);
-        } catch (MongoException $e) {
-            throw new MongoGridFSException('Could not store file: ' . $e->getMessage(), $e->getCode(), $e);
+        if (count($extra)) {
+            $collection = $this->bucket->getFilesCollection();
+            $collection->updateOne(['_id' => $id], ['$set' => $extra]);
         }
 
-        try {
-            $this->insertChunksFromBytes($bytes, $file);
-        } catch (MongoException $e) {
-            $this->delete($file['_id']);
-            throw new MongoGridFSException('Could not store file: ' . $e->getMessage(), $e->getCode(), $e);
-        }
-
-        return $file['_id'];
+        return TypeConverter::toLegacy($id);
     }
 
     /**
@@ -233,17 +236,9 @@ class MongoGridFS extends MongoCollection
      */
     public function storeFile($filename, array $extra = [], array $options = [])
     {
-        $this->createChunksIndex();
-
         $record = $extra;
         if (is_string($filename)) {
-            $record += [
-                'md5' => md5_file($filename),
-                'length' => filesize($filename),
-                'filename' => $filename,
-            ];
-
-            $handle = fopen($filename, 'r');
+            $handle = fopen($filename, 'rb');
             if (! $handle) {
                 throw new MongoGridFSException('could not open file: ' . $filename);
             }
@@ -251,49 +246,16 @@ class MongoGridFS extends MongoCollection
             throw new \Exception('first argument must be a string or stream resource');
         } else {
             $handle = $filename;
+            $metadata = stream_get_meta_data($handle);
+            $filename =  $metadata['uri'];
+        }
+        $id = $this->bucket->uploadFromStream($filename, $handle);
+        if (count($extra)) {
+            $collection = $this->bucket->getFilesCollection();
+            $collection->updateOne(['_id' => $id], ['$set' => $extra]);
         }
 
-        $md5 = null;
-        try {
-            $file = $this->insertFile($record, $options);
-        } catch (MongoException $e) {
-            throw new MongoGridFSException('Could not store file: ' . $e->getMessage(), $e->getCode(), $e);
-        }
-
-        try {
-            $length = $this->insertChunksFromFile($handle, $file, $md5);
-        } catch (MongoException $e) {
-            $this->delete($file['_id']);
-            throw new MongoGridFSException('Could not store file: ' . $e->getMessage(), $e->getCode(), $e);
-        }
-
-
-        // Add length and MD5 if they were not present before
-        $update = [];
-        if (! isset($record['length'])) {
-            $update['length'] = $length;
-        }
-        if (! isset($record['md5'])) {
-            try {
-                $update['md5'] = $md5;
-            } catch (MongoException $e) {
-                throw new MongoGridFSException('Could not store file: ' . $e->getMessage(), $e->getCode(), $e);
-            }
-        }
-
-        if (count($update)) {
-            try {
-                $result = $this->update(['_id' => $file['_id']], ['$set' => $update]);
-                if (! $this->isOKResult($result)) {
-                    throw new MongoGridFSException('Could not store file');
-                }
-            } catch (MongoException $e) {
-                $this->delete($file['_id']);
-                throw new MongoGridFSException('Could not store file: ' . $e->getMessage(), $e->getCode(), $e);
-            }
-        }
-
-        return $file['_id'];
+        return TypeConverter::toLegacy($id);
     }
 
     /**
@@ -332,120 +294,12 @@ class MongoGridFS extends MongoCollection
     }
 
     /**
-     * Creates the index on the chunks collection
+     * @internal
+     * @return \MongoDB\GridFS\Bucket
      */
-    private function createChunksIndex()
+    public function getBucket()
     {
-        try {
-            $this->chunks->createIndex(['files_id' => 1, 'n' => 1], ['unique' => true]);
-        } catch (MongoDuplicateKeyException $e) {
-        }
-    }
-
-    /**
-     * Inserts a single chunk into the database
-     *
-     * @param mixed $fileId
-     * @param string $data
-     * @param int $chunkNumber
-     * @return array|bool
-     */
-    private function insertChunk($fileId, $data, $chunkNumber)
-    {
-        $chunk = [
-            'files_id' => $fileId,
-            'n' => $chunkNumber,
-            'data' => new MongoBinData($data),
-        ];
-
-        $result = $this->chunks->insert($chunk);
-
-        if (! $this->isOKResult($result)) {
-            throw new \MongoException('error inserting chunk');
-        }
-
-        return $result;
-    }
-
-    /**
-     * Splits a string into chunks and writes them to the database
-     *
-     * @param string $bytes
-     * @param array $record
-     */
-    private function insertChunksFromBytes($bytes, $record)
-    {
-        $chunkSize = $record['chunkSize'];
-        $fileId = $record['_id'];
-        $i = 0;
-
-        $chunks = str_split($bytes, $chunkSize);
-        foreach ($chunks as $chunk) {
-            $this->insertChunk($fileId, $chunk, $i++);
-        }
-    }
-
-    /**
-     * Reads chunks from a file and writes them to the database
-     *
-     * @param resource $handle
-     * @param array $record
-     * @param string $md5
-     * @return int Returns the number of bytes written to the database
-     */
-    private function insertChunksFromFile($handle, $record, &$md5)
-    {
-        $written = 0;
-        $offset = 0;
-        $i = 0;
-
-        $fileId = $record['_id'];
-        $chunkSize = $record['chunkSize'];
-
-        $hash = hash_init('md5');
-
-        rewind($handle);
-        while (! feof($handle)) {
-            $data = stream_get_contents($handle, $chunkSize);
-            hash_update($hash, $data);
-            $this->insertChunk($fileId, $data, $i++);
-            $written += strlen($data);
-            $offset += $chunkSize;
-        }
-
-        $md5 = hash_final($hash);
-
-        return $written;
-    }
-
-    /**
-     * Writes a file record to the database
-     *
-     * @param $record
-     * @param array $options
-     * @return array
-     */
-    private function insertFile($record, array $options = [])
-    {
-        $record += [
-            '_id' => new MongoId(),
-            'uploadDate' => new MongoDate(),
-            'chunkSize' => $this->defaultChunkSize,
-        ];
-
-        $result = $this->insert($record, $options);
-
-        if (! $this->isOKResult($result)) {
-            throw new \MongoException('error inserting file');
-        }
-
-        return $record;
-    }
-
-    private function isOKResult($result)
-    {
-        return (is_array($result) && $result['ok'] == 1.0) ||
-               (is_bool($result) && $result);
+        return $this->bucket;
     }
 
     /**

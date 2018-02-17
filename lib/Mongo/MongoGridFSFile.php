@@ -13,6 +13,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+use Alcaeus\MongoDbAdapter\TypeConverter;
+
 if (class_exists('MongoGridFSFile', false)) {
     return;
 }
@@ -83,7 +85,8 @@ class MongoGridFSFile
             return 0;
         }
 
-        $written = $this->copyToResource($handle);
+        $source = $this->getResource();
+        $written = stream_copy_to_stream($source, $handle);
         fclose($handle);
 
         return $written;
@@ -96,12 +99,9 @@ class MongoGridFSFile
      */
     public function getBytes()
     {
-        $result = '';
-        foreach ($this->getChunks() as $chunk) {
-            $result .= $chunk['data']->bin;
-        }
+        $handle = $this->getResource();
 
-        return $result;
+        return stream_get_contents($handle);
     }
 
     /**
@@ -114,11 +114,9 @@ class MongoGridFSFile
      */
     public function getResource()
     {
-        $handle = fopen('php://temp', 'w+');
-        $this->copyToResource($handle);
-        rewind($handle);
+        $bucket = $this->gridfs->getBucket();
 
-        return $handle;
+        return $bucket->openDownloadStream(TypeConverter::fromLegacy($this->file['_id']));
     }
 
     private function copyToResource($handle)
