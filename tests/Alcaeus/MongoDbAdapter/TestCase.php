@@ -20,7 +20,7 @@ abstract class TestCase extends BaseTestCase
      */
     protected function getCheckClient()
     {
-        return new Client('mongodb://localhost', ['connect' => true]);
+        return new Client($this->getMongoUri(), ['connect' => true]);
     }
 
     /**
@@ -34,10 +34,16 @@ abstract class TestCase extends BaseTestCase
 
     /**
      * @param array|null $options
+     * @param string $uri
+     *
      * @return \MongoClient
+     * @throws \ReflectionException
      */
-    protected function getClient($options = null, $uri = 'mongodb://localhost')
+    protected function getClient($options = null, $uri = null)
     {
+        if (!$uri) {
+            $uri = $this->getMongoUri();
+        }
         $args = [$uri];
         if ($options !== null) {
             $args[] = $options;
@@ -200,5 +206,26 @@ abstract class TestCase extends BaseTestCase
         // Check featureCompatibilityFlag
         $compatibilityVersion = $this->getFeatureCompatibilityVersion();
         return $compatibilityVersion === '3.4' ? self::INDEX_VERSION_2 : self::INDEX_VERSION_1;
+    }
+
+    /**
+     * @return string
+     */
+    protected function getMongoUri()
+    {
+        $uri = getenv('MONGO_DSN');
+        if (!$uri) {
+            $uri = 'mongodb://localhost';
+        }
+
+        return $uri;
+    }
+
+    /**
+     * @return string
+     */
+    protected function getMongoHost()
+    {
+        return parse_url($this->getMongoUri(), PHP_URL_HOST);
     }
 }

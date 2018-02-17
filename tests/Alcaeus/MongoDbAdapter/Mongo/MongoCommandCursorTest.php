@@ -47,13 +47,14 @@ class MongoCommandCursorTest extends TestCase
         // Ensure cursor started iterating
         $array = iterator_to_array($cursor);
 
+        $server = sprintf('%s:27017;-;.;%d', $this->getMongoHost(), getmypid());
         $expected['started_iterating'] = true;
         $expected += [
             'id' => 0,
             'at' => 0,
             'numReturned' => 0,
-            'server' => 'localhost:27017;-;.;' . getmypid(),
-            'host' => 'localhost',
+            'server' => $server,
+            'host' => $this->getMongoHost(),
             'port' => 27017,
             'connection_type_desc' => 'STANDALONE',
         ];

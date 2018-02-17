@@ -2,3 +2,5 @@ composer.lock
 .phpcs-cache
 vendor/
 tests/scripts/
+.idea/
+docker-compose.override.yml

@@ -1,0 +1,15 @@
+version: '3'
+services:
+    php:
+        build: .
+        volumes:
+            - .:/src
+        links:
+            - mongo
+        working_dir: /src
+        stdin_open: true
+        environment:
+          - MONGO_DSN=mongodb://mongo
+        tty: true
+    mongo:
+        image: mongo:3.4
