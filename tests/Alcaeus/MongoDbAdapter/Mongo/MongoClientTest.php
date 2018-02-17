@@ -59,7 +59,7 @@ class MongoClientTest extends TestCase
         $client = $this->getClient();
         $hosts = $client->getHosts();
 
-        $key = sprintf( '%s:27017;-;.;%d', $this->getMongoHost(), getmypid());
+        $key = sprintf('%s:27017;-;.;%d', $this->getMongoHost(), getmypid());
 
         $this->assertArraySubset(
             [
@@ -68,7 +68,7 @@ class MongoClientTest extends TestCase
                     'port' => 27017,
                     'health' => 1,
                     'state' => 0,
-                ],
+                 ],
             ],
             $hosts
         );

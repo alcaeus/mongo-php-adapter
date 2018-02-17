@@ -47,7 +47,7 @@ class MongoCommandCursorTest extends TestCase
         // Ensure cursor started iterating
         $array = iterator_to_array($cursor);
 
-        $server = sprintf('%s:27017;-;.;%d',$this->getMongoHost(), getmypid());
+        $server = sprintf('%s:27017;-;.;%d', $this->getMongoHost(), getmypid());
         $expected['started_iterating'] = true;
         $expected += [
             'id' => 0,

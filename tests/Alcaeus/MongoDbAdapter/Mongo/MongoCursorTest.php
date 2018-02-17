@@ -356,7 +356,7 @@ class MongoCursorTest extends TestCase
         // Ensure cursor started iterating
         iterator_to_array($cursor);
 
-        $server = sprintf('%s:27017;-;.;%d',$this->getMongoHost(), getmypid());
+        $server = sprintf('%s:27017;-;.;%d', $this->getMongoHost(), getmypid());
 
         $expected['started_iterating'] = true;
         $expected += [
@@ -396,7 +396,7 @@ class MongoCursorTest extends TestCase
         // Ensure cursor started iterating
         iterator_to_array($cursor);
 
-        $server = sprintf('%s:27017;-;.;%d',$this->getMongoHost(), getmypid());
+        $server = sprintf('%s:27017;-;.;%d', $this->getMongoHost(), getmypid());
         $expected['started_iterating'] = true;
         $expected += [
             'id' => 0,
