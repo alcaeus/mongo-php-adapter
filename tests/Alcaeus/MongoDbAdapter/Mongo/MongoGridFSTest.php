@@ -323,9 +323,6 @@ class MongoGridFSTest extends TestCase
     {
         $collection = $this->getGridFS();
 
-        // to make sure we have multiple chunks
-        $extra += ['chunkSize' => 2];
-
         return $collection->storeBytes($data, $extra);
     }
 }
