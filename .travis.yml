@@ -49,7 +49,7 @@ jobs:
     # Test against set of lowest dependencies
     - stage: Test
       php: 5.6
-      env: DRIVER_VERSION="1.2.0" COMPOSER_FLAGS="--prefer-dist --prefer-lowest"
+      env: DRIVER_VERSION="1.3.0" COMPOSER_FLAGS="--prefer-dist --prefer-lowest"
       addons:
         apt:
           sources:
