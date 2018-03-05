@@ -3,7 +3,17 @@ CHANGELOG for 1.1.x
 
 This changelog references the relevant changes done in minor version updates.
 
-1.1.4 (2019-01-24)
+1.1.5 (2018-03-05)
+-----------------
+
+All issues and pull requests under this release may be found under the
+[1.1.5](https://github.com/alcaeus/mongo-php-adapter/issues?q=milestone%3A1.1.5)
+milestone.
+
+ * [#222](https://github.com/alcaeus/mongo-php-adapter/pull/222) fixes handling
+ of `monodb+srv` URLs in `MongoClient`.
+
+1.1.4 (2018-01-24)
 ------------------
 
 All issues and pull requests under this release may be found under the
