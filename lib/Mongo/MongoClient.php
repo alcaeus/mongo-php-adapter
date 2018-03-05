@@ -93,7 +93,7 @@ class MongoClient
         $this->applyConnectionOptions($server, $options);
 
         $this->server = $server;
-        if (false === strpos($this->server, 'mongodb://')) {
+        if (false === strpos($this->server, '://')) {
             $this->server = 'mongodb://' . $this->server;
         }
         $this->client = new Client($this->server, $options, $driverOptions);
