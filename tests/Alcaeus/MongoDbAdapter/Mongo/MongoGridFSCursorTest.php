@@ -25,7 +25,7 @@ class MongoGridFSCursorTest extends TestCase
         $cursor = $gridfs->find(['filename' => 'foo.txt']);
         $this->assertCount(1, $cursor);
         foreach ($cursor as $key => $value) {
-            $this->assertSame((string)$id, $key);
+            $this->assertSame((string) $id, $key);
             $this->assertInstanceOf('MongoGridFSFile', $value);
             $this->assertSame('foo', $value->getBytes());
 

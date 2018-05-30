@@ -51,7 +51,7 @@ class MongoGridFSFileTest extends TestCase
 
         $file->write();
 
-        $this->assertTrue(file_exists($filename));
+        $this->assertFileExists($filename);
         $this->assertSame('e2fc714c4727ee9395f324cd2e7f331f', md5_file($filename));
         unlink($filename);
     }
@@ -66,7 +66,7 @@ class MongoGridFSFileTest extends TestCase
 
         $file->write($filename);
 
-        $this->assertTrue(file_exists($filename));
+        $this->assertFileExists($filename);
         $this->assertSame('e2fc714c4727ee9395f324cd2e7f331f', md5_file($filename));
         unlink($filename);
     }

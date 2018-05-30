@@ -83,7 +83,7 @@ class MongoWriteBatch
     public function add($item)
     {
         if (is_object($item)) {
-            $item = (array)$item;
+            $item = (array) $item;
         }
 
         $this->validate($item);
@@ -132,6 +132,17 @@ class MongoWriteBatch
 
         switch ($this->batchType) {
             case self::COMMAND_UPDATE:
+                if ($options['writeConcern']->getW() === 0) {
+                    $resultDocument += [
+                        'nMatched' => 0,
+                        'nModified' => 0,
+                        'nUpserted' => 0,
+                        'ok' => true,
+                    ];
+
+                    break;
+                }
+
                 $upsertedIds = [];
                 foreach ($writeResult->getUpsertedIds() as $index => $id) {
                     $upsertedIds[] = [
@@ -153,6 +164,15 @@ class MongoWriteBatch
                 break;
 
             case self::COMMAND_DELETE:
+                if ($options['writeConcern']->getW() === 0) {
+                    $resultDocument += [
+                        'nRemoved' => 0,
+                        'ok' => true,
+                    ];
+
+                    break;
+                }
+
                 $resultDocument += [
                     'nRemoved' => $writeResult->getDeletedCount(),
                     'ok' => true,
@@ -160,6 +180,15 @@ class MongoWriteBatch
                 break;
 
             case self::COMMAND_INSERT:
+                if ($options['writeConcern']->getW() === 0) {
+                    $resultDocument += [
+                        'nInserted' => 0,
+                        'ok' => true,
+                    ];
+
+                    break;
+                }
+
                 $resultDocument += [
                     'nInserted' => $writeResult->getInsertedCount(),
                     'ok' => true,

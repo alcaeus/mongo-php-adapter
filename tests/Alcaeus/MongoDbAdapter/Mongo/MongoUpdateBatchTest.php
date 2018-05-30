@@ -104,6 +104,35 @@ class MongoUpdateBatchTest extends TestCase
         $this->assertAttributeSame('foo', 'foo', $record);
     }
 
+    public function testUpdateManyWithoutAck()
+    {
+        $collection = $this->getCollection();
+        $batch = new \MongoUpdateBatch($collection);
+
+        $document = ['foo' => 'bar'];
+        $collection->insert($document);
+        unset($document['_id']);
+        $collection->insert($document);
+
+        $this->assertTrue($batch->add(['q' => ['foo' => 'bar'], 'u' => ['$set' => ['foo' => 'foo']], 'multi' => true]));
+
+        $expected = [
+            'nMatched' => 0,
+            'nModified' => 0,
+            'nUpserted' => 0,
+            'ok' => true,
+        ];
+
+        $this->assertSame($expected, $batch->execute(['w' => 0]));
+
+        $newCollection = $this->getCheckDatabase()->selectCollection('test');
+        $this->assertSame(2, $newCollection->count());
+        $record = $newCollection->findOne();
+        $this->assertNotNull($record);
+        $this->assertObjectHasAttribute('foo', $record);
+        $this->assertAttributeSame('foo', 'foo', $record);
+    }
+
     public function testUpdateManyException()
     {
         $collection = $this->getCollection();

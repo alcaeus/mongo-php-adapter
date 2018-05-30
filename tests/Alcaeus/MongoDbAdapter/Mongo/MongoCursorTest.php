@@ -200,7 +200,8 @@ class MongoCursorTest extends TestCase
 
     public static function getCursorOptions()
     {
-        function getMissingOptionCallback($optionName) {
+        function getMissingOptionCallback($optionName)
+        {
             return function ($value) use ($optionName) {
                 return
                     is_array($value) &&
@@ -208,7 +209,8 @@ class MongoCursorTest extends TestCase
             };
         }
 
-        function getBasicCheckCallback($expected, $optionName) {
+        function getBasicCheckCallback($expected, $optionName)
+        {
             return function ($value) use ($expected, $optionName) {
                 return
                     is_array($value) &&
@@ -217,7 +219,8 @@ class MongoCursorTest extends TestCase
             };
         }
 
-        function getModifierCheckCallback($expected, $modifierName) {
+        function getModifierCheckCallback($expected, $modifierName)
+        {
             return function ($value) use ($expected, $modifierName) {
                 return
                     is_array($value) &&

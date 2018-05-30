@@ -1,3 +1,4 @@
 composer.lock
+.phpcs-cache
 vendor/
 tests/scripts/

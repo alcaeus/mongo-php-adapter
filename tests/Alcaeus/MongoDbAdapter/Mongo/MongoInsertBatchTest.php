@@ -34,6 +34,28 @@ class MongoInsertBatchTest extends TestCase
         $this->assertAttributeSame('bar', 'foo', $record);
     }
 
+    public function testInsertBatchWithoutAck()
+    {
+        $batch = new \MongoInsertBatch($this->getCollection());
+
+        $this->assertTrue($batch->add(['foo' => 'bar']));
+        $this->assertTrue($batch->add(['bar' => 'foo']));
+
+        $expected = [
+            'nInserted' => 0,
+            'ok' => true,
+        ];
+
+        $this->assertSame($expected, $batch->execute(['w' => 0]));
+
+        $newCollection = $this->getCheckDatabase()->selectCollection('test');
+        $this->assertSame(2, $newCollection->count());
+        $record = $newCollection->findOne();
+        $this->assertNotNull($record);
+        $this->assertObjectHasAttribute('foo', $record);
+        $this->assertAttributeSame('bar', 'foo', $record);
+    }
+
     public function testInsertBatchError()
     {
         $collection = $this->getCollection();
