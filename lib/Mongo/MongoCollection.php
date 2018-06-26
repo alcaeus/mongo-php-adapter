@@ -983,7 +983,7 @@ class MongoCollection
     private function checkKeys(array $array)
     {
         foreach ($array as $key => $value) {
-            if (empty($key) && $key !== 0) {
+            if (empty($key) && $key !== 0 && $key !== '0') {
                 throw new \MongoException('zero-length keys are not allowed, did you use $ with double quotes?');
             }
 
