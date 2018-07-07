@@ -45,7 +45,7 @@ class ExceptionConverter
             case Exception\WriteException::class:
                 $writeResult = $e->getWriteResult();
 
-                if ($writeResult) {
+                if ($writeResult && $writeResult->getWriteErrors() !== []) {
                     $writeError = $writeResult->getWriteErrors()[0];
 
                     $message = $writeError->getMessage();
