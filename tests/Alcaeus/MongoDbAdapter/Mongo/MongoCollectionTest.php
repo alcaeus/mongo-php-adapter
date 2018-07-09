@@ -130,6 +130,20 @@ class MongoCollectionTest extends TestCase
         $this->assertSame(1, $this->getCollection()->count(['foo']));
     }
 
+    public function testInsertWithAlphaNumbericKey()
+    {
+        /**
+         * Force the array to store the key as a string "0".
+         * Initialising like ['0' => 'foo'] casts the string to an int.
+         */
+        $document = new \stdClass();
+        $document->{'0'} = 'foo';
+        $document = (array) $document;
+
+        $this->getCollection()->insert($document);
+        $this->assertSame(1, $this->getCollection()->count(['0' => 'foo']));
+    }
+
     public function testInsertDuplicate()
     {
         $collection = $this->getCollection();
