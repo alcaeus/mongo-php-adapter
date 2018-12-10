@@ -9,6 +9,7 @@ services:
 php:
   - 7.0
   - 7.1
+  - 7.2
 
 env:
   global:
@@ -36,7 +37,7 @@ jobs:
   include:
     # Run tests with coverage
     - stage: test
-      php: 7.2
+      php: 7.3
       script:
         - vendor/bin/phpunit --coverage-clover=coverage.clover
       after_script:
@@ -63,7 +64,7 @@ jobs:
 
     - stage: Code Quality
       env: CODING_STANDARDS
-      php: 7.1
+      php: 7.2
       script:
         - ./vendor/bin/phpcs
 
