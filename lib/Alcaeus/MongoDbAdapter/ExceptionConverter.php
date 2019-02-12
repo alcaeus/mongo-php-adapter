@@ -16,6 +16,8 @@
 namespace Alcaeus\MongoDbAdapter;
 
 use MongoDB\Driver\Exception;
+use MongoDB\Driver\WriteError;
+use MongoDB\Driver\WriteResult;
 
 /**
  * @internal
@@ -44,12 +46,13 @@ class ExceptionConverter
             case Exception\BulkWriteException::class:
             case Exception\WriteException::class:
                 $writeResult = $e->getWriteResult();
-
-                if ($writeResult && $writeResult->getWriteErrors() !== []) {
+                // attempt to retrieve write error
+                if ($writeResult instanceof WriteResult && is_array($writeResult->getWriteErrors()) && $writeResult->getWriteErrors() !== []) {
                     $writeError = $writeResult->getWriteErrors()[0];
-
-                    $message = $writeError->getMessage();
-                    $code = $writeError->getCode();
+                    if ($writeError instanceof WriteError) {
+                        $message = $writeError->getMessage();
+                        $code = $writeError->getCode();
+                    }
                 }
 
                 switch ($code) {
