@@ -279,6 +279,14 @@ class MongoClientTest extends TestCase
         $collection->insert($document);
     }
 
+    public function testConnectionUriOptionIntegerTypeCasting()
+    {
+        $client = new \MongoClient('mongodb://localhost/db?w=0&wtimeout=0', ['connect' => false]);
+
+        $this->skipTestIf(extension_loaded('mongo'));
+        $this->assertSame(['w' => 0, 'wtimeout' => 0], $client->getWriteConcern());
+    }
+
     /**
      * @param array $options
      * @return string
