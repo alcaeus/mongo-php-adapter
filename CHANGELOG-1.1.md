@@ -3,6 +3,17 @@ CHANGELOG for 1.1.x
 
 This changelog references the relevant changes done in minor version updates.
 
+1.1.7 (2019-04-06)
+------------------
+
+All issues and pull requests under this release may be found under the
+[1.1.7](https://github.com/alcaeus/mongo-php-adapter/issues?q=milestone%3A1.1.7)
+milestone.
+
+ * [#250](https://github.com/alcaeus/mongo-php-adapter/pull/250) fixes type
+ conversion when passing write concern to `MongoClient` via URL arguments.
+
+
 1.1.6 (2019-02-08)
 ------------------
 
@@ -11,7 +22,7 @@ All issues and pull requests under this release may be found under the
 milestone.
 
  * [#244](https://github.com/alcaeus/mongo-php-adapter/pull/244) fixes a null
- acces when converting exceptions.
+ access when converting exceptions.
  * [#236](https://github.com/alcaeus/mongo-php-adapter/pull/236) allows using
  `0` as key in documents.
  * [#234](https://github.com/alcaeus/mongo-php-adapter/pull/234) removes an
