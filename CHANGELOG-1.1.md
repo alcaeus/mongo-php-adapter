@@ -3,6 +3,16 @@ CHANGELOG for 1.1.x
 
 This changelog references the relevant changes done in minor version updates.
 
+1.1.8 (2019-07-14)
+------------------
+
+All issues and pull requests under this release may be found under the
+[1.1.8](https://github.com/alcaeus/mongo-php-adapter/issues?q=milestone%3A1.1.8)
+milestone.
+
+ * [#253](https://github.com/alcaeus/mongo-php-adapter/pull/253) fixes wrong
+ handling of `ArrayObject` instances in `MongoCollection::insert`.
+
 1.1.7 (2019-04-06)
 ------------------
 
