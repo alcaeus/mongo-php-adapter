@@ -999,12 +999,12 @@ class MongoCollection
      */
     private function ensureDocumentHasMongoId(&$document)
     {
-        if (is_array($document)) {
+        if (is_array($document) || $document instanceof ArrayObject) {
             if (! isset($document['_id'])) {
                 $document['_id'] = new \MongoId();
             }
 
-            $this->checkKeys($document);
+            $this->checkKeys((array) $document);
 
             return $document['_id'];
         } elseif (is_object($document)) {

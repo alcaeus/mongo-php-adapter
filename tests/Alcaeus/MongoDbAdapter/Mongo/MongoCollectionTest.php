@@ -2,9 +2,11 @@
 
 namespace Alcaeus\MongoDbAdapter\Tests\Mongo;
 
+use ArrayObject;
 use MongoDB\BSON\Regex;
 use MongoDB\Driver\ReadPreference;
 use Alcaeus\MongoDbAdapter\Tests\TestCase;
+use MongoId;
 use PHPUnit\Framework\Error\Warning;
 
 /**
@@ -93,6 +95,15 @@ class MongoCollectionTest extends TestCase
 
         $document = new PrivatePropertiesStub();
         $this->getCollection()->insert($document);
+    }
+
+    public function testInsertArrayObjectWithProtectedProperties()
+    {
+        $document = new ArrayObjectWithProtectedProperties(['foo' => 'bar']);
+        $this->getCollection()->insert($document);
+
+        $this->assertInstanceOf('MongoId', $document['_id']);
+        $this->assertEquals(['_id' => $document['_id'], 'foo' => 'bar'], $this->getCollection()->findOne(['_id' => $document['_id']]));
     }
 
     public function testInsertWithInvalidKey()
@@ -1990,4 +2001,9 @@ class MongoCollectionTest extends TestCase
 class PrivatePropertiesStub
 {
     private $foo = 'bar';
+}
+
+class ArrayObjectWithProtectedProperties extends ArrayObject
+{
+    protected $something = 'baz';
 }
