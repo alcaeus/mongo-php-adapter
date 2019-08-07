@@ -3,6 +3,16 @@ CHANGELOG for 1.1.x
 
 This changelog references the relevant changes done in minor version updates.
 
+1.1.9 (2019-08-07)
+------------------
+
+All issues and pull requests under this release may be found under the
+[1.1.9](https://github.com/alcaeus/mongo-php-adapter/issues?q=milestone%3A1.1.9)
+milestone.
+
+ * [#255](https://github.com/alcaeus/mongo-php-adapter/pull/255) fixes inserting
+ documents with identifiers PHP considers empty.
+
 1.1.8 (2019-07-14)
 ------------------
 
