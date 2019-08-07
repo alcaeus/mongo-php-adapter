@@ -277,7 +277,7 @@ class MongoCollection
      */
     public function insert(&$a, array $options = [])
     {
-        if (! $this->ensureDocumentHasMongoId($a)) {
+        if ($this->ensureDocumentHasMongoId($a) === null) {
             trigger_error(sprintf('%s(): expects parameter %d to be an array or object, %s given', __METHOD__, 1, gettype($a)), E_USER_WARNING);
             return;
         }

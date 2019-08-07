@@ -80,6 +80,34 @@ class MongoCollectionTest extends TestCase
         $this->assertSame(1, $this->getCollection()->count(['_id' => $document['_id']]));
     }
 
+    /**
+     * @dataProvider emptyIdProvider
+     */
+    public function testInsertArrayWithEmptyIds($id)
+    {
+        $document = ['_id' => $id];
+        $this->getCollection()->insert($document);
+
+        $this->assertSame(1, $this->getCollection()->count(['_id' => $id]));
+    }
+
+    public function emptyIdProvider()
+    {
+        return [
+            'Zero as string' => ['0'],
+            'Zero as int' => [0],
+            'Empty string' => [''],
+        ];
+    }
+
+    public function testInsertArrayWithEmptyId()
+    {
+        $document = ['_id' => ''];
+        $this->getCollection()->insert($document);
+
+        $this->assertSame(1, $this->getCollection()->count(['_id' => $document['_id']]));
+    }
+
     public function testInsertEmptyObject()
     {
         $document = (object) [];
