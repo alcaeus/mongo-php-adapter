@@ -20,6 +20,7 @@ if (class_exists('MongoCollection', false)) {
 use Alcaeus\MongoDbAdapter\Helper;
 use Alcaeus\MongoDbAdapter\TypeConverter;
 use Alcaeus\MongoDbAdapter\ExceptionConverter;
+use MongoDB\Driver\Exception\CommandException;
 
 /**
  * Represents a database collection.
@@ -626,7 +627,9 @@ class MongoCollection
 
             $this->collection->createIndex($keys, $options);
         } catch (\MongoDB\Driver\Exception\Exception $e) {
-            throw ExceptionConverter::toLegacy($e, 'MongoResultException');
+            if (! $e instanceof CommandException || strpos($e->getMessage(), 'with a different name') === false) {
+                throw ExceptionConverter::toLegacy($e, 'MongoResultException');
+            }
         }
 
         $result = [

@@ -8,6 +8,7 @@ use MongoDB\Driver\ReadPreference;
 use Alcaeus\MongoDbAdapter\Tests\TestCase;
 use MongoId;
 use PHPUnit\Framework\Error\Warning;
+use function extension_loaded;
 
 /**
  * @author alcaeus <alcaeus@alcaeus.org>
@@ -844,6 +845,8 @@ class MongoCollectionTest extends TestCase
 
     public function testAggregate()
     {
+        $this->skipTestIf(extension_loaded('mongo'));
+
         $collection = $this->getCollection();
 
         $this->prepareData();
@@ -860,7 +863,7 @@ class MongoCollectionTest extends TestCase
             ]
         ];
 
-        $result = $collection->aggregate($pipeline);
+        $result = $collection->aggregate($pipeline, ['cursor' => true]);
         $this->assertInternalType('array', $result);
         $this->assertArrayHasKey('result', $result);
 
@@ -872,6 +875,8 @@ class MongoCollectionTest extends TestCase
 
     public function testAggregateWithMultiplePilelineOperatorsAsArguments()
     {
+        $this->skipTestIf(version_compare($this->getServerVersion(), '3.6.0', '>='), 'Test does not apply to MongoDB >= 3.6.');
+
         $collection = $this->getCollection();
 
         $this->prepareData();
@@ -906,6 +911,8 @@ class MongoCollectionTest extends TestCase
 
     public function testAggregateInvalidPipeline()
     {
+        $this->skipTestIf(extension_loaded('mongo'));
+
         $collection = $this->getCollection();
 
         $pipeline = [
@@ -916,7 +923,7 @@ class MongoCollectionTest extends TestCase
 
         $this->expectException(\MongoResultException::class);
         $this->expectExceptionMessage('Unrecognized pipeline stage name');
-        $collection->aggregate($pipeline);
+        $collection->aggregate($pipeline, ['cursor' => true]);
     }
 
     public function testAggregateTimeoutException()
@@ -939,7 +946,7 @@ class MongoCollectionTest extends TestCase
             ]
         ];
 
-        $collection->aggregate($pipeline, ['maxTimeMS' => 1]);
+        $collection->aggregate($pipeline, ['maxTimeMS' => 1, 'cursor' => true]);
     }
 
     public function testAggregateCursor()
@@ -1723,6 +1730,8 @@ class MongoCollectionTest extends TestCase
 
     public function testGroup()
     {
+        $this->skipTestIf(version_compare($this->getServerVersion(), '4.2.0', '>='), 'Test does not apply to MongoDB >= 4.2.');
+
         $collection = $this->getCollection();
 
         $document1 = ['a' => 2];
@@ -1887,7 +1896,6 @@ class MongoCollectionTest extends TestCase
                 'ns' => 'mongo-php-adapter.test',
                 'nrecords' => 1,
                 'nIndexes' => 1,
-                'keysPerIndex' => ['mongo-php-adapter.test.$_id_' => 1],
                 'valid' => true,
                 'errors' => [],
             ],
@@ -1904,7 +1912,7 @@ class MongoCollectionTest extends TestCase
             'nIndexesWas' => 1,
             'ok' => 1.0
         ];
-        $this->assertSame($expected, $this->getCollection()->drop());
+        $this->assertEquals($expected, $this->getCollection()->drop());
     }
 
     public function testEmptyCollectionName()
