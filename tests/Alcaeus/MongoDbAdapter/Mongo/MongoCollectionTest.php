@@ -1896,7 +1896,6 @@ class MongoCollectionTest extends TestCase
                 'ns' => 'mongo-php-adapter.test',
                 'nrecords' => 1,
                 'nIndexes' => 1,
-                'keysPerIndex' => ['mongo-php-adapter.test.$_id_' => 1],
                 'valid' => true,
                 'errors' => [],
             ],
