@@ -290,7 +290,7 @@ class MongoDBTest extends TestCase
                         ],
                     ];
                 }
-                $this->assertEquals($expected, $collectionInfo);
+                $this->assertArraySubset($expected, $collectionInfo);
                 return;
             }
         }
