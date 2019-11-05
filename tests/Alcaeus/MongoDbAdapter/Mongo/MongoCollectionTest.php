@@ -1730,6 +1730,8 @@ class MongoCollectionTest extends TestCase
 
     public function testGroup()
     {
+        $this->skipTestIf(version_compare($this->getServerVersion(), '4.2.0', '>='), 'Test does not apply to MongoDB >= 4.2.');
+
         $collection = $this->getCollection();
 
         $document1 = ['a' => 2];
