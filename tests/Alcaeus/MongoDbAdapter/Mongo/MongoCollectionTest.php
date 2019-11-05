@@ -1912,7 +1912,7 @@ class MongoCollectionTest extends TestCase
             'nIndexesWas' => 1,
             'ok' => 1.0
         ];
-        $this->assertSame($expected, $this->getCollection()->drop());
+        $this->assertEquals($expected, $this->getCollection()->drop());
     }
 
     public function testEmptyCollectionName()
