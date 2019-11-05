@@ -153,18 +153,19 @@ abstract class TestCase extends BaseTestCase
     /**
      * @param bool $condition
      */
-    protected function skipTestUnless($condition)
+    protected function skipTestUnless($condition, $message = null)
     {
-        $this->skipTestIf(! $condition);
+        $this->skipTestIf(! $condition, $message);
     }
 
     /**
      * @param bool $condition
+     * @param string|null $message
      */
-    protected function skipTestIf($condition)
+    protected function skipTestIf($condition, $message = null)
     {
         if ($condition) {
-            $this->markTestSkipped('Test only applies when running against mongo-php-adapter');
+            $this->markTestSkipped($message !== null ? $message : 'Test only applies when running against mongo-php-adapter');
         }
     }
 
