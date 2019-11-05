@@ -28,7 +28,7 @@ use MongoDB\Operation\Find;
  * Result object for database query.
  * @link http://www.php.net/manual/en/class.mongocursor.php
  */
-class MongoCursor extends AbstractCursor implements Iterator
+class MongoCursor extends AbstractCursor implements Iterator, Countable
 {
     /**
      * @var bool
