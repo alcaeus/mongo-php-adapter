@@ -184,7 +184,11 @@ abstract class TestCase extends BaseTestCase
     protected function getFeatureCompatibilityVersion()
     {
         $featureCompatibilityVersion = $this->getClient()->selectDB('admin')->command(['getParameter' => true, 'featureCompatibilityVersion' => true]);
-        return isset($featureCompatibilityVersion['featureCompatibilityVersion']) ? $featureCompatibilityVersion['featureCompatibilityVersion'] : '3.2';
+        if (! isset($featureCompatibilityVersion['featureCompatibilityVersion'])) {
+            return '3.2';
+        }
+
+        return isset($featureCompatibilityVersion['featureCompatibilityVersion']['version']) ? $featureCompatibilityVersion['featureCompatibilityVersion']['version'] : $featureCompatibilityVersion['featureCompatibilityVersion'];
     }
 
     /**
@@ -200,6 +204,6 @@ abstract class TestCase extends BaseTestCase
 
         // Check featureCompatibilityFlag
         $compatibilityVersion = $this->getFeatureCompatibilityVersion();
-        return $compatibilityVersion === '3.4' ? self::INDEX_VERSION_2 : self::INDEX_VERSION_1;
+        return version_compare($compatibilityVersion, '3.4', '>=') ? self::INDEX_VERSION_2 : self::INDEX_VERSION_1;
     }
 }
