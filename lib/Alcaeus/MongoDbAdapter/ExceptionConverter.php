@@ -32,6 +32,12 @@ class ExceptionConverter
      */
     public static function toLegacy(Exception\Exception $e, $fallbackClass = 'MongoException')
     {
+        // Starting with ext-mongodb 1.6.0, errors during bulk write are always wrapped in a BulkWriteException.
+        // If a BulkWriteException wraps another driver exception, use that instead.
+        if ($e instanceof Exception\BulkWriteException && $e->getPrevious() instanceof Exception\Exception) {
+            $e = $e->getPrevious();
+        }
+
         $message = $e->getMessage();
         $code = $e->getCode();
 
