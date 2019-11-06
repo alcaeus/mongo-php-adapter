@@ -4,6 +4,8 @@ namespace Alcaeus\MongoDbAdapter\Tests\Mongo;
 
 use Alcaeus\MongoDbAdapter\Tests\TestCase;
 use Alcaeus\MongoDbAdapter\TypeConverter;
+use Countable;
+use MongoCursorInterface;
 use MongoDB\Driver\ReadPreference;
 use MongoDB\Model\BSONDocument;
 use MongoDB\Operation\Find;
@@ -514,6 +516,19 @@ class MongoCursorTest extends TestCase
         ];
 
         $this->assertArraySubset($expected, $cursor->explain());
+    }
+
+    public function testInterfaces()
+    {
+        $collection = $this->getCollection();
+        $cursor = $collection->find();
+
+        $this->assertInstanceOf(MongoCursorInterface::class, $cursor);
+
+        // The countable interface is necessary for compatibility with PHP 7.3+, but not implemented by MongoCursor
+        if (! extension_loaded('mongo')) {
+            $this->assertInstanceOf(Countable::class, $cursor);
+        }
     }
 
 
