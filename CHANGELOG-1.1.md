@@ -3,6 +3,20 @@ CHANGELOG for 1.1.x
 
 This changelog references the relevant changes done in minor version updates.
 
+1.1.10 (2019-11-06)
+-------------------
+
+All issues and pull requests under this release may be found under the
+[1.1.10](https://github.com/alcaeus/mongo-php-adapter/issues?q=milestone%3A1.1.10)
+milestone.
+
+ * [#261](https://github.com/alcaeus/mongo-php-adapter/pull/261) fixes missing
+ interface implementations in cursor classes.
+ * [#260](https://github.com/alcaeus/mongo-php-adapter/pull/260) fixes issues
+ when running against MongoDB 4.2 or `ext-mongodb` 1.6.
+ * [#259](https://github.com/alcaeus/mongo-php-adapter/pull/259) fixes issues on
+ PHP 7.3 due to `MongoCursor` not implementing `Countable`.
+
 1.1.9 (2019-08-07)
 ------------------
 
