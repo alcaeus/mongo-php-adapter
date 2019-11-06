@@ -2,6 +2,7 @@
 
 namespace Alcaeus\MongoDbAdapter\Tests\Mongo;
 
+use MongoCursorInterface;
 use MongoDB\Database;
 use MongoDB\Driver\ReadPreference;
 use Alcaeus\MongoDbAdapter\Tests\TestCase;
@@ -201,5 +202,13 @@ class MongoCommandCursorTest extends TestCase
                 ReadPreference::RP_SECONDARY,
             ],
         ];
+    }
+
+    public function testInterfaces()
+    {
+        $this->prepareData();
+        $cursor = $this->getCollection()->aggregateCursor([['$match' => ['foo' => 'bar']]]);
+
+        $this->assertInstanceOf(MongoCursorInterface::class, $cursor);
     }
 }
