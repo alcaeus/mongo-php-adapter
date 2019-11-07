@@ -131,6 +131,11 @@ abstract class AbstractCursor
         }
     }
 
+    public function __destruct()
+    {
+        $this->iterator = null;
+    }
+
     /**
      * Returns the current element
      * @link http://www.php.net/manual/en/mongocursor.current.php
