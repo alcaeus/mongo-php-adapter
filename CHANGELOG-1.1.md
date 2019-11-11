@@ -3,6 +3,18 @@ CHANGELOG for 1.1.x
 
 This changelog references the relevant changes done in minor version updates.
 
+1.1.11 (2019-11-11)
+-------------------
+
+All issues and pull requests under this release may be found under the
+[1.1.11](https://github.com/alcaeus/mongo-php-adapter/issues?q=milestone%3A1.1.11)
+milestone.
+
+ * [#263](https://github.com/alcaeus/mongo-php-adapter/pull/263) fixes test
+ failures on PHP 7.4.
+ * [#262](https://github.com/alcaeus/mongo-php-adapter/pull/262) fixes a memory
+ leak due to generators that aren't freed.
+
 1.1.10 (2019-11-06)
 -------------------
 
