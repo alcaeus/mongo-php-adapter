@@ -47,10 +47,10 @@ class MongoCollectionTest extends TestCase
         $object = $newCollection->findOne();
 
         $this->assertNotNull($object);
-        $this->assertAttributeInstanceOf('MongoDB\BSON\ObjectID', '_id', $object);
+        $this->assertInstanceOf('MongoDB\BSON\ObjectID', $object->_id);
         $this->assertSame($id, (string) $object->_id);
-        $this->assertObjectHasAttribute('foo', $object);
-        $this->assertAttributeSame('bar', 'foo', $object);
+        $this->assertNotNull($object->foo);
+        $this->assertSame('bar', $object->foo);
     }
 
     public function testInsertInvalidData()
@@ -1072,10 +1072,9 @@ class MongoCollectionTest extends TestCase
         $object = $newCollection->findOne();
 
         $this->assertNotNull($object);
-        $this->assertAttributeInstanceOf('MongoDB\BSON\ObjectID', '_id', $object);
+        $this->assertInstanceOf('MongoDB\BSON\ObjectID', $object->_id);
         $this->assertSame($id, (string) $object->_id);
-        $this->assertObjectHasAttribute('foo', $object);
-        $this->assertAttributeSame('bar', 'foo', $object);
+        $this->assertSame('bar', $object->foo);
     }
 
     public function testRemoveOne()
@@ -1115,10 +1114,9 @@ class MongoCollectionTest extends TestCase
         $object = $newCollection->findOne();
 
         $this->assertNotNull($object);
-        $this->assertAttributeInstanceOf('MongoDB\BSON\ObjectID', '_id', $object);
+        $this->assertInstanceOf('MongoDB\BSON\ObjectID', $object->_id);
         $this->assertSame($id, (string) $object->_id);
-        $this->assertObjectHasAttribute('foo', $object);
-        $this->assertAttributeSame('foo', 'foo', $object);
+        $this->assertSame('foo', $object->foo);
     }
 
     public function testSavingShouldReplaceTheWholeDocument()
@@ -1137,7 +1135,7 @@ class MongoCollectionTest extends TestCase
         $object = $newCollection->findOne();
 
         $this->assertNotNull($object);
-        $this->assertObjectNotHasAttribute('foo', $object);
+        $this->assertArrayNotHasKey('bar', $object);
     }
 
     public function testSaveDuplicate()
@@ -1612,7 +1610,7 @@ class MongoCollectionTest extends TestCase
         $object = $newCollection->findOne();
 
         $this->assertNotNull($object);
-        $this->assertAttributeSame('foo', 'foo', $object);
+        $this->assertSame('foo', $object->foo);
     }
 
     public function testFindAndModifyUpdateWithUpdateOptions()
@@ -1637,8 +1635,8 @@ class MongoCollectionTest extends TestCase
         $object = $newCollection->findOne();
 
         $this->assertNotNull($object);
-        $this->assertAttributeSame('foo', 'bar', $object);
-        $this->assertObjectNotHasAttribute('foo', $object);
+        $this->assertSame('foo', $object->bar);
+        $this->assertArrayNotHasKey('foo', $object);
     }
 
     public function testFindAndModifyWithUpdateParamAndOption()
@@ -1666,8 +1664,8 @@ class MongoCollectionTest extends TestCase
         $object = $newCollection->findOne();
 
         $this->assertNotNull($object);
-        $this->assertAttributeSame('foobar', 'foo', $object);
-        $this->assertObjectNotHasAttribute('bar', $object);
+        $this->assertSame('foobar', $object->foo);
+        $this->assertArrayNotHasKey('bar', $object);
     }
 
     public function testFindAndModifyUpdateReplace()
@@ -1688,8 +1686,8 @@ class MongoCollectionTest extends TestCase
         $object = $newCollection->findOne();
 
         $this->assertNotNull($object);
-        $this->assertAttributeSame('boo', 'foo', $object);
-        $this->assertObjectNotHasAttribute('bar', $object);
+        $this->assertSame('boo', $object->foo);
+        $this->assertArrayNotHasKey('bar', $object);
     }
 
     public function testFindAndModifyUpdateReturnNew()
