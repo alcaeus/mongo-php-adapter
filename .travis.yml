@@ -5,11 +5,12 @@ language: php
 services:
   - mongodb
 
-# Note: latest PHP version is tested with coverage
 php:
   - 7.0
   - 7.1
   - 7.2
+  - 7.3
+  - 7.4snapshot
 
 env:
   global:
