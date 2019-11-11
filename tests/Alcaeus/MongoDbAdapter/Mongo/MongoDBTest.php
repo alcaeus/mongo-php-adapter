@@ -240,6 +240,8 @@ class MongoDBTest extends TestCase
 
     public function testExecute()
     {
+        $this->skipTestIf(version_compare($this->getServerVersion(), '4.2.0', '>='), 'Eval no longer works on MongoDB 4.2.0 and newer');
+
         $db = $this->getDatabase();
         $document = ['foo' => 'bar'];
         $this->getCollection()->insert($document);
@@ -384,11 +386,13 @@ class MongoDBTest extends TestCase
             'nIndexesWas' => 1,
             'ok' => 1.0
         ];
-        $this->assertSame($expected, $this->getDatabase()->dropCollection('test'));
+        $this->assertEquals($expected, $this->getDatabase()->dropCollection('test'));
     }
 
     public function testRepair()
     {
+        $this->skipTestIf(version_compare($this->getServerVersion(), '4.2.0', '>='), 'The "repairDatabase" has been removed in MongoDB 4.2.0');
+
         $this->assertSame(['ok' => 1.0], $this->getDatabase()->repair());
     }
 }
