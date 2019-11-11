@@ -30,8 +30,7 @@ class MongoInsertBatchTest extends TestCase
         $this->assertSame(2, $newCollection->count());
         $record = $newCollection->findOne();
         $this->assertNotNull($record);
-        $this->assertObjectHasAttribute('foo', $record);
-        $this->assertAttributeSame('bar', 'foo', $record);
+        $this->assertSame('bar', $record->foo);
     }
 
     public function testInsertBatchWithoutAck()
@@ -52,8 +51,7 @@ class MongoInsertBatchTest extends TestCase
         $this->assertSame(2, $newCollection->count());
         $record = $newCollection->findOne();
         $this->assertNotNull($record);
-        $this->assertObjectHasAttribute('foo', $record);
-        $this->assertAttributeSame('bar', 'foo', $record);
+        $this->assertSame('bar', $record->foo);
     }
 
     public function testInsertBatchError()

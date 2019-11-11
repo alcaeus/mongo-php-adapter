@@ -35,8 +35,7 @@ class MongoUpdateBatchTest extends TestCase
         $this->assertSame(1, $newCollection->count());
         $record = $newCollection->findOne();
         $this->assertNotNull($record);
-        $this->assertObjectHasAttribute('foo', $record);
-        $this->assertAttributeSame('foo', 'foo', $record);
+        $this->assertSame('foo', $record->foo);
     }
 
     public function testUpdateOneException()
@@ -100,8 +99,7 @@ class MongoUpdateBatchTest extends TestCase
         $this->assertSame(2, $newCollection->count());
         $record = $newCollection->findOne();
         $this->assertNotNull($record);
-        $this->assertObjectHasAttribute('foo', $record);
-        $this->assertAttributeSame('foo', 'foo', $record);
+        $this->assertSame('foo', $record->foo);
     }
 
     public function testUpdateManyWithoutAck()
@@ -129,8 +127,7 @@ class MongoUpdateBatchTest extends TestCase
         $this->assertSame(2, $newCollection->count());
         $record = $newCollection->findOne();
         $this->assertNotNull($record);
-        $this->assertObjectHasAttribute('foo', $record);
-        $this->assertAttributeSame('foo', 'foo', $record);
+        $this->assertSame('foo', $record->foo);
     }
 
     public function testUpdateManyException()
@@ -200,8 +197,7 @@ class MongoUpdateBatchTest extends TestCase
         $this->assertSame(2, $newCollection->count());
         $record = $newCollection->findOne();
         $this->assertNotNull($record);
-        $this->assertObjectHasAttribute('foo', $record);
-        $this->assertAttributeSame('bar', 'foo', $record);
+        $this->assertSame('bar', $record->foo);
     }
 
     public function testValidateItem()
