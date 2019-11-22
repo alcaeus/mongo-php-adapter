@@ -2,10 +2,13 @@
 
 namespace Alcaeus\MongoDbAdapter\Tests\Mongo;
 
+use ArrayObject;
 use MongoDB\BSON\Regex;
 use MongoDB\Driver\ReadPreference;
 use Alcaeus\MongoDbAdapter\Tests\TestCase;
+use MongoId;
 use PHPUnit\Framework\Error\Warning;
+use function extension_loaded;
 
 /**
  * @author alcaeus <alcaeus@alcaeus.org>
@@ -44,10 +47,10 @@ class MongoCollectionTest extends TestCase
         $object = $newCollection->findOne();
 
         $this->assertNotNull($object);
-        $this->assertAttributeInstanceOf('MongoDB\BSON\ObjectID', '_id', $object);
+        $this->assertInstanceOf('MongoDB\BSON\ObjectID', $object->_id);
         $this->assertSame($id, (string) $object->_id);
-        $this->assertObjectHasAttribute('foo', $object);
-        $this->assertAttributeSame('bar', 'foo', $object);
+        $this->assertNotNull($object->foo);
+        $this->assertSame('bar', $object->foo);
     }
 
     public function testInsertInvalidData()
@@ -78,6 +81,34 @@ class MongoCollectionTest extends TestCase
         $this->assertSame(1, $this->getCollection()->count(['_id' => $document['_id']]));
     }
 
+    /**
+     * @dataProvider emptyIdProvider
+     */
+    public function testInsertArrayWithEmptyIds($id)
+    {
+        $document = ['_id' => $id];
+        $this->getCollection()->insert($document);
+
+        $this->assertSame(1, $this->getCollection()->count(['_id' => $id]));
+    }
+
+    public function emptyIdProvider()
+    {
+        return [
+            'Zero as string' => ['0'],
+            'Zero as int' => [0],
+            'Empty string' => [''],
+        ];
+    }
+
+    public function testInsertArrayWithEmptyId()
+    {
+        $document = ['_id' => ''];
+        $this->getCollection()->insert($document);
+
+        $this->assertSame(1, $this->getCollection()->count(['_id' => $document['_id']]));
+    }
+
     public function testInsertEmptyObject()
     {
         $document = (object) [];
@@ -93,6 +124,15 @@ class MongoCollectionTest extends TestCase
 
         $document = new PrivatePropertiesStub();
         $this->getCollection()->insert($document);
+    }
+
+    public function testInsertArrayObjectWithProtectedProperties()
+    {
+        $document = new ArrayObjectWithProtectedProperties(['foo' => 'bar']);
+        $this->getCollection()->insert($document);
+
+        $this->assertInstanceOf('MongoId', $document['_id']);
+        $this->assertEquals(['_id' => $document['_id'], 'foo' => 'bar'], $this->getCollection()->findOne(['_id' => $document['_id']]));
     }
 
     public function testInsertWithInvalidKey()
@@ -805,6 +845,8 @@ class MongoCollectionTest extends TestCase
 
     public function testAggregate()
     {
+        $this->skipTestIf(extension_loaded('mongo'));
+
         $collection = $this->getCollection();
 
         $this->prepareData();
@@ -821,7 +863,7 @@ class MongoCollectionTest extends TestCase
             ]
         ];
 
-        $result = $collection->aggregate($pipeline);
+        $result = $collection->aggregate($pipeline, ['cursor' => true]);
         $this->assertInternalType('array', $result);
         $this->assertArrayHasKey('result', $result);
 
@@ -833,6 +875,8 @@ class MongoCollectionTest extends TestCase
 
     public function testAggregateWithMultiplePilelineOperatorsAsArguments()
     {
+        $this->skipTestIf(version_compare($this->getServerVersion(), '3.6.0', '>='), 'Test does not apply to MongoDB >= 3.6.');
+
         $collection = $this->getCollection();
 
         $this->prepareData();
@@ -867,6 +911,8 @@ class MongoCollectionTest extends TestCase
 
     public function testAggregateInvalidPipeline()
     {
+        $this->skipTestIf(extension_loaded('mongo'));
+
         $collection = $this->getCollection();
 
         $pipeline = [
@@ -877,7 +923,7 @@ class MongoCollectionTest extends TestCase
 
         $this->expectException(\MongoResultException::class);
         $this->expectExceptionMessage('Unrecognized pipeline stage name');
-        $collection->aggregate($pipeline);
+        $collection->aggregate($pipeline, ['cursor' => true]);
     }
 
     public function testAggregateTimeoutException()
@@ -900,7 +946,7 @@ class MongoCollectionTest extends TestCase
             ]
         ];
 
-        $collection->aggregate($pipeline, ['maxTimeMS' => 1]);
+        $collection->aggregate($pipeline, ['maxTimeMS' => 1, 'cursor' => true]);
     }
 
     public function testAggregateCursor()
@@ -1026,10 +1072,9 @@ class MongoCollectionTest extends TestCase
         $object = $newCollection->findOne();
 
         $this->assertNotNull($object);
-        $this->assertAttributeInstanceOf('MongoDB\BSON\ObjectID', '_id', $object);
+        $this->assertInstanceOf('MongoDB\BSON\ObjectID', $object->_id);
         $this->assertSame($id, (string) $object->_id);
-        $this->assertObjectHasAttribute('foo', $object);
-        $this->assertAttributeSame('bar', 'foo', $object);
+        $this->assertSame('bar', $object->foo);
     }
 
     public function testRemoveOne()
@@ -1069,10 +1114,9 @@ class MongoCollectionTest extends TestCase
         $object = $newCollection->findOne();
 
         $this->assertNotNull($object);
-        $this->assertAttributeInstanceOf('MongoDB\BSON\ObjectID', '_id', $object);
+        $this->assertInstanceOf('MongoDB\BSON\ObjectID', $object->_id);
         $this->assertSame($id, (string) $object->_id);
-        $this->assertObjectHasAttribute('foo', $object);
-        $this->assertAttributeSame('foo', 'foo', $object);
+        $this->assertSame('foo', $object->foo);
     }
 
     public function testSavingShouldReplaceTheWholeDocument()
@@ -1091,7 +1135,7 @@ class MongoCollectionTest extends TestCase
         $object = $newCollection->findOne();
 
         $this->assertNotNull($object);
-        $this->assertObjectNotHasAttribute('foo', $object);
+        $this->assertArrayNotHasKey('bar', $object);
     }
 
     public function testSaveDuplicate()
@@ -1566,7 +1610,7 @@ class MongoCollectionTest extends TestCase
         $object = $newCollection->findOne();
 
         $this->assertNotNull($object);
-        $this->assertAttributeSame('foo', 'foo', $object);
+        $this->assertSame('foo', $object->foo);
     }
 
     public function testFindAndModifyUpdateWithUpdateOptions()
@@ -1591,8 +1635,8 @@ class MongoCollectionTest extends TestCase
         $object = $newCollection->findOne();
 
         $this->assertNotNull($object);
-        $this->assertAttributeSame('foo', 'bar', $object);
-        $this->assertObjectNotHasAttribute('foo', $object);
+        $this->assertSame('foo', $object->bar);
+        $this->assertArrayNotHasKey('foo', $object);
     }
 
     public function testFindAndModifyWithUpdateParamAndOption()
@@ -1620,8 +1664,8 @@ class MongoCollectionTest extends TestCase
         $object = $newCollection->findOne();
 
         $this->assertNotNull($object);
-        $this->assertAttributeSame('foobar', 'foo', $object);
-        $this->assertObjectNotHasAttribute('bar', $object);
+        $this->assertSame('foobar', $object->foo);
+        $this->assertArrayNotHasKey('bar', $object);
     }
 
     public function testFindAndModifyUpdateReplace()
@@ -1642,8 +1686,8 @@ class MongoCollectionTest extends TestCase
         $object = $newCollection->findOne();
 
         $this->assertNotNull($object);
-        $this->assertAttributeSame('boo', 'foo', $object);
-        $this->assertObjectNotHasAttribute('bar', $object);
+        $this->assertSame('boo', $object->foo);
+        $this->assertArrayNotHasKey('bar', $object);
     }
 
     public function testFindAndModifyUpdateReturnNew()
@@ -1684,6 +1728,8 @@ class MongoCollectionTest extends TestCase
 
     public function testGroup()
     {
+        $this->skipTestIf(version_compare($this->getServerVersion(), '4.2.0', '>='), 'Test does not apply to MongoDB >= 4.2.');
+
         $collection = $this->getCollection();
 
         $document1 = ['a' => 2];
@@ -1848,7 +1894,6 @@ class MongoCollectionTest extends TestCase
                 'ns' => 'mongo-php-adapter.test',
                 'nrecords' => 1,
                 'nIndexes' => 1,
-                'keysPerIndex' => ['mongo-php-adapter.test.$_id_' => 1],
                 'valid' => true,
                 'errors' => [],
             ],
@@ -1865,7 +1910,7 @@ class MongoCollectionTest extends TestCase
             'nIndexesWas' => 1,
             'ok' => 1.0
         ];
-        $this->assertSame($expected, $this->getCollection()->drop());
+        $this->assertEquals($expected, $this->getCollection()->drop());
     }
 
     public function testEmptyCollectionName()
@@ -1990,4 +2035,9 @@ class MongoCollectionTest extends TestCase
 class PrivatePropertiesStub
 {
     private $foo = 'bar';
+}
+
+class ArrayObjectWithProtectedProperties extends ArrayObject
+{
+    protected $something = 'baz';
 }

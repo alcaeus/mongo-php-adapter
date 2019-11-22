@@ -20,6 +20,7 @@ if (class_exists('MongoCollection', false)) {
 use Alcaeus\MongoDbAdapter\Helper;
 use Alcaeus\MongoDbAdapter\TypeConverter;
 use Alcaeus\MongoDbAdapter\ExceptionConverter;
+use MongoDB\Driver\Exception\CommandException;
 
 /**
  * Represents a database collection.
@@ -277,7 +278,7 @@ class MongoCollection
      */
     public function insert(&$a, array $options = [])
     {
-        if (! $this->ensureDocumentHasMongoId($a)) {
+        if ($this->ensureDocumentHasMongoId($a) === null) {
             trigger_error(sprintf('%s(): expects parameter %d to be an array or object, %s given', __METHOD__, 1, gettype($a)), E_USER_WARNING);
             return;
         }
@@ -626,7 +627,9 @@ class MongoCollection
 
             $this->collection->createIndex($keys, $options);
         } catch (\MongoDB\Driver\Exception\Exception $e) {
-            throw ExceptionConverter::toLegacy($e, 'MongoResultException');
+            if (! $e instanceof CommandException || strpos($e->getMessage(), 'with a different name') === false) {
+                throw ExceptionConverter::toLegacy($e, 'MongoResultException');
+            }
         }
 
         $result = [
@@ -999,12 +1002,12 @@ class MongoCollection
      */
     private function ensureDocumentHasMongoId(&$document)
     {
-        if (is_array($document)) {
+        if (is_array($document) || $document instanceof ArrayObject) {
             if (! isset($document['_id'])) {
                 $document['_id'] = new \MongoId();
             }
 
-            $this->checkKeys($document);
+            $this->checkKeys((array) $document);
 
             return $document['_id'];
         } elseif (is_object($document)) {

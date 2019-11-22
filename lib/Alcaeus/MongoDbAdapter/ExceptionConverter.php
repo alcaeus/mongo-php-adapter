@@ -16,6 +16,8 @@
 namespace Alcaeus\MongoDbAdapter;
 
 use MongoDB\Driver\Exception;
+use MongoDB\Driver\WriteError;
+use MongoDB\Driver\WriteResult;
 
 /**
  * @internal
@@ -30,6 +32,12 @@ class ExceptionConverter
      */
     public static function toLegacy(Exception\Exception $e, $fallbackClass = 'MongoException')
     {
+        // Starting with ext-mongodb 1.6.0, errors during bulk write are always wrapped in a BulkWriteException.
+        // If a BulkWriteException wraps another driver exception, use that instead.
+        if ($e instanceof Exception\BulkWriteException && $e->getPrevious() instanceof Exception\Exception) {
+            $e = $e->getPrevious();
+        }
+
         $message = $e->getMessage();
         $code = $e->getCode();
 
@@ -44,12 +52,13 @@ class ExceptionConverter
             case Exception\BulkWriteException::class:
             case Exception\WriteException::class:
                 $writeResult = $e->getWriteResult();
-
-                if ($writeResult && $writeResult->getWriteErrors() !== []) {
+                // attempt to retrieve write error
+                if ($writeResult instanceof WriteResult && is_array($writeResult->getWriteErrors()) && $writeResult->getWriteErrors() !== []) {
                     $writeError = $writeResult->getWriteErrors()[0];
-
-                    $message = $writeError->getMessage();
-                    $code = $writeError->getCode();
+                    if ($writeError instanceof WriteError) {
+                        $message = $writeError->getMessage();
+                        $code = $writeError->getCode();
+                    }
                 }
 
                 switch ($code) {
