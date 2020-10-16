@@ -12,7 +12,7 @@ class MongoDBTest extends TestCase
 {
     public function testSerialize()
     {
-        $this->assertInternalType('string', serialize($this->getDatabase()));
+        $this->assertIsString(serialize($this->getDatabase()));
     }
 
     public function testEmptyDatabaseName()

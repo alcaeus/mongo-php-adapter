@@ -9,7 +9,7 @@ class MongoInsertBatchTest extends TestCase
     public function testSerialize()
     {
         $batch = new \MongoInsertBatch($this->getCollection());
-        $this->assertInternalType('string', serialize($batch));
+        $this->assertIsString(serialize($batch));
     }
 
     public function testInsertBatch()

@@ -10,7 +10,7 @@ php:
   - 7.1
   - 7.2
   - 7.3
-  - 7.4snapshot
+  - 7.4
 
 env:
   global:
@@ -29,7 +29,7 @@ before_install:
   - composer update ${COMPOSER_FLAGS}
 
 script:
-  - vendor/bin/phpunit
+  - vendor/bin/simple-phpunit
 
 jobs:
   include:
@@ -37,7 +37,7 @@ jobs:
     - stage: test
       php: 7.3
       script:
-        - vendor/bin/phpunit --coverage-clover=coverage.clover
+        - vendor/bin/simple-phpunit --coverage-clover=coverage.clover
       after_script:
         - wget https://scrutinizer-ci.com/ocular.phar
         - php ocular.phar code-coverage:upload --format=php-clover coverage.clover
@@ -45,7 +45,7 @@ jobs:
     # Test against legacy driver to ensure validity of the test suite
     - stage: Test
       php: 5.6
-      env: DRIVER_VERSION="1.7.5"
+      env: DRIVER_VERSION="1.7.5" SYMFONY_DEPRECATIONS_HELPER=9999999
       install:
         - yes '' | pecl -q install -f mongo
 

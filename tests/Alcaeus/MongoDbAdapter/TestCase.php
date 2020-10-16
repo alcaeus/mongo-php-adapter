@@ -4,15 +4,20 @@ namespace Alcaeus\MongoDbAdapter\Tests;
 
 use MongoDB\Client;
 use PHPUnit\Framework\TestCase as BaseTestCase;
+use Symfony\Bridge\PhpUnit\SetUpTearDownTrait;
 
 abstract class TestCase extends BaseTestCase
 {
+    use SetUpTearDownTrait;
+
     const INDEX_VERSION_1 = 1;
     const INDEX_VERSION_2 = 2;
 
-    protected function tearDown()
+    private function doTearDown()
     {
         $this->getCheckDatabase()->drop();
+
+        parent::tearDown();
     }
 
     /**

@@ -19,7 +19,7 @@ class MongoCursorTest extends TestCase
     {
         $this->prepareData();
         $cursor = $this->getCollection()->find(['foo' => 'bar']);
-        $this->assertInternalType('string', serialize($cursor));
+        $this->assertIsString(serialize($cursor));
     }
 
     public function testCursorConvertsTypes()

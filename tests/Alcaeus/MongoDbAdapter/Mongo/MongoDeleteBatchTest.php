@@ -9,7 +9,7 @@ class MongoDeleteBatchTest extends TestCase
     public function testSerialize()
     {
         $batch = new \MongoDeleteBatch($this->getCollection());
-        $this->assertInternalType('string', serialize($batch));
+        $this->assertIsString(serialize($batch));
     }
 
     public function testDeleteOne()
