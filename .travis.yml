@@ -12,10 +12,6 @@ php:
   - 7.3
   - 7.4
 
-env:
-  global:
-    - DRIVER_VERSION="stable"
-
 addons:
   apt:
     sources:
@@ -25,7 +21,7 @@ addons:
     packages: ['mongodb-org-server']
 
 before_install:
-  - pecl install -f mongodb-${DRIVER_VERSION}
+  - .travis/install-extension.sh
   - composer update ${COMPOSER_FLAGS}
 
 script:
