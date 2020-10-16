@@ -30,7 +30,7 @@ class MongoClientTest extends TestCase
 
     public function testSerialize()
     {
-        $this->assertInternalType('string', serialize($this->getClient()));
+        $this->assertIsString(serialize($this->getClient()));
     }
 
     public function testGetDb()

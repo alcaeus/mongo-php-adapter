@@ -4,6 +4,7 @@ namespace Alcaeus\MongoDbAdapter\Tests\Mongo;
 
 use Alcaeus\MongoDbAdapter\Tests\TestCase;
 use Alcaeus\MongoDbAdapter\TypeInterface;
+use ReflectionProperty;
 
 /**
  * @author alcaeus <alcaeus@alcaeus.org>
@@ -13,8 +14,9 @@ class MongoCodeTest extends TestCase
     public function testCreate()
     {
         $code = new \MongoCode('code', ['scope' => 'bleh']);
-        $this->assertAttributeSame('code', 'code', $code);
-        $this->assertAttributeSame(['scope' => 'bleh'], 'scope', $code);
+
+        $this->assertSame('code', $this->getAttributeValue($code, 'code'));
+        $this->assertSame(['scope' => 'bleh'], $this->getAttributeValue($code, 'scope'));
 
         $this->assertSame('code', (string) $code);
 
@@ -39,7 +41,15 @@ class MongoCodeTest extends TestCase
         $bsonCode = new \MongoDB\BSON\Javascript('code', ['scope' => 'bleh']);
         $code = new \MongoCode($bsonCode);
 
-        $this->assertAttributeSame('code', 'code', $code);
-        $this->assertAttributeSame(['scope' => 'bleh'], 'scope', $code);
+        $this->assertSame('code', $this->getAttributeValue($code, 'code'));
+        $this->assertSame(['scope' => 'bleh'], $this->getAttributeValue($code, 'scope'));
+    }
+
+    private function getAttributeValue(\MongoCode $code, $attribute)
+    {
+        $property = new ReflectionProperty($code, $attribute);
+        $property->setAccessible(true);
+
+        return $property->getValue($code);
     }
 }

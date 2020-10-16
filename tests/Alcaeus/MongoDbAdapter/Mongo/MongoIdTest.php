@@ -4,6 +4,7 @@ namespace Alcaeus\MongoDbAdapter\Tests\Mongo;
 
 use Alcaeus\MongoDbAdapter\Tests\TestCase;
 use MongoDB\BSON\ObjectID;
+use ReflectionProperty;
 
 /**
  * @author alcaeus <alcaeus@alcaeus.org>
@@ -40,12 +41,11 @@ class MongoIdTest extends TestCase
         $this->assertSame(34335, $id->getPID());
     }
 
-    /**
-     * @expectedException \MongoException
-     * @expectedExceptionMessage Invalid object ID
-     */
     public function testCreateWithInvalidStringThrowsMongoException()
     {
+        $this->expectException('\MongoException');
+        $this->expectExceptionMessage('Invalid object ID');
+
         new \MongoId('invalid');
     }
 
@@ -59,7 +59,7 @@ class MongoIdTest extends TestCase
         $id = new \MongoId($objectId);
         $this->assertSame($original, (string) $id);
 
-        $this->assertAttributeNotSame($objectId, 'objectID', $id);
+        $this->assertNotSame($objectId, $this->getAttributeValue($id, 'objectID'));
     }
 
     /**
@@ -82,5 +82,13 @@ class MongoIdTest extends TestCase
             'invalidString' => [false, 'abc'],
             'object' => [false, new \stdClass()],
         ];
+    }
+
+    private function getAttributeValue(\MongoId $id, $attribute)
+    {
+        $property = new ReflectionProperty($id, $attribute);
+        $property->setAccessible(true);
+
+        return $property->getValue($id);
     }
 }

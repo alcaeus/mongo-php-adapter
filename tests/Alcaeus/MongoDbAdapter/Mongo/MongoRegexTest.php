@@ -13,8 +13,8 @@ class MongoRegexTest extends TestCase
     public function testCreate()
     {
         $regex = new \MongoRegex('/abc/i');
-        $this->assertAttributeSame('abc', 'regex', $regex);
-        $this->assertAttributeSame('i', 'flags', $regex);
+        $this->assertSame('abc', $regex->regex);
+        $this->assertSame('i', $regex->flags);
 
         $this->assertSame('/abc/i', (string) $regex);
 
@@ -41,7 +41,7 @@ class MongoRegexTest extends TestCase
         $bsonRegex = new \MongoDB\BSON\Regex('abc', 'i');
         $regex = new \MongoRegex($bsonRegex);
 
-        $this->assertAttributeSame('abc', 'regex', $regex);
-        $this->assertAttributeSame('i', 'flags', $regex);
+        $this->assertSame('abc', $regex->regex);
+        $this->assertSame('i', $regex->flags);
     }
 }

@@ -8,7 +8,7 @@ class MongoGridFSTest extends TestCase
 {
     public function testSerialize()
     {
-        $this->assertInternalType('string', serialize($this->getGridFS()));
+        $this->assertIsString(serialize($this->getGridFS()));
     }
 
     public function testChunkProperty()

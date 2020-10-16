@@ -15,8 +15,8 @@ class MongoBinDataTest extends TestCase
     public function testCreate()
     {
         $bin = new \MongoBinData(self::GUID, \MongoBinData::FUNC);
-        $this->assertAttributeSame(self::GUID, 'bin', $bin);
-        $this->assertAttributeSame(\MongoBinData::FUNC, 'type', $bin);
+        $this->assertSame(self::GUID, $bin->bin);
+        $this->assertSame(\MongoBinData::FUNC, $bin->type);
 
         $this->assertSame('<Mongo Binary Data>', (string) $bin);
 
@@ -44,7 +44,7 @@ class MongoBinDataTest extends TestCase
         $bsonBinary = new \MongoDB\BSON\Binary(self::GUID, \MongoDB\BSON\Binary::TYPE_UUID);
         $bin = new \MongoBinData($bsonBinary);
 
-        $this->assertAttributeSame(self::GUID, 'bin', $bin);
-        $this->assertAttributeSame(\MongoBinData::UUID_RFC4122, 'type', $bin);
+        $this->assertSame(self::GUID, $bin->bin);
+        $this->assertSame(\MongoBinData::UUID_RFC4122, $bin->type);
     }
 }

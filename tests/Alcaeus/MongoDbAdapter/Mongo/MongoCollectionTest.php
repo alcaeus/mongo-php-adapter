@@ -17,7 +17,7 @@ class MongoCollectionTest extends TestCase
 {
     public function testSerialize()
     {
-        $this->assertInternalType('string', serialize($this->getCollection()));
+        $this->assertIsString(serialize($this->getCollection()));
     }
 
     public function testGetNestedCollections()
@@ -802,7 +802,7 @@ class MongoCollectionTest extends TestCase
         $this->prepareData();
 
         $values = $this->getCollection()->distinct('foo');
-        $this->assertInternalType('array', $values);
+        $this->assertIsArray($values);
 
         sort($values);
         $this->assertEquals(['bar', 'foo'], $values);
@@ -813,7 +813,7 @@ class MongoCollectionTest extends TestCase
         $this->prepareData();
 
         $values = $this->getCollection()->distinct('foo', ['foo' => 'bar']);
-        $this->assertInternalType('array', $values);
+        $this->assertIsArray($values);
         $this->assertEquals(['bar'], $values);
     }
 
@@ -864,7 +864,7 @@ class MongoCollectionTest extends TestCase
         ];
 
         $result = $collection->aggregate($pipeline, ['cursor' => true]);
-        $this->assertInternalType('array', $result);
+        $this->assertIsArray($result);
         $this->assertArrayHasKey('result', $result);
 
         $this->assertEquals([
@@ -900,7 +900,7 @@ class MongoCollectionTest extends TestCase
             $this->fail($msg);
         }
 
-        $this->assertInternalType('array', $result);
+        $this->assertIsArray($result);
         $this->assertArrayHasKey('result', $result);
 
         $this->assertEquals([
@@ -1449,17 +1449,14 @@ class MongoCollectionTest extends TestCase
 
     public function testDeleteIndexesForNonExistingCollection()
     {
-        $expected = [
-            'ok' => 0.0,
-            'errmsg' => 'ns not found',
-        ];
+        $result = $this->getCollection('nonExisting')->deleteIndexes();
 
+        $this->assertSame(0.0, $result['ok']);
+        $this->assertRegExp('#ns not found#', $result['errmsg']);
         if (version_compare($this->getServerVersion(), '3.4.0', '>=')) {
+            $this->assertSame(26, $result['code']);
             $expected['code'] = 26;
         }
-
-        // Using assertArraySubset because newer versions (3.4.7?) also return `codeName`
-        $this->assertArraySubset($expected, $this->getCollection('nonExisting')->deleteIndexes());
     }
 
     public function dataGetIndexInfo()

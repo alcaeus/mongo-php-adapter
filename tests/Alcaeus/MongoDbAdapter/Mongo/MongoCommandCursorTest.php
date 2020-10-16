@@ -16,7 +16,7 @@ class MongoCommandCursorTest extends TestCase
     {
         $this->prepareData();
         $cursor = $this->getCollection()->aggregateCursor([['$match' => ['foo' => 'bar']]]);
-        $this->assertInternalType('string', serialize($cursor));
+        $this->assertIsString(serialize($cursor));
     }
 
     public function testInfo()

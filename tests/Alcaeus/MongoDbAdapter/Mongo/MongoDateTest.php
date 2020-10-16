@@ -32,8 +32,8 @@ class MongoDateTest extends TestCase
     public function testCreate()
     {
         $date = new \MongoDate(1234567890, 123456);
-        $this->assertAttributeSame(1234567890, 'sec', $date);
-        $this->assertAttributeSame(123000, 'usec', $date);
+        $this->assertSame(1234567890, $date->sec);
+        $this->assertSame(123000, $date->usec);
 
         $this->assertSame('0.12300000 1234567890', (string) $date);
         $dateTime = $date->toDateTime();
@@ -68,8 +68,8 @@ class MongoDateTest extends TestCase
     public function testCreateWithString()
     {
         $date = new \MongoDate('1234567890', '123456');
-        $this->assertAttributeSame(1234567890, 'sec', $date);
-        $this->assertAttributeSame(123000, 'usec', $date);
+        $this->assertSame(1234567890, $date->sec);
+        $this->assertSame(123000, $date->usec);
     }
 
     public function testCreateWithBsonDate()
@@ -79,15 +79,15 @@ class MongoDateTest extends TestCase
         $bsonDate = new \MongoDB\BSON\UTCDateTime(1234567890123);
         $date = new \MongoDate($bsonDate);
 
-        $this->assertAttributeSame(1234567890, 'sec', $date);
-        $this->assertAttributeSame(123000, 'usec', $date);
+        $this->assertSame(1234567890, $date->sec);
+        $this->assertSame(123000, $date->usec);
     }
 
     public function testSupportMillisecondsWithLeadingZeroes()
     {
         $date = new \MongoDate('1234567890', '012345');
-        $this->assertAttributeSame(1234567890, 'sec', $date);
-        $this->assertAttributeSame(12000, 'usec', $date);
+        $this->assertSame(1234567890, $date->sec);
+        $this->assertSame(12000, $date->usec);
 
         $this->assertSame('0.01200000 1234567890', (string) $date);
         $dateTime = $date->toDateTime();

@@ -14,7 +14,7 @@ class MongoGridFSCursorTest extends TestCase
         $gridfs->storeBytes('bar', ['filename' => 'bar.txt']);
         $cursor = $gridfs->find(['filename' => 'foo.txt']);
 
-        $this->assertInternalType('string', serialize($cursor));
+        $this->assertIsString(serialize($cursor));
     }
 
     public function testCursorItems()
