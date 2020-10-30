@@ -88,14 +88,13 @@ class MongoDate implements TypeInterface
     public function toDateTime()
     {
         $datetime = new \DateTime();
+        $datetime->setTimezone(new \DateTimeZone("UTC"));
         $datetime->setTimestamp($this->sec);
 
         $microSeconds = $this->truncateMicroSeconds($this->usec);
         if ($microSeconds > 0) {
-            $datetime = \DateTime::createFromFormat('Y-m-d H:i:s.u', $datetime->format('Y-m-d H:i:s') . '.' . str_pad($microSeconds, 6, '0', STR_PAD_LEFT));
+            $datetime = \DateTime::createFromFormat('Y-m-d H:i:s.u e', $datetime->format('Y-m-d H:i:s') . '.' . str_pad($microSeconds, 6, '0', STR_PAD_LEFT) . ' UTC');
         }
-
-        $datetime->setTimezone(new \DateTimeZone("UTC"));
 
         return $datetime;
     }
