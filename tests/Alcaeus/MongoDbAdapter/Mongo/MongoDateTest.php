@@ -95,4 +95,33 @@ class MongoDateTest extends TestCase
         $this->assertSame(1234567890, $dateTime->getTimestamp());
         $this->assertSame('012000', $dateTime->format('u'));
     }
+
+    public function testDSTTransitionDoesNotProduceWrongResults()
+    {
+        $initialTZ = ini_get("date.timezone");
+
+        ini_set("date.timezone", "Europe/Madrid");
+
+        $date = new \MongoDate(1603584000);
+        $dateTime = $date->toDateTime();
+
+        $this->assertSame(1603584000, $dateTime->getTimestamp());
+
+        ini_set("date.timezone", $initialTZ);
+    }
+
+    public function testDSTTransitionDoesNotProduceWrongResultsWithMicroSeconds()
+    {
+        $initialTZ = ini_get("date.timezone");
+
+        ini_set("date.timezone", "Europe/Madrid");
+
+        $date = new \MongoDate(1603584000, 123456);
+        $dateTime = $date->toDateTime();
+
+        $this->assertSame(1603584000, $dateTime->getTimestamp());
+        $this->assertSame('123000', $dateTime->format('u'));
+
+        ini_set("date.timezone", $initialTZ);
+    }
 }
