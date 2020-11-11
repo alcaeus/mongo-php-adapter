@@ -35,8 +35,6 @@
         "psr-4": { "Alcaeus\\MongoDbAdapter\\Tests\\": "tests/Alcaeus/MongoDbAdapter" }
     },
     "extra": {
-        "branch-alias": {
-            "dev-master": "1.1.x-dev"
-        }
+        "branch-version": "1.x"
     }
 }
