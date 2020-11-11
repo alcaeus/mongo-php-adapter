@@ -23,15 +23,40 @@ class MongoCodeTest extends TestCase
         return $code;
     }
 
-    /**
-     * @depends testCreate
-     */
-    public function testConvertToBson(\MongoCode $code)
+    public function testCreateWithoutScope()
     {
+        $code = new \MongoCode('code');
+
+        $this->assertSame('code', $this->getAttributeValue($code, 'code'));
+        $this->assertSame([], $this->getAttributeValue($code, 'scope'));
+
+        $this->assertSame('code', (string) $code);
+
+        return $code;
+    }
+
+    public function testConvertToBson()
+    {
+        $code = new \MongoCode('code', ['scope' => 'bleh']);
+
         $this->skipTestUnless($code instanceof TypeInterface);
 
         $bsonCode = $code->toBSONType();
         $this->assertInstanceOf('MongoDB\BSON\Javascript', $bsonCode);
+        $this->assertSame('code', $bsonCode->getCode());
+        $this->assertEquals((object) ['scope' => 'bleh'], $bsonCode->getScope());
+    }
+
+    public function testConvertToBsonWithoutScope()
+    {
+        $code = new \MongoCode('code');
+
+        $this->skipTestUnless($code instanceof TypeInterface);
+
+        $bsonCode = $code->toBSONType();
+        $this->assertInstanceOf('MongoDB\BSON\Javascript', $bsonCode);
+        $this->assertSame('code', $bsonCode->getCode());
+        $this->assertNull($bsonCode->getScope());
     }
 
     public function testCreateWithBsonObject()

@@ -9,6 +9,7 @@ use Alcaeus\MongoDbAdapter\Tests\TestCase;
 use MongoId;
 use PHPUnit\Framework\Error\Warning;
 use function extension_loaded;
+use function strcasecmp;
 
 /**
  * @author alcaeus <alcaeus@alcaeus.org>
@@ -56,10 +57,8 @@ class MongoCollectionTest extends TestCase
     public function testInsertInvalidData()
     {
         // Dirty hack to support both PHPUnit 5.x and 6.x
-        $className = class_exists(Warning::class) ? Warning::class : \PHPUnit_Framework_Error_Warning::class;
-        $this->expectException($className);
-
-        $this->expectExceptionMessage('MongoCollection::insert(): expects parameter 1 to be an array or object, integer given');
+        $this->expectWarning();
+        $this->expectWarningMessage('MongoCollection::insert(): expects parameter 1 to be an array or object, integer given');
 
         $document = 8;
         $this->getCollection()->insert($document);
@@ -250,7 +249,7 @@ class MongoCollectionTest extends TestCase
             ['foo' => 'bar'],
             ['bar' => 'foo']
         ];
-        $this->assertArraySubset($expected, $this->getCollection()->batchInsert($documents));
+        $this->assertMatches($expected, $this->getCollection()->batchInsert($documents));
 
         foreach ($documents as $document) {
             $this->assertInstanceOf('MongoId', $document['_id']);
@@ -272,7 +271,7 @@ class MongoCollectionTest extends TestCase
             'a' => ['foo' => 'bar'],
             'b' => ['bar' => 'foo']
         ];
-        $this->assertArraySubset($expected, $this->getCollection()->batchInsert($documents));
+        $this->assertMatches($expected, $this->getCollection()->batchInsert($documents));
 
         $newCollection = $this->getCheckDatabase()->selectCollection('test');
         $this->assertSame(2, $newCollection->count());
@@ -292,7 +291,7 @@ class MongoCollectionTest extends TestCase
             8,
             'b' => ['bar' => 'foo']
         ];
-        $this->assertArraySubset($expected, $this->getCollection()->batchInsert($documents, ['continueOnError' => true]));
+        $this->assertMatches($expected, $this->getCollection()->batchInsert($documents, ['continueOnError' => true]));
 
         $newCollection = $this->getCheckDatabase()->selectCollection('test');
         $this->assertSame(1, $newCollection->count());
@@ -606,7 +605,7 @@ class MongoCollectionTest extends TestCase
         foreach ($cursor as $document) {
             $this->assertCount(2, $document);
             $this->assertArrayHasKey('_id', $document);
-            $this->assertArraySubset(['bar' => 'bar'], $document);
+            $this->assertMatches(['bar' => 'bar'], $document);
         }
     }
 
@@ -668,7 +667,7 @@ class MongoCollectionTest extends TestCase
         foreach ($cursor as $document) {
             $this->assertCount(1, $document);
             $this->assertArrayNotHasKey('_id', $document);
-            $this->assertArraySubset(['bar' => 'bar'], $document);
+            $this->assertMatches(['bar' => 'bar'], $document);
         }
     }
 
@@ -768,7 +767,7 @@ class MongoCollectionTest extends TestCase
 
         $document = $this->getCollection()->findOne(['foo' => 'foo'], ['bar' => true]);
         $this->assertCount(2, $document);
-        $this->assertArraySubset(['bar' => 'bar'], $document);
+        $this->assertMatches(['bar' => 'bar'], $document);
     }
 
     public function testFindOneWithLegacyProjection()
@@ -778,7 +777,7 @@ class MongoCollectionTest extends TestCase
 
         $document = $this->getCollection()->findOne(['foo' => 'foo'], ['bar']);
         $this->assertCount(2, $document);
-        $this->assertArraySubset(['bar' => 'bar'], $document);
+        $this->assertMatches(['bar' => 'bar'], $document);
     }
 
     public function testFindOneNotFound()
@@ -990,7 +989,7 @@ class MongoCollectionTest extends TestCase
         $this->assertSame(['type' => \MongoClient::RP_SECONDARY_PREFERRED, 'tagsets' => [['a' => 'b']]], $collection->getReadPreference());
 
         $this->assertTrue($collection->setSlaveOkay(false));
-        $this->assertArraySubset(['type' => \MongoClient::RP_PRIMARY], $collection->getReadPreference());
+        $this->assertMatches(['type' => \MongoClient::RP_PRIMARY], $collection->getReadPreference());
     }
 
     public function testReadPreferenceIsSetInDriver()
@@ -1398,8 +1397,8 @@ class MongoCollectionTest extends TestCase
             $expected['code'] = 27;
         }
 
-        // Using assertArraySubset because newer versions (3.4.7?) also return `codeName`
-        $this->assertArraySubset($expected, $this->getCollection()->deleteIndex('bar'));
+        // Using assertMatches because newer versions (3.4.7?) also return `codeName`
+        $this->assertMatches($expected, $this->getCollection()->deleteIndex('bar'));
 
         $this->assertCount(2, iterator_to_array($newCollection->listIndexes()));
     }
@@ -1452,7 +1451,7 @@ class MongoCollectionTest extends TestCase
         $result = $this->getCollection('nonExisting')->deleteIndexes();
 
         $this->assertSame(0.0, $result['ok']);
-        $this->assertRegExp('#ns not found#', $result['errmsg']);
+        $this->assertMatchesRegularExpression('#ns not found#', $result['errmsg']);
         if (version_compare($this->getServerVersion(), '3.4.0', '>=')) {
             $this->assertSame(26, $result['code']);
             $expected['code'] = 26;
@@ -1742,7 +1741,7 @@ class MongoCollectionTest extends TestCase
 
         $result = $collection->group($keys, $initial, $reduce, $condition);
 
-        $this->assertArraySubset(
+        $this->assertMatches(
             [
                 'retval' => [['count' => 1.0]],
                 'count' => 1.0,
@@ -1798,7 +1797,7 @@ class MongoCollectionTest extends TestCase
             'map' => new \MongoCode($map),
             'reduce' => new \MongoCode($reduce),
             'query' => (object) [],
-            'out' => ['inline' => true],
+            'out' => ['inline' => 1],
             'finalize' => new \MongoCode($finalize),
         ];
 
@@ -1823,8 +1822,12 @@ class MongoCollectionTest extends TestCase
             ],
         ];
 
+        usort($result['results'], function ($a, $b) {
+            return strcasecmp($a['_id'], $b['_id']);
+        });
+
         $this->assertSame(1.0, $result['ok']);
-        $this->assertSame($expected, $result['results']);
+        $this->assertEquals($expected, $result['results']);
     }
 
     public function testFindAndModifyResultException()
@@ -1886,7 +1889,7 @@ class MongoCollectionTest extends TestCase
         $collection->insert($document);
         $result = $collection->validate();
 
-        $this->assertArraySubset(
+        $this->assertMatches(
             [
                 'ns' => 'mongo-php-adapter.test',
                 'nrecords' => 1,

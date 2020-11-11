@@ -77,7 +77,7 @@ class MongoClientTest extends TestCase
     {
         $client = $this->getClient();
         $hosts = $client->getHosts();
-        $this->assertArraySubset(
+        $this->assertMatches(
             [
                 'localhost:27017;-;.;' . getmypid() => [
                     'host' => 'localhost',
