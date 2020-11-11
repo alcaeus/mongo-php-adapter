@@ -27,7 +27,7 @@ class MongoCode implements \Alcaeus\MongoDbAdapter\TypeInterface
     private $code;
 
     /**
-     * @var array
+     * @var array|null
      */
     private $scope;
 
@@ -65,6 +65,6 @@ class MongoCode implements \Alcaeus\MongoDbAdapter\TypeInterface
      */
     public function toBSONType()
     {
-        return new \MongoDB\BSON\Javascript($this->code, $this->scope);
+        return new \MongoDB\BSON\Javascript($this->code, !empty($this->scope) ? $this->scope : null);
     }
 }
