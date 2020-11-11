@@ -2,6 +2,7 @@
 
 namespace Alcaeus\MongoDbAdapter\Tests;
 
+use Alcaeus\MongoDbAdapter\Tests\Constraint\Matches;
 use MongoDB\Client;
 use PHPUnit\Framework\TestCase as BaseTestCase;
 use Symfony\Bridge\PhpUnit\SetUpTearDownTrait;
@@ -18,6 +19,12 @@ abstract class TestCase extends BaseTestCase
         $this->getCheckDatabase()->drop();
 
         parent::tearDown();
+    }
+
+    public function assertMatches($expected, $value, $message = '')
+    {
+        $constraint = new Matches($expected, true, true, true);
+        $this->assertThat($value, $constraint, $message);
     }
 
     /**

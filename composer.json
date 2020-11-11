@@ -9,14 +9,14 @@
         { "name": "Olivier Lechevalier", "email": "olivier.lechevalier@gmail.com" }
     ],
     "require": {
-        "php": "^5.6 || ^7.0",
+        "php": "^5.6 || ^7.0 || ^8.0",
         "ext-ctype": "*",
         "ext-hash": "*",
         "ext-mongodb": "^1.2.0",
         "mongodb/mongodb": "^1.0.1"
     },
     "require-dev": {
-        "symfony/phpunit-bridge": "^4.4 || ^5.1",
+        "symfony/phpunit-bridge": "5.x-dev",
         "squizlabs/php_codesniffer": "^3.2"
     },
     "provide": {

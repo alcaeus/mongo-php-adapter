@@ -2,6 +2,7 @@
 
 namespace Alcaeus\MongoDbAdapter\Tests\Mongo;
 
+use Alcaeus\MongoDbAdapter\Tests\Constraint\Matches;
 use Alcaeus\MongoDbAdapter\Tests\TestCase;
 use Countable;
 
@@ -30,7 +31,7 @@ class MongoGridFSCursorTest extends TestCase
             $this->assertInstanceOf('MongoGridFSFile', $value);
             $this->assertSame('foo', $value->getBytes());
 
-            $this->assertArraySubset([
+            $this->assertMatches([
                 'filename' => 'foo.txt',
                 'chunkSize' => 261120,
                 'length' => 3,
