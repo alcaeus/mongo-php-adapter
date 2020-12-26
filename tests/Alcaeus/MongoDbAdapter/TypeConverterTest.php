@@ -3,7 +3,6 @@
 namespace Alcaeus\MongoDbAdapter\Tests;
 
 use MongoDB\BSON;
-use MongoDB\Driver\Exception;
 use Alcaeus\MongoDbAdapter\TypeConverter;
 use MongoDB\Model\BSONDocument;
 
