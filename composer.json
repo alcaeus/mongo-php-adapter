@@ -16,7 +16,7 @@
         "mongodb/mongodb": "^1.0.1"
     },
     "require-dev": {
-        "symfony/phpunit-bridge": "5.x-dev",
+        "symfony/phpunit-bridge": "^4.4.16 || ^5.2",
         "squizlabs/php_codesniffer": "^3.2"
     },
     "provide": {
