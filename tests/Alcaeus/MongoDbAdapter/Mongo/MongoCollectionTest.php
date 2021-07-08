@@ -195,7 +195,7 @@ class MongoCollectionTest extends TestCase
         unset($document['_id']);
 
         $this->expectException(\MongoDuplicateKeyException::class);
-        $this->expectExceptionMessageRegExp('/E11000 duplicate key error .* mongo-php-adapter\.test/');
+        $this->expectErrorMessageMatches('/E11000 duplicate key error .* mongo-php-adapter\.test/');
         $this->expectExceptionCode(11000);
         $collection->insert($document);
     }
@@ -303,7 +303,7 @@ class MongoCollectionTest extends TestCase
         $documents = [['_id' => $id, 'foo' => 'bar'], ['_id' => $id, 'foo' => 'bleh']];
 
         $this->expectException(\MongoDuplicateKeyException::class);
-        $this->expectExceptionMessageRegExp('/E11000 duplicate key error .* mongo-php-adapter.test.*_id_/');
+        $this->expectErrorMessageMatches('/E11000 duplicate key error .* mongo-php-adapter.test.*_id_/');
         $this->expectExceptionCode(11000);
 
         $this->getCollection()->batchInsert($documents);
@@ -415,7 +415,7 @@ class MongoCollectionTest extends TestCase
     public function testUpdateReplaceMultiple()
     {
         $this->expectException(\MongoWriteConcernException::class);
-        $this->expectExceptionMessageRegExp('/multi update only works with \$ operators/', 9);
+        $this->expectErrorMessageMatches('/multi update only works with \$ operators/', 9);
         $this->getCollection()->update(['foo' => 'bar'], ['foo' => 'foo'], ['multiple' => true]);
     }
 
