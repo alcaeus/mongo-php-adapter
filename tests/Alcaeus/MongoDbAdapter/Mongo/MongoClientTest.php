@@ -93,7 +93,7 @@ class MongoClientTest extends TestCase
     public function testGetHostsExceptionHandling()
     {
         $this->expectException(\MongoConnectionException::class);
-        $this->expectExceptionMessageRegExp('/fake_host/');
+        $this->expectErrorMessageMatches('/fake_host/');
 
         $client = $this->getClient(null, 'mongodb://fake_host');
         $client->getHosts();
@@ -265,7 +265,7 @@ class MongoClientTest extends TestCase
 
         $collection->insert($document);
     }
-    
+
     public function testConnectWithUsernameAndPasswordInConnectionUrl()
     {
         $this->expectException(\MongoConnectionException::class);

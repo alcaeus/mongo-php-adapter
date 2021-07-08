@@ -21,12 +21,6 @@
         </testsuite>
     </testsuites>
 
-    <filter>
-        <whitelist>
-            <directory suffix=".php">./lib/Alcaeus/MongoDbAdapter</directory>
-        </whitelist>
-    </filter>
-
     <php>
         <const name="MONGODB_URI" value="mongodb://localhost:27017" />
     </php>
