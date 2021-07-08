@@ -43,6 +43,8 @@ class TypeConverter
                 return $value->toBSONType();
             case $value instanceof BSON\Type:
                 return $value;
+            case $value instanceof \DateTimeInterface:
+                return self::fromLegacy((array) $value);
             case is_array($value):
             case is_object($value):
                 $result = [];
