@@ -16,7 +16,7 @@ class MongoCommandCursorTest extends TestCase
     {
         $this->prepareData();
         $cursor = $this->getCollection()->aggregateCursor([['$match' => ['foo' => 'bar']]]);
-        $this->assertInternalType('string', serialize($cursor));
+        $this->assertIsString(serialize($cursor));
     }
 
     public function testInfo()
@@ -59,7 +59,7 @@ class MongoCommandCursorTest extends TestCase
             'connection_type_desc' => 'STANDALONE',
         ];
 
-        $this->assertArraySubset($expected, $cursor->info());
+        $this->assertMatches($expected, $cursor->info());
 
         $i = 0;
         foreach ($array as $key => $value) {
@@ -137,7 +137,7 @@ class MongoCommandCursorTest extends TestCase
             'mapReduceWithOutInline' => [
                 [
                     'mapReduce' => (string) $this->getCollection(),
-                    'out' => ['inline' => true],
+                    'out' => ['inline' => 1],
                 ],
                 ReadPreference::RP_SECONDARY,
             ],

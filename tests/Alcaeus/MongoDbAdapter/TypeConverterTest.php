@@ -3,7 +3,6 @@
 namespace Alcaeus\MongoDbAdapter\Tests;
 
 use MongoDB\BSON;
-use MongoDB\Driver\Exception;
 use Alcaeus\MongoDbAdapter\TypeConverter;
 use MongoDB\Model\BSONDocument;
 
@@ -37,6 +36,14 @@ class TypeConverterTest extends TestCase
             ],
             'nestedArrays' => [
                 [['foo' => 'bar']], [new BSONDocument(['foo' => 'bar'])]
+            ],
+            'dateTime'            => [
+                \DateTime::createFromFormat('Y-m-d\TH:i:sP', '2021-06-30T12:34:56-7'),
+                new BSONDocument([
+                    'date'          => '2021-06-30 12:34:56.000000',
+                    'timezone_type' => 1,
+                    'timezone'      => '-07:00',
+                ]),
             ],
         ];
     }

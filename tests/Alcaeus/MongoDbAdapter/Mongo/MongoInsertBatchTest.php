@@ -9,7 +9,7 @@ class MongoInsertBatchTest extends TestCase
     public function testSerialize()
     {
         $batch = new \MongoInsertBatch($this->getCollection());
-        $this->assertInternalType('string', serialize($batch));
+        $this->assertIsString(serialize($batch));
     }
 
     public function testInsertBatch()
@@ -80,7 +80,7 @@ class MongoInsertBatchTest extends TestCase
         } catch (\MongoWriteConcernException $e) {
             $this->assertSame('Failed write', $e->getMessage());
             $this->assertSame(911, $e->getCode());
-            $this->assertArraySubset($expected, $e->getDocument());
+            $this->assertMatches($expected, $e->getDocument());
         }
     }
 }

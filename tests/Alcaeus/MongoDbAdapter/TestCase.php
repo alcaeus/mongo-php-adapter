@@ -2,17 +2,29 @@
 
 namespace Alcaeus\MongoDbAdapter\Tests;
 
+use Alcaeus\MongoDbAdapter\Tests\Constraint\Matches;
 use MongoDB\Client;
 use PHPUnit\Framework\TestCase as BaseTestCase;
+use Symfony\Bridge\PhpUnit\SetUpTearDownTrait;
 
 abstract class TestCase extends BaseTestCase
 {
+    use SetUpTearDownTrait;
+
     const INDEX_VERSION_1 = 1;
     const INDEX_VERSION_2 = 2;
 
-    protected function tearDown()
+    private function doTearDown()
     {
         $this->getCheckDatabase()->drop();
+
+        parent::tearDown();
+    }
+
+    public function assertMatches($expected, $value, $message = '')
+    {
+        $constraint = new Matches($expected, true, true, true);
+        $this->assertThat($value, $constraint, $message);
     }
 
     /**
@@ -20,7 +32,7 @@ abstract class TestCase extends BaseTestCase
      */
     protected function getCheckClient()
     {
-        return new Client('mongodb://localhost', ['connect' => true]);
+        return new Client(MONGODB_URI, ['connect' => true]);
     }
 
     /**
@@ -36,7 +48,7 @@ abstract class TestCase extends BaseTestCase
      * @param array|null $options
      * @return \MongoClient
      */
-    protected function getClient($options = null, $uri = 'mongodb://localhost')
+    protected function getClient($options = null, $uri = MONGODB_URI)
     {
         $args = [$uri];
         if ($options !== null) {

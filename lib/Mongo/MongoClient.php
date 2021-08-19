@@ -222,7 +222,7 @@ class MongoClient
             $results[$key] = [
                 'host' => $server->getHost(),
                 'port' => $server->getPort(),
-                'health' => (int) $info['ok'],
+                'health' => 1,
                 'state' => $state,
                 'ping' => $server->getLatency(),
                 'lastPing' => null,

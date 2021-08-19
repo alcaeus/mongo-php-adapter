@@ -14,7 +14,7 @@ class MongoGridFSCursorTest extends TestCase
         $gridfs->storeBytes('bar', ['filename' => 'bar.txt']);
         $cursor = $gridfs->find(['filename' => 'foo.txt']);
 
-        $this->assertInternalType('string', serialize($cursor));
+        $this->assertIsString(serialize($cursor));
     }
 
     public function testCursorItems()
@@ -30,7 +30,7 @@ class MongoGridFSCursorTest extends TestCase
             $this->assertInstanceOf('MongoGridFSFile', $value);
             $this->assertSame('foo', $value->getBytes());
 
-            $this->assertArraySubset([
+            $this->assertMatches([
                 'filename' => 'foo.txt',
                 'chunkSize' => 261120,
                 'length' => 3,

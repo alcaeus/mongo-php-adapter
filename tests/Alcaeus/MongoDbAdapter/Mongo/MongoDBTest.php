@@ -12,7 +12,7 @@ class MongoDBTest extends TestCase
 {
     public function testSerialize()
     {
-        $this->assertInternalType('string', serialize($this->getDatabase()));
+        $this->assertIsString(serialize($this->getDatabase()));
     }
 
     public function testEmptyDatabaseName()
@@ -126,8 +126,8 @@ class MongoDBTest extends TestCase
             'code' => 13,
         ];
 
-        // Using assertArraySubset because newer versions (3.4.7?) also return `codeName`
-        $this->assertArraySubset($expected, $db->command(['listDatabases' => 1]));
+        // Using assertMatches because newer versions (3.4.7?) also return `codeName`
+        $this->assertMatches($expected, $db->command(['listDatabases' => 1]));
     }
 
     public function testCommandCursorTimeout()
@@ -164,7 +164,7 @@ class MongoDBTest extends TestCase
 
         $this->assertTrue($database->setSlaveOkay(false));
         // Only test a subset since we don't keep tagsets around for RP_PRIMARY
-        $this->assertArraySubset(['type' => \MongoClient::RP_PRIMARY], $database->getReadPreference());
+        $this->assertMatches(['type' => \MongoClient::RP_PRIMARY], $database->getReadPreference());
     }
 
     public function testReadPreferenceIsSetInDriver()
@@ -292,7 +292,7 @@ class MongoDBTest extends TestCase
                         ],
                     ];
                 }
-                $this->assertArraySubset($expected, $collectionInfo);
+                $this->assertMatches($expected, $collectionInfo);
                 return;
             }
         }

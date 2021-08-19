@@ -8,7 +8,7 @@ class MongoGridFSTest extends TestCase
 {
     public function testSerialize()
     {
-        $this->assertInternalType('string', serialize($this->getGridFS()));
+        $this->assertIsString(serialize($this->getGridFS()));
     }
 
     public function testChunkProperty()
@@ -327,7 +327,7 @@ class MongoGridFSTest extends TestCase
         $collection->insert($document);
 
         $this->expectException(\MongoGridFSException::class);
-        $this->expectExceptionMessageRegExp('/Could not store file:.* E11000 duplicate key error .* mongo-php-adapter\.fs\.files/');
+        $this->expectErrorMessageMatches('/Could not store file:.* E11000 duplicate key error .* mongo-php-adapter\.fs\.files/');
         $this->expectExceptionCode(11000);
 
         $collection->storeBytes('foo', ['_id' => $id]);
@@ -342,7 +342,7 @@ class MongoGridFSTest extends TestCase
         $collection->chunks->insert($document);
 
         $this->expectException(\MongoGridFSException::class);
-        $this->expectExceptionMessageRegExp('/Could not store file:.* E11000 duplicate key error .* mongo-php-adapter\.fs\.chunks/');
+        $this->expectErrorMessageMatches('/Could not store file:.* E11000 duplicate key error .* mongo-php-adapter\.fs\.chunks/');
         $this->expectExceptionCode(11000);
 
         $collection->storeBytes('foo');
@@ -357,7 +357,7 @@ class MongoGridFSTest extends TestCase
         $collection->insert($document);
 
         $this->expectException(\MongoGridFSException::class);
-        $this->expectExceptionMessageRegExp('/Could not store file:.* E11000 duplicate key error .* mongo-php-adapter\.fs\.files/');
+        $this->expectErrorMessageMatches('/Could not store file:.* E11000 duplicate key error .* mongo-php-adapter\.fs\.files/');
         $this->expectExceptionCode(11000);
 
         $collection->storeFile(__FILE__, ['_id' => $id]);
@@ -372,7 +372,7 @@ class MongoGridFSTest extends TestCase
         $collection->chunks->insert($document);
 
         $this->expectException(\MongoGridFSException::class);
-        $this->expectExceptionMessageRegExp('/Could not store file:.* E11000 duplicate key error .* mongo-php-adapter\.fs\.chunks/');
+        $this->expectErrorMessageMatches('/Could not store file:.* E11000 duplicate key error .* mongo-php-adapter\.fs\.chunks/');
         $this->expectExceptionCode(11000);
 
         $collection->storeFile(__FILE__);
@@ -387,7 +387,7 @@ class MongoGridFSTest extends TestCase
         $collection->insert($document);
 
         $this->expectException(\MongoGridFSException::class);
-        $this->expectExceptionMessageRegExp('/Could not store file:.* E11000 duplicate key error .* mongo-php-adapter\.fs\.files/');
+        $this->expectErrorMessageMatches('/Could not store file:.* E11000 duplicate key error .* mongo-php-adapter\.fs\.files/');
         $this->expectExceptionCode(11000);
 
         $collection->storeFile(fopen(__FILE__, 'r'));
