@@ -219,6 +219,7 @@ class MongoId implements Serializable, TypeInterface, JsonSerializable
     /**
      * @return stdClass
      */
+    #[ReturnTypeWillChange]
     public function jsonSerialize()
     {
         $object = new stdClass();
