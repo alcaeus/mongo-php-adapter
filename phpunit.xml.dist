@@ -13,6 +13,7 @@
         <!-- Disable deprecation warnings -->
         <!-- php -r 'echo -1 & ~E_USER_DEPRECATED & ~E_DEPRECATED;' -->
         <ini name="error_reporting" value="-24577"/>
+        <const name="MONGODB_URI" value="mongodb://localhost:27017" />
     </php>
 
     <testsuites>
@@ -20,8 +21,4 @@
             <directory>./tests/Alcaeus/MongoDbAdapter/</directory>
         </testsuite>
     </testsuites>
-
-    <php>
-        <const name="MONGODB_URI" value="mongodb://localhost:27017" />
-    </php>
 </phpunit>
