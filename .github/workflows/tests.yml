@@ -80,8 +80,6 @@ jobs:
         os:
           - "ubuntu-18.04"
         php-version:
-          - "7.0"
-          - "7.1"
           - "7.2"
           - "7.3"
           - "7.4"
@@ -99,6 +97,16 @@ jobs:
             php-version: "5.6"
             mongodb-version: "3.0"
             driver-version: "1.2.0"
+          - deps: "normal"
+            os: "ubuntu-18.04"
+            php-version: "7.0"
+            mongodb-version: "4.4"
+            driver-version: "1.9.2"
+          - deps: "normal"
+            os: "ubuntu-18.04"
+            php-version: "7.1"
+            mongodb-version: "4.4"
+            driver-version: "1.11.1"
 
     steps:
       - name: "Checkout"
