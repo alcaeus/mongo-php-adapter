@@ -11,7 +11,7 @@ on:
 jobs:
   verification:
     name: "Verification tests"
-    runs-on: "ubuntu-16.04"
+    runs-on: "ubuntu-18.04"
 
     steps:
       - name: "Checkout"
@@ -80,12 +80,11 @@ jobs:
         os:
           - "ubuntu-18.04"
         php-version:
-          - "7.0"
-          - "7.1"
           - "7.2"
           - "7.3"
           - "7.4"
           - "8.0"
+          - "8.1"
         mongodb-version:
           - "4.4"
         driver-version:
@@ -94,10 +93,20 @@ jobs:
           - "normal"
         include:
           - deps: "low"
-            os: "ubuntu-16.04"
+            os: "ubuntu-18.04"
             php-version: "5.6"
             mongodb-version: "3.0"
             driver-version: "1.2.0"
+          - deps: "normal"
+            os: "ubuntu-18.04"
+            php-version: "7.0"
+            mongodb-version: "4.4"
+            driver-version: "1.9.2"
+          - deps: "normal"
+            os: "ubuntu-18.04"
+            php-version: "7.1"
+            mongodb-version: "4.4"
+            driver-version: "1.11.1"
 
     steps:
       - name: "Checkout"

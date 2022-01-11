@@ -18,6 +18,7 @@ namespace Alcaeus\MongoDbAdapter;
 use Alcaeus\MongoDbAdapter\Helper\ReadPreference;
 use MongoDB\Collection;
 use MongoDB\Driver\Cursor;
+use ReturnTypeWillChange;
 
 /**
  * @internal
@@ -136,6 +137,7 @@ abstract class AbstractCursor
      * @link http://www.php.net/manual/en/mongocursor.current.php
      * @return array
      */
+    #[ReturnTypeWillChange]
     public function current()
     {
         return $this->current;
@@ -146,6 +148,7 @@ abstract class AbstractCursor
      * @link http://www.php.net/manual/en/mongocursor.key.php
      * @return string The current result's _id as a string.
      */
+    #[ReturnTypeWillChange]
     public function key()
     {
         return $this->key;
@@ -158,6 +161,7 @@ abstract class AbstractCursor
      * @throws \MongoCursorTimeoutException
      * @return array Returns the next object
      */
+    #[ReturnTypeWillChange]
     public function next()
     {
         if (! $this->startedIterating) {
@@ -181,6 +185,7 @@ abstract class AbstractCursor
      * @throws \MongoCursorTimeoutException
      * @return void
      */
+    #[ReturnTypeWillChange]
     public function rewind()
     {
         // We can recreate the cursor to allow it to be rewound
@@ -196,6 +201,7 @@ abstract class AbstractCursor
      * @link http://www.php.net/manual/en/mongocursor.valid.php
      * @return boolean If the current result is not null.
      */
+    #[ReturnTypeWillChange]
     public function valid()
     {
         return $this->valid;

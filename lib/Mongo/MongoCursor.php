@@ -22,7 +22,6 @@ use Alcaeus\MongoDbAdapter\CursorIterator;
 use Alcaeus\MongoDbAdapter\TypeConverter;
 use Alcaeus\MongoDbAdapter\ExceptionConverter;
 use MongoDB\Driver\Cursor;
-use MongoDB\Driver\ReadPreference;
 use MongoDB\Operation\Find;
 
 /**
@@ -134,6 +133,7 @@ class MongoCursor extends AbstractCursor implements Iterator, Countable, MongoCu
      * @param bool $foundOnly Send cursor limit and skip information to the count function, if applicable.
      * @return int The number of documents returned by this cursor's query.
      */
+    #[\ReturnTypeWillChange]
     public function count($foundOnly = false)
     {
         $optionNames = ['hint', 'maxTimeMS'];
