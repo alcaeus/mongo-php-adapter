@@ -85,7 +85,7 @@ class MongoDBRefTest extends TestCase
         $db->selectCollection('test')->insert($document);
 
         $fetchedRef = \MongoDBRef::get($db, ['$ref' => 'test', '$id' => $id]);
-        $this->assertInternalType('array', $fetchedRef);
+        $this->assertIsArray($fetchedRef);
         $this->assertEquals($document, $fetchedRef);
     }
 
@@ -99,7 +99,7 @@ class MongoDBRefTest extends TestCase
         $db->selectCollection('test')->insert($document);
 
         $fetchedRef = $db->getDBRef(['$ref' => 'test', '$id' => $id]);
-        $this->assertInternalType('array', $fetchedRef);
+        $this->assertIsArray($fetchedRef);
         $this->assertEquals($document, $fetchedRef);
     }
 

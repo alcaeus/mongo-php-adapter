@@ -3,6 +3,78 @@ CHANGELOG for 1.1.x
 
 This changelog references the relevant changes done in minor version updates.
 
+1.1.11 (2019-11-11)
+-------------------
+
+All issues and pull requests under this release may be found under the
+[1.1.11](https://github.com/alcaeus/mongo-php-adapter/issues?q=milestone%3A1.1.11)
+milestone.
+
+ * [#263](https://github.com/alcaeus/mongo-php-adapter/pull/263) fixes test
+ failures on PHP 7.4.
+ * [#262](https://github.com/alcaeus/mongo-php-adapter/pull/262) fixes a memory
+ leak due to generators that aren't freed.
+
+1.1.10 (2019-11-06)
+-------------------
+
+All issues and pull requests under this release may be found under the
+[1.1.10](https://github.com/alcaeus/mongo-php-adapter/issues?q=milestone%3A1.1.10)
+milestone.
+
+ * [#261](https://github.com/alcaeus/mongo-php-adapter/pull/261) fixes missing
+ interface implementations in cursor classes.
+ * [#260](https://github.com/alcaeus/mongo-php-adapter/pull/260) fixes issues
+ when running against MongoDB 4.2 or `ext-mongodb` 1.6.
+ * [#259](https://github.com/alcaeus/mongo-php-adapter/pull/259) fixes issues on
+ PHP 7.3 due to `MongoCursor` not implementing `Countable`.
+
+1.1.9 (2019-08-07)
+------------------
+
+All issues and pull requests under this release may be found under the
+[1.1.9](https://github.com/alcaeus/mongo-php-adapter/issues?q=milestone%3A1.1.9)
+milestone.
+
+ * [#255](https://github.com/alcaeus/mongo-php-adapter/pull/255) fixes inserting
+ documents with identifiers PHP considers empty.
+
+1.1.8 (2019-07-14)
+------------------
+
+All issues and pull requests under this release may be found under the
+[1.1.8](https://github.com/alcaeus/mongo-php-adapter/issues?q=milestone%3A1.1.8)
+milestone.
+
+ * [#253](https://github.com/alcaeus/mongo-php-adapter/pull/253) fixes wrong
+ handling of `ArrayObject` instances in `MongoCollection::insert`.
+
+1.1.7 (2019-04-06)
+------------------
+
+All issues and pull requests under this release may be found under the
+[1.1.7](https://github.com/alcaeus/mongo-php-adapter/issues?q=milestone%3A1.1.7)
+milestone.
+
+ * [#250](https://github.com/alcaeus/mongo-php-adapter/pull/250) fixes type
+ conversion when passing write concern to `MongoClient` via URL arguments.
+
+
+1.1.6 (2019-02-08)
+------------------
+
+All issues and pull requests under this release may be found under the
+[1.1.6](https://github.com/alcaeus/mongo-php-adapter/issues?q=milestone%3A1.1.6)
+milestone.
+
+ * [#244](https://github.com/alcaeus/mongo-php-adapter/pull/244) fixes a null
+ access when converting exceptions.
+ * [#236](https://github.com/alcaeus/mongo-php-adapter/pull/236) allows using
+ `0` as key in documents.
+ * [#234](https://github.com/alcaeus/mongo-php-adapter/pull/234) removes an
+ invalid attribute from phpunit.xml.
+
+
 1.1.5 (2018-03-05)
 -----------------
 

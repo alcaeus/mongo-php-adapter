@@ -3,6 +3,7 @@
 namespace Alcaeus\MongoDbAdapter\Tests\Mongo;
 
 use Alcaeus\MongoDbAdapter\Tests\TestCase;
+use Countable;
 
 class MongoGridFSCursorTest extends TestCase
 {
@@ -13,7 +14,7 @@ class MongoGridFSCursorTest extends TestCase
         $gridfs->storeBytes('bar', ['filename' => 'bar.txt']);
         $cursor = $gridfs->find(['filename' => 'foo.txt']);
 
-        $this->assertInternalType('string', serialize($cursor));
+        $this->assertIsString(serialize($cursor));
     }
 
     public function testCursorItems()
@@ -29,12 +30,24 @@ class MongoGridFSCursorTest extends TestCase
             $this->assertInstanceOf('MongoGridFSFile', $value);
             $this->assertSame('foo', $value->getBytes());
 
-            $this->assertArraySubset([
+            $this->assertMatches([
                 'filename' => 'foo.txt',
                 'chunkSize' => 261120,
                 'length' => 3,
                 'md5' => 'acbd18db4cc2f85cedef654fccc4a4d8'
             ], $value->file);
         }
+    }
+
+    public function testInterfaces()
+    {
+        $this->skipTestIf(extension_loaded('mongo'));
+
+        $gridfs = $this->getGridFS();
+        $id = $gridfs->storeBytes('foo', ['filename' => 'foo.txt']);
+        $gridfs->storeBytes('bar', ['filename' => 'bar.txt']);
+
+        $cursor = $gridfs->find(['filename' => 'foo.txt']);
+        $this->assertInstanceOf(Countable::class, $cursor);
     }
 }

@@ -1,0 +1,168 @@
+name: "Tests"
+
+on:
+  pull_request:
+    branches:
+      - "*.x"
+  push:
+    branches:
+      - "*.x"
+
+jobs:
+  verification:
+    name: "Verification tests"
+    runs-on: "ubuntu-18.04"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v2"
+        with:
+          fetch-depth: 2
+
+      - name: Setup cache environment
+        id: extcache
+        uses: shivammathur/cache-extensions@v1
+        with:
+          php-version: "5.6"
+          extensions: "mongodb-1.7.5, mongo-1.6.14"
+          key: "extcache-v1"
+
+      - name: Cache extensions
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.extcache.outputs.dir }}
+          key: ${{ steps.extcache.outputs.key }}
+          restore-keys: ${{ steps.extcache.outputs.key }}
+
+      - name: "Install PHP"
+        uses: "shivammathur/setup-php@v2"
+        with:
+          php-version: "5.6"
+          tools: "pecl"
+          extensions: "mongodb-1.7.5, mongo-1.6.14"
+          coverage: "none"
+          ini-values: "zend.assertions=1"
+
+      - name: "Show legacy driver information"
+        run: "php --ri mongo"
+
+      - name: "Show driver information"
+        run: "php --ri mongodb"
+
+      - name: "Cache dependencies installed with composer"
+        uses: "actions/cache@v2"
+        with:
+          path: "~/.composer/cache"
+          key: "php-5.6-composer-locked-${{ hashFiles('composer.json') }}"
+          restore-keys: "php-5.6-composer-normal-"
+
+      - name: "Install dependencies with composer"
+        run: "composer update --no-interaction --no-progress"
+
+      - id: setup-mongodb
+        uses: mongodb-labs/drivers-evergreen-tools@master
+        with:
+          version: "3.0"
+
+      - name: "Run PHPUnit"
+        run: "vendor/bin/simple-phpunit -v"
+        env:
+          SYMFONY_DEPRECATIONS_HELPER: 999999
+          MONGODB_URI: ${{ steps.setup-mongodb.outputs.cluster-uri }}
+
+  phpunit:
+    name: "PHPUnit tests"
+    runs-on: "${{ matrix.os }}"
+
+    strategy:
+      fail-fast: true
+      matrix:
+        os:
+          - "ubuntu-18.04"
+        php-version:
+          - "7.2"
+          - "7.3"
+          - "7.4"
+          - "8.0"
+          - "8.1"
+        mongodb-version:
+          - "4.4"
+        driver-version:
+          - "stable"
+        deps:
+          - "normal"
+        include:
+          - deps: "low"
+            os: "ubuntu-18.04"
+            php-version: "5.6"
+            mongodb-version: "3.0"
+            driver-version: "1.2.0"
+          - deps: "normal"
+            os: "ubuntu-18.04"
+            php-version: "7.0"
+            mongodb-version: "4.4"
+            driver-version: "1.9.2"
+          - deps: "normal"
+            os: "ubuntu-18.04"
+            php-version: "7.1"
+            mongodb-version: "4.4"
+            driver-version: "1.11.1"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v2"
+        with:
+          fetch-depth: 2
+
+      - name: Setup cache environment
+        id: extcache
+        uses: shivammathur/cache-extensions@v1
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: "mongodb-${{ matrix.driver-version }}"
+          key: "extcache-v1"
+
+      - name: Cache extensions
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.extcache.outputs.dir }}
+          key: ${{ steps.extcache.outputs.key }}
+          restore-keys: ${{ steps.extcache.outputs.key }}
+
+      - name: "Install PHP"
+        uses: "shivammathur/setup-php@v2"
+        with:
+          php-version: "${{ matrix.php-version }}"
+          tools: "pecl"
+          extensions: "mongodb-${{ matrix.driver-version }}"
+          coverage: "none"
+          ini-values: "zend.assertions=1"
+
+      - name: "Show driver information"
+        run: "php --ri mongodb"
+
+      - name: "Cache dependencies installed with composer"
+        uses: "actions/cache@v2"
+        with:
+          path: "~/.composer/cache"
+          key: "php-${{ matrix.php-version }}-composer-locked-${{ hashFiles('composer.json') }}"
+          restore-keys: "php-${{ matrix.php-version }}-composer-${{ matrix.deps }}-"
+
+      - name: "Install dependencies with composer"
+        run: "composer update --no-interaction --no-progress"
+        if: "${{ matrix.deps == 'normal' }}"
+
+      - name: "Install lowest possible dependencies with composer"
+        run: "composer update --no-interaction --no-progress --prefer-dist --prefer-lowest"
+        if: "${{ matrix.deps == 'low' }}"
+
+      - id: setup-mongodb
+        uses: mongodb-labs/drivers-evergreen-tools@master
+        with:
+          version: ${{ matrix.mongodb-version }}
+
+      - name: "Run PHPUnit"
+        run: "vendor/bin/simple-phpunit -v"
+        env:
+          SYMFONY_DEPRECATIONS_HELPER: 999999
+          MONGODB_URI: ${{ steps.setup-mongodb.outputs.cluster-uri }}

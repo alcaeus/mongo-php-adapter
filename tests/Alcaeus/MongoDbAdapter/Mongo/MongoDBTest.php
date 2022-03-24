@@ -12,7 +12,7 @@ class MongoDBTest extends TestCase
 {
     public function testSerialize()
     {
-        $this->assertInternalType('string', serialize($this->getDatabase()));
+        $this->assertIsString(serialize($this->getDatabase()));
     }
 
     public function testEmptyDatabaseName()
@@ -126,8 +126,8 @@ class MongoDBTest extends TestCase
             'code' => 13,
         ];
 
-        // Using assertArraySubset because newer versions (3.4.7?) also return `codeName`
-        $this->assertArraySubset($expected, $db->command(['listDatabases' => 1]));
+        // Using assertMatches because newer versions (3.4.7?) also return `codeName`
+        $this->assertMatches($expected, $db->command(['listDatabases' => 1]));
     }
 
     public function testCommandCursorTimeout()
@@ -164,7 +164,7 @@ class MongoDBTest extends TestCase
 
         $this->assertTrue($database->setSlaveOkay(false));
         // Only test a subset since we don't keep tagsets around for RP_PRIMARY
-        $this->assertArraySubset(['type' => \MongoClient::RP_PRIMARY], $database->getReadPreference());
+        $this->assertMatches(['type' => \MongoClient::RP_PRIMARY], $database->getReadPreference());
     }
 
     public function testReadPreferenceIsSetInDriver()
@@ -240,6 +240,8 @@ class MongoDBTest extends TestCase
 
     public function testExecute()
     {
+        $this->skipTestIf(version_compare($this->getServerVersion(), '4.2.0', '>='), 'Eval no longer works on MongoDB 4.2.0 and newer');
+
         $db = $this->getDatabase();
         $document = ['foo' => 'bar'];
         $this->getCollection()->insert($document);
@@ -290,7 +292,7 @@ class MongoDBTest extends TestCase
                         ],
                     ];
                 }
-                $this->assertEquals($expected, $collectionInfo);
+                $this->assertMatches($expected, $collectionInfo);
                 return;
             }
         }
@@ -384,11 +386,13 @@ class MongoDBTest extends TestCase
             'nIndexesWas' => 1,
             'ok' => 1.0
         ];
-        $this->assertSame($expected, $this->getDatabase()->dropCollection('test'));
+        $this->assertEquals($expected, $this->getDatabase()->dropCollection('test'));
     }
 
     public function testRepair()
     {
+        $this->skipTestIf(version_compare($this->getServerVersion(), '4.2.0', '>='), 'The "repairDatabase" has been removed in MongoDB 4.2.0');
+
         $this->assertSame(['ok' => 1.0], $this->getDatabase()->repair());
     }
 }

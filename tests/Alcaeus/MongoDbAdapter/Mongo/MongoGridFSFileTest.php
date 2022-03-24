@@ -12,14 +12,14 @@ class MongoGridFSFileTest extends TestCase
         $file = $this->getGridFS()->findOne(['filename' => 'foo']);
         $this->assertInstanceOf(\MongoGridFSFile::class, $file);
 
-        $this->assertInternalType('string', serialize($file));
+        $this->assertIsString(serialize($file));
     }
 
     public function testFileProperty()
     {
         $file = $this->getFile();
         $this->assertArrayHasKey('_id', $file->file);
-        $this->assertArraySubset(
+        $this->assertMatches(
             [
                 'length' => 666,
                 'filename' => 'file',

@@ -8,7 +8,7 @@ class MongoGridFSTest extends TestCase
 {
     public function testSerialize()
     {
-        $this->assertInternalType('string', serialize($this->getGridFS()));
+        $this->assertIsString(serialize($this->getGridFS()));
     }
 
     public function testChunkProperty()
@@ -70,33 +70,29 @@ class MongoGridFSTest extends TestCase
 
         $record = $newCollection->findOne();
         $this->assertNotNull($record);
-        $this->assertAttributeInstanceOf('MongoDB\BSON\ObjectID', '_id', $record);
+        $this->assertInstanceOf('MongoDB\BSON\ObjectID', $record->_id);
         $this->assertSame((string) $id, (string) $record->_id);
-        $this->assertObjectHasAttribute('foo', $record);
-        $this->assertAttributeSame('bar', 'foo', $record);
-        $this->assertObjectHasAttribute('length', $record);
-        $this->assertAttributeSame(4, 'length', $record);
-        $this->assertObjectHasAttribute('chunkSize', $record);
-        $this->assertAttributeSame(2, 'chunkSize', $record);
-        $this->assertObjectHasAttribute('md5', $record);
-        $this->assertAttributeSame('e2fc714c4727ee9395f324cd2e7f331f', 'md5', $record);
+        $this->assertSame('bar', $record->foo);
+        $this->assertSame(4, $record->length);
+        $this->assertSame(2, $record->chunkSize);
+        $this->assertSame('e2fc714c4727ee9395f324cd2e7f331f', $record->md5);
 
         $chunksCursor = $newChunksCollection->find([], ['sort' => ['n' => 1]]);
         $chunks = iterator_to_array($chunksCursor);
         $firstChunk = $chunks[0];
         $this->assertNotNull($firstChunk);
-        $this->assertAttributeInstanceOf('MongoDB\BSON\ObjectID', 'files_id', $firstChunk);
+        $this->assertInstanceOf('MongoDB\BSON\ObjectID', $firstChunk->files_id);
         $this->assertSame((string) $id, (string) $firstChunk->files_id);
-        $this->assertAttributeSame(0, 'n', $firstChunk);
-        $this->assertAttributeInstanceOf('MongoDB\BSON\Binary', 'data', $firstChunk);
+        $this->assertSame(0, $firstChunk->n);
+        $this->assertInstanceOf('MongoDB\BSON\Binary', $firstChunk->data);
         $this->assertSame('ab', (string) $firstChunk->data->getData());
 
         $secondChunck = $chunks[1];
         $this->assertNotNull($secondChunck);
-        $this->assertAttributeInstanceOf('MongoDB\BSON\ObjectID', 'files_id', $secondChunck);
+        $this->assertInstanceOf('MongoDB\BSON\ObjectID', $secondChunck->files_id);
         $this->assertSame((string) $id, (string) $secondChunck->files_id);
-        $this->assertAttributeSame(1, 'n', $secondChunck);
-        $this->assertAttributeInstanceOf('MongoDB\BSON\Binary', 'data', $secondChunck);
+        $this->assertSame(1, $secondChunck->n);
+        $this->assertInstanceOf('MongoDB\BSON\Binary', $secondChunck->data);
         $this->assertSame('cd', (string) $secondChunck->data->getData());
     }
 
@@ -164,18 +160,13 @@ class MongoGridFSTest extends TestCase
         $size = filesize($filename);
         $record = $newCollection->findOne();
         $this->assertNotNull($record);
-        $this->assertAttributeInstanceOf('MongoDB\BSON\ObjectID', '_id', $record);
+        $this->assertInstanceOf('MongoDB\BSON\ObjectID', $record->_id);
         $this->assertSame((string) $id, (string) $record->_id);
-        $this->assertObjectHasAttribute('foo', $record);
-        $this->assertAttributeSame('bar', 'foo', $record);
-        $this->assertObjectHasAttribute('length', $record);
-        $this->assertAttributeSame($size, 'length', $record);
-        $this->assertObjectHasAttribute('chunkSize', $record);
-        $this->assertAttributeSame(100, 'chunkSize', $record);
-        $this->assertObjectHasAttribute('md5', $record);
-        $this->assertAttributeSame($md5, 'md5', $record);
-        $this->assertObjectHasAttribute('filename', $record);
-        $this->assertAttributeSame($filename, 'filename', $record);
+        $this->assertSame('bar', $record->foo);
+        $this->assertSame($size, $record->length);
+        $this->assertSame(100, $record->chunkSize);
+        $this->assertSame($md5, $record->md5);
+        $this->assertSame($filename, $record->filename);
 
         $numberOfChunks = (int) ceil($size / 100);
         $this->assertSame($numberOfChunks, $newChunksCollection->count());
@@ -183,10 +174,10 @@ class MongoGridFSTest extends TestCase
 
         $firstChunk = $newChunksCollection->findOne([], ['sort' => ['n' => 1]]);
         $this->assertNotNull($firstChunk);
-        $this->assertAttributeInstanceOf('MongoDB\BSON\ObjectID', 'files_id', $firstChunk);
+        $this->assertInstanceOf('MongoDB\BSON\ObjectID', $firstChunk->files_id);
         $this->assertSame((string) $id, (string) $firstChunk->files_id);
-        $this->assertAttributeSame(0, 'n', $firstChunk);
-        $this->assertAttributeInstanceOf('MongoDB\BSON\Binary', 'data', $firstChunk);
+        $this->assertSame(0, $firstChunk->n);
+        $this->assertInstanceOf('MongoDB\BSON\Binary', $firstChunk->data);
         $this->assertSame($expectedContent, (string) $firstChunk->data->getData());
     }
 
@@ -209,18 +200,13 @@ class MongoGridFSTest extends TestCase
         $filename = basename(__FILE__);
         $record = $newCollection->findOne();
         $this->assertNotNull($record);
-        $this->assertAttributeInstanceOf('MongoDB\BSON\ObjectID', '_id', $record);
+        $this->assertInstanceOf('MongoDB\BSON\ObjectID', $record->_id);
         $this->assertSame((string) $id, (string) $record->_id);
-        $this->assertObjectHasAttribute('foo', $record);
-        $this->assertAttributeSame('bar', 'foo', $record);
-        $this->assertObjectHasAttribute('length', $record);
-        $this->assertAttributeSame($size, 'length', $record);
-        $this->assertObjectHasAttribute('chunkSize', $record);
-        $this->assertAttributeSame(100, 'chunkSize', $record);
-        $this->assertObjectHasAttribute('md5', $record);
-        $this->assertAttributeSame($md5, 'md5', $record);
-        $this->assertObjectHasAttribute('filename', $record);
-        $this->assertAttributeSame('test.php', 'filename', $record);
+        $this->assertSame('bar', $record->foo);
+        $this->assertSame($size, $record->length);
+        $this->assertSame(100, $record->chunkSize);
+        $this->assertSame($md5, $record->md5);
+        $this->assertSame('test.php', $record->filename);
 
         $numberOfChunks = (int) ceil($size / 100);
         $this->assertSame($numberOfChunks, $newChunksCollection->count());
@@ -228,10 +214,10 @@ class MongoGridFSTest extends TestCase
 
         $firstChunk = $newChunksCollection->findOne([], ['sort' => ['n' => 1]]);
         $this->assertNotNull($firstChunk);
-        $this->assertAttributeInstanceOf('MongoDB\BSON\ObjectID', 'files_id', $firstChunk);
+        $this->assertInstanceOf('MongoDB\BSON\ObjectID', $firstChunk->files_id);
         $this->assertSame((string) $id, (string) $firstChunk->files_id);
-        $this->assertAttributeSame(0, 'n', $firstChunk);
-        $this->assertAttributeInstanceOf('MongoDB\BSON\Binary', 'data', $firstChunk);
+        $this->assertSame(0, $firstChunk->n);
+        $this->assertInstanceOf('MongoDB\BSON\Binary', $firstChunk->data);
         $this->assertSame($expectedContent, (string) $firstChunk->data->getData());
     }
 
@@ -260,18 +246,13 @@ class MongoGridFSTest extends TestCase
         $size = filesize(__FILE__);
         $record = $newCollection->findOne();
         $this->assertNotNull($record);
-        $this->assertAttributeInstanceOf('MongoDB\BSON\ObjectID', '_id', $record);
+        $this->assertInstanceOf('MongoDB\BSON\ObjectID', $record->_id);
         $this->assertSame((string) $id, (string) $record->_id);
-        $this->assertObjectHasAttribute('foo', $record);
-        $this->assertAttributeSame('bar', 'foo', $record);
-        $this->assertObjectHasAttribute('length', $record);
-        $this->assertAttributeSame($size, 'length', $record);
-        $this->assertObjectHasAttribute('chunkSize', $record);
-        $this->assertAttributeSame(100, 'chunkSize', $record);
-        $this->assertObjectHasAttribute('md5', $record);
-        $this->assertAttributeSame($md5, 'md5', $record);
-        $this->assertObjectHasAttribute('filename', $record);
-        $this->assertAttributeSame('test.php', 'filename', $record);
+        $this->assertSame('bar', $record->foo);
+        $this->assertSame($size, $record->length);
+        $this->assertSame(100, $record->chunkSize);
+        $this->assertSame($md5, $record->md5);
+        $this->assertSame('test.php', $record->filename);
 
         $numberOfChunks = (int) ceil($size / 100);
         $this->assertSame($numberOfChunks, $newChunksCollection->count());
@@ -346,7 +327,7 @@ class MongoGridFSTest extends TestCase
         $collection->insert($document);
 
         $this->expectException(\MongoGridFSException::class);
-        $this->expectExceptionMessageRegExp('/Could not store file:.* E11000 duplicate key error .* mongo-php-adapter\.fs\.files/');
+        $this->expectErrorMessageMatches('/Could not store file:.* E11000 duplicate key error .* mongo-php-adapter\.fs\.files/');
         $this->expectExceptionCode(11000);
 
         $collection->storeBytes('foo', ['_id' => $id]);
@@ -361,7 +342,7 @@ class MongoGridFSTest extends TestCase
         $collection->chunks->insert($document);
 
         $this->expectException(\MongoGridFSException::class);
-        $this->expectExceptionMessageRegExp('/Could not store file:.* E11000 duplicate key error .* mongo-php-adapter\.fs\.chunks/');
+        $this->expectErrorMessageMatches('/Could not store file:.* E11000 duplicate key error .* mongo-php-adapter\.fs\.chunks/');
         $this->expectExceptionCode(11000);
 
         $collection->storeBytes('foo');
@@ -376,7 +357,7 @@ class MongoGridFSTest extends TestCase
         $collection->insert($document);
 
         $this->expectException(\MongoGridFSException::class);
-        $this->expectExceptionMessageRegExp('/Could not store file:.* E11000 duplicate key error .* mongo-php-adapter\.fs\.files/');
+        $this->expectErrorMessageMatches('/Could not store file:.* E11000 duplicate key error .* mongo-php-adapter\.fs\.files/');
         $this->expectExceptionCode(11000);
 
         $collection->storeFile(__FILE__, ['_id' => $id]);
@@ -391,7 +372,7 @@ class MongoGridFSTest extends TestCase
         $collection->chunks->insert($document);
 
         $this->expectException(\MongoGridFSException::class);
-        $this->expectExceptionMessageRegExp('/Could not store file:.* E11000 duplicate key error .* mongo-php-adapter\.fs\.chunks/');
+        $this->expectErrorMessageMatches('/Could not store file:.* E11000 duplicate key error .* mongo-php-adapter\.fs\.chunks/');
         $this->expectExceptionCode(11000);
 
         $collection->storeFile(__FILE__);
@@ -406,7 +387,7 @@ class MongoGridFSTest extends TestCase
         $collection->insert($document);
 
         $this->expectException(\MongoGridFSException::class);
-        $this->expectExceptionMessageRegExp('/Could not store file:.* E11000 duplicate key error .* mongo-php-adapter\.fs\.files/');
+        $this->expectErrorMessageMatches('/Could not store file:.* E11000 duplicate key error .* mongo-php-adapter\.fs\.files/');
         $this->expectExceptionCode(11000);
 
         $collection->storeFile(fopen(__FILE__, 'r'));

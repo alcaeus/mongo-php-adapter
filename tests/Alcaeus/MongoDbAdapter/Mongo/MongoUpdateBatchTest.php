@@ -9,7 +9,7 @@ class MongoUpdateBatchTest extends TestCase
     public function testSerialize()
     {
         $batch = new \MongoUpdateBatch($this->getCollection());
-        $this->assertInternalType('string', serialize($batch));
+        $this->assertIsString(serialize($batch));
     }
 
     public function testUpdateOne()
@@ -35,8 +35,7 @@ class MongoUpdateBatchTest extends TestCase
         $this->assertSame(1, $newCollection->count());
         $record = $newCollection->findOne();
         $this->assertNotNull($record);
-        $this->assertObjectHasAttribute('foo', $record);
-        $this->assertAttributeSame('foo', 'foo', $record);
+        $this->assertSame('foo', $record->foo);
     }
 
     public function testUpdateOneException()
@@ -71,7 +70,7 @@ class MongoUpdateBatchTest extends TestCase
         } catch (\MongoWriteConcernException $e) {
             $this->assertSame('Failed write', $e->getMessage());
             $this->assertSame(911, $e->getCode());
-            $this->assertArraySubset($expected, $e->getDocument());
+            $this->assertMatches($expected, $e->getDocument());
         }
     }
 
@@ -100,8 +99,7 @@ class MongoUpdateBatchTest extends TestCase
         $this->assertSame(2, $newCollection->count());
         $record = $newCollection->findOne();
         $this->assertNotNull($record);
-        $this->assertObjectHasAttribute('foo', $record);
-        $this->assertAttributeSame('foo', 'foo', $record);
+        $this->assertSame('foo', $record->foo);
     }
 
     public function testUpdateManyWithoutAck()
@@ -129,8 +127,7 @@ class MongoUpdateBatchTest extends TestCase
         $this->assertSame(2, $newCollection->count());
         $record = $newCollection->findOne();
         $this->assertNotNull($record);
-        $this->assertObjectHasAttribute('foo', $record);
-        $this->assertAttributeSame('foo', 'foo', $record);
+        $this->assertSame('foo', $record->foo);
     }
 
     public function testUpdateManyException()
@@ -165,7 +162,7 @@ class MongoUpdateBatchTest extends TestCase
         } catch (\MongoWriteConcernException $e) {
             $this->assertSame('Failed write', $e->getMessage());
             $this->assertSame(911, $e->getCode());
-            $this->assertArraySubset($expected, $e->getDocument());
+            $this->assertMatches($expected, $e->getDocument());
         }
     }
 
@@ -191,7 +188,7 @@ class MongoUpdateBatchTest extends TestCase
         ];
 
         $result = $batch->execute();
-        $this->assertArraySubset($expected, $result);
+        $this->assertMatches($expected, $result);
 
         $this->assertInstanceOf('MongoId', $result['upserted'][0]['_id']);
 
@@ -200,8 +197,7 @@ class MongoUpdateBatchTest extends TestCase
         $this->assertSame(2, $newCollection->count());
         $record = $newCollection->findOne();
         $this->assertNotNull($record);
-        $this->assertObjectHasAttribute('foo', $record);
-        $this->assertAttributeSame('bar', 'foo', $record);
+        $this->assertSame('bar', $record->foo);
     }
 
     public function testValidateItem()

@@ -18,17 +18,17 @@ if (class_exists('MongoCursor', false)) {
 }
 
 use Alcaeus\MongoDbAdapter\AbstractCursor;
+use Alcaeus\MongoDbAdapter\CursorIterator;
 use Alcaeus\MongoDbAdapter\TypeConverter;
 use Alcaeus\MongoDbAdapter\ExceptionConverter;
 use MongoDB\Driver\Cursor;
-use MongoDB\Driver\ReadPreference;
 use MongoDB\Operation\Find;
 
 /**
  * Result object for database query.
  * @link http://www.php.net/manual/en/class.mongocursor.php
  */
-class MongoCursor extends AbstractCursor implements Iterator
+class MongoCursor extends AbstractCursor implements Iterator, Countable, MongoCursorInterface
 {
     /**
      * @var bool
@@ -133,6 +133,7 @@ class MongoCursor extends AbstractCursor implements Iterator
      * @param bool $foundOnly Send cursor limit and skip information to the count function, if applicable.
      * @return int The number of documents returned by this cursor's query.
      */
+    #[\ReturnTypeWillChange]
     public function count($foundOnly = false)
     {
         $optionNames = ['hint', 'maxTimeMS'];
@@ -472,16 +473,11 @@ class MongoCursor extends AbstractCursor implements Iterator
 
     /**
      * @param \Traversable $traversable
-     * @return \Generator
+     * @return CursorIterator
      */
     protected function wrapTraversable(\Traversable $traversable)
     {
-        foreach ($traversable as $key => $value) {
-            if (isset($value->_id) && ($value->_id instanceof \MongoDB\BSON\ObjectID || !is_object($value->_id))) {
-                $key = (string) $value->_id;
-            }
-            yield $key => $value;
-        }
+        return new CursorIterator($traversable, true);
     }
 
     /**

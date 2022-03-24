@@ -4,6 +4,8 @@ namespace Alcaeus\MongoDbAdapter\Tests\Mongo;
 
 use Alcaeus\MongoDbAdapter\Tests\TestCase;
 use Alcaeus\MongoDbAdapter\TypeConverter;
+use Countable;
+use MongoCursorInterface;
 use MongoDB\Driver\ReadPreference;
 use MongoDB\Model\BSONDocument;
 use MongoDB\Operation\Find;
@@ -17,7 +19,7 @@ class MongoCursorTest extends TestCase
     {
         $this->prepareData();
         $cursor = $this->getCollection()->find(['foo' => 'bar']);
-        $this->assertInternalType('string', serialize($cursor));
+        $this->assertIsString(serialize($cursor));
     }
 
     public function testCursorConvertsTypes()
@@ -432,23 +434,23 @@ class MongoCursorTest extends TestCase
                 'parsedQuery' => [
                     'foo' => ['$eq' => 'bar']
                 ],
-                'winningPlan' => [],
-                'rejectedPlans' => [],
+                'winningPlan' => ['$$exists' => true],
+                'rejectedPlans' => ['$$exists' => true],
             ],
             'executionStats' => [
                 'executionSuccess' => true,
                 'nReturned' => 1,
                 'totalKeysExamined' => 0,
                 'totalDocsExamined' => 3,
-                'executionStages' => [],
-                'allPlansExecution' => [],
+                'executionStages' => ['$$exists' => true],
+                'allPlansExecution' => ['$$exists' => true],
             ],
             'serverInfo' => [
                 'port' => 27017,
             ],
         ];
 
-        $this->assertArraySubset($expected, $cursor->explain());
+        $this->assertMatches($expected, $cursor->explain());
     }
 
     public function testExplainWithEmptyProjection()
@@ -466,23 +468,23 @@ class MongoCursorTest extends TestCase
                 'parsedQuery' => [
                     'foo' => ['$eq' => 'bar']
                 ],
-                'winningPlan' => [],
-                'rejectedPlans' => [],
+                'winningPlan' => ['$$exists' => true],
+                'rejectedPlans' => ['$$exists' => true],
             ],
             'executionStats' => [
                 'executionSuccess' => true,
                 'nReturned' => 2,
                 'totalKeysExamined' => 0,
                 'totalDocsExamined' => 3,
-                'executionStages' => [],
-                'allPlansExecution' => [],
+                'executionStages' => ['$$exists' => true],
+                'allPlansExecution' => ['$$exists' => true],
             ],
             'serverInfo' => [
                 'port' => 27017,
             ],
         ];
 
-        $this->assertArraySubset($expected, $cursor->explain());
+        $this->assertMatches($expected, $cursor->explain());
     }
 
     public function testExplainConvertsQuery()
@@ -497,23 +499,36 @@ class MongoCursorTest extends TestCase
                 'plannerVersion' => 1,
                 'namespace' => 'mongo-php-adapter.test',
                 'indexFilterSet' => false,
-                'winningPlan' => [],
-                'rejectedPlans' => [],
+                'winningPlan' => ['$$exists' => true],
+                'rejectedPlans' => ['$$exists' => true],
             ],
             'executionStats' => [
                 'executionSuccess' => true,
                 'nReturned' => 2,
                 'totalKeysExamined' => 0,
                 'totalDocsExamined' => 3,
-                'executionStages' => [],
-                'allPlansExecution' => [],
+                'executionStages' => ['$$exists' => true],
+                'allPlansExecution' => ['$$exists' => true],
             ],
             'serverInfo' => [
                 'port' => 27017,
             ],
         ];
 
-        $this->assertArraySubset($expected, $cursor->explain());
+        $this->assertMatches($expected, $cursor->explain());
+    }
+
+    public function testInterfaces()
+    {
+        $collection = $this->getCollection();
+        $cursor = $collection->find();
+
+        $this->assertInstanceOf(MongoCursorInterface::class, $cursor);
+
+        // The countable interface is necessary for compatibility with PHP 7.3+, but not implemented by MongoCursor
+        if (! extension_loaded('mongo')) {
+            $this->assertInstanceOf(Countable::class, $cursor);
+        }
     }
 
 
