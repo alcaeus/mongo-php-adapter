@@ -23,9 +23,6 @@ class MongoClientTest extends TestCase
         yield ['default', sprintf('mongodb://%s:%d', \MongoClient::DEFAULT_HOST, \MongoClient::DEFAULT_PORT)];
         yield ['localhost', 'mongodb://localhost'];
         yield ['mongodb://localhost', 'mongodb://localhost'];
-        if (version_compare(phpversion('mongodb'), '1.4.0', '>=')) {
-            yield ['mongodb+srv://foo.example.com', 'mongodb+srv://foo.example.com'];
-        }
     }
 
     public function testSerialize()
