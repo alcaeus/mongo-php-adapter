@@ -91,10 +91,12 @@ class MongoClient
         }
 
         $this->applyConnectionOptions($server, $options);
+        
+        $protocol = $options['protocol'] ?? 'mongodb://';
 
         $this->server = $server;
-        if (false === strpos($this->server, '://')) {
-            $this->server = 'mongodb://' . $this->server;
+        if (false === strpos($this->server, $protocol)) {
+            $this->server = $protocol . $this->server;
         }
         $this->client = new Client($this->server, $options, $driverOptions);
         $info = $this->client->__debugInfo();
