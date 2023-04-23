@@ -1,12 +1,13 @@
 {
-    "name": "alcaeus/mongo-php-adapter",
+    "name": "nbsbbs/mongo-php-adapter",
     "type": "library",
-    "description": "Adapter to provide ext-mongo interface on top of mongo-php-library",
+    "description": "Adapter to provide ext-mongo interface on top of mongo-php-library (updated by Noobus)",
     "keywords": ["mongodb", "database"],
     "license": "MIT",
     "authors": [
         { "name": "alcaeus", "email": "alcaeus@alcaeus.org" },
-        { "name": "Olivier Lechevalier", "email": "olivier.lechevalier@gmail.com" }
+        { "name": "Olivier Lechevalier", "email": "olivier.lechevalier@gmail.com" },
+        { "name": "Noobus", "email": "nbsbbs@gmail.com" }
     ],
     "require": {
         "php": "^5.6 || ^7.0 || ^8.0",
