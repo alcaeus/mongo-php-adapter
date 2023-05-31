@@ -15,7 +15,7 @@ class MongoClientTest extends TestCase
     public function testConnectionUri($uri, $expected)
     {
         $this->skipTestIf(extension_loaded('mongo'));
-        $this->assertSame($expected, (string)(new \MongoClient($uri, ['connect' => false])));
+        $this->assertSame($expected, (string) (new \MongoClient($uri, ['connect' => false])));
     }
 
     public function provideConnectionUri()
@@ -35,7 +35,7 @@ class MongoClientTest extends TestCase
         $client = $this->getClient();
         $db = $client->selectDB('mongo-php-adapter');
         $this->assertInstanceOf('\MongoDB', $db);
-        $this->assertSame('mongo-php-adapter', (string)$db);
+        $this->assertSame('mongo-php-adapter', (string) $db);
     }
 
     public function testSelectDBWithEmptyName()
@@ -59,7 +59,7 @@ class MongoClientTest extends TestCase
         $client = $this->getClient();
         $db = $client->{'mongo-php-adapter'};
         $this->assertInstanceOf('\MongoDB', $db);
-        $this->assertSame('mongo-php-adapter', (string)$db);
+        $this->assertSame('mongo-php-adapter', (string) $db);
     }
 
     public function testGetCollection()
@@ -67,7 +67,7 @@ class MongoClientTest extends TestCase
         $client = $this->getClient();
         $collection = $client->selectCollection('mongo-php-adapter', 'test');
         $this->assertInstanceOf('MongoCollection', $collection);
-        $this->assertSame('mongo-php-adapter.test', (string)$collection);
+        $this->assertSame('mongo-php-adapter.test', (string) $collection);
     }
 
     public function testGetHosts()
