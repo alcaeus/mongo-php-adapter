@@ -392,11 +392,15 @@ class MongoClient
     }
 
     /**
-     * @param $readPreferenceTagString
+     * @param string $readPreferenceTagString
      * @return array
      */
     private function getReadPreferenceTags($readPreferenceTagString)
     {
+        if ($readPreferenceTagString === '') {
+            return [];
+        }
+
         $tagSets = [];
         foreach (explode(',', $readPreferenceTagString) as $index => $tagSet) {
             $tags = explode(':', $tagSet);
