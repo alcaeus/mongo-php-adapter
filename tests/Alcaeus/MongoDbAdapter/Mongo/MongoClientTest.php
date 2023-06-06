@@ -340,7 +340,6 @@ class MongoClientTest extends TestCase
             if (is_array($value)) {
                 if ($key === 'readPreferenceTags') {
                     foreach ($value as $tagSet) {
-
                         $tagString = implode(',', array_map(
                             function ($k, $v) {
                                 return $k . ':' . $v;
