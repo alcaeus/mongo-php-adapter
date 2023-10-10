@@ -89,11 +89,23 @@ class MongoClientTest extends TestCase
 
     public function testGetHostsExceptionHandling()
     {
-        $this->expectException(\MongoConnectionException::class);
-        $this->expectErrorMessageMatches('/fake_host/');
+        // Workaround for PHPUnit 10
+        set_error_handler(
+            static function ($errno, $errstr) {
+                throw new \Exception($errstr, $errno);
+            },
+            E_ALL
+        );
 
-        $client = $this->getClient(null, 'mongodb://fake_host');
-        $client->getHosts();
+        $this->expectException(\MongoConnectionException::class);
+        $this->expectExceptionMessageMatches('/fake_host/');
+
+        try {
+            $client = $this->getClient(null, 'mongodb://fake_host');
+            $client->getHosts();
+        } finally {
+            restore_error_handler();
+        }
     }
 
     public function testReadPreference()
