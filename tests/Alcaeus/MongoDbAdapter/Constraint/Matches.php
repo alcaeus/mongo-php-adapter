@@ -51,6 +51,9 @@ class Matches extends Constraint
     /** @var ComparisonFailure|null */
     private $lastFailure;
 
+    /** @var Factory */
+    private $comparatorFactory;
+
     public function __construct($value, $allowExtraRootKeys = true, $allowExtraKeys = false, $allowOperators = true)
     {
         $this->value = self::prepare($value);
