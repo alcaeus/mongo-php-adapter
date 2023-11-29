@@ -1047,9 +1047,13 @@ class MongoCollection
      */
     private function generateIndexName($keys)
     {
-        $indexInput = new IndexInput(['key' => $keys]);
+        $name = '';
 
-        return (string) $indexInput;
+        foreach ($keys as $field => $type) {
+            $name .= ($name !== '' ? '_' : '') . $field . '_' . $type;
+        }
+
+        return $name;
     }
 
     /**
