@@ -164,17 +164,32 @@ class MongoClientTest extends TestCase
     {
         $options = [
             'readPreference' => \MongoClient::RP_SECONDARY_PREFERRED,
-            'readPreferenceTags' => 'a:b',
+            'readPreferenceTags' => [['a' => 'b']],
         ];
 
         $overriddenOptions = [
             'readPreference' => \MongoClient::RP_NEAREST,
-            'readPreferenceTags' => 'c:d',
+            'readPreferenceTags' => [['c' => 'd']],
         ];
 
-        $multipleTagsets = [
+        $emptyTagSet = [
+            'readPreference' => \MongoClient::RP_SECONDARY_PREFERRED,
+            'readPreferenceTags' => [[]],
+        ];
+
+        $multipleTags = [
+            'readPreference' => \MongoClient::RP_SECONDARY_PREFERRED,
+            'readPreferenceTags' => [['a' => 'b', 'c' => 'd']],
+        ];
+
+        $multipleTagsAsString = [
             'readPreference' => \MongoClient::RP_SECONDARY_PREFERRED,
             'readPreferenceTags' => 'a:b,c:d',
+        ];
+
+        $multipleTagSets = [
+            'readPreference' => \MongoClient::RP_SECONDARY_PREFERRED,
+            'readPreferenceTags' => [['a' => 'b', 'c' =>'d'], ['e' => 'f'], []],
         ];
 
         return [
@@ -198,15 +213,45 @@ class MongoClientTest extends TestCase
                 'uri' => 'mongodb://localhost/?' . self::makeOptionString($overriddenOptions),
                 'expectedTagsets' => [['c' => 'd'], ['a' => 'b']],
             ],
-            'multipleTagsetsOptions' => [
-                'options' => $multipleTagsets,
+            'emptyTagSetInQuery' => [
+                'options' => null,
+                'uri' => 'mongodb://localhost/?' . self::makeOptionString($emptyTagSet),
+                'expectedTagsets' => [[]],
+            ],
+            'emptyTagSetInOptions' => [
+                'options' => $emptyTagSet,
+                'uri' => 'mongodb://localhost',
+                'expectedTagsets' => [[]],
+            ],
+            'multipleTagsArrayInOptions' => [
+                'options' => $multipleTags,
                 'uri' => 'mongodb://localhost',
                 'expectedTagsets' => [['a' => 'b', 'c' => 'd']],
             ],
-            'multipleTagsetsQueryString' => [
+            'multipleTagsInQueryString' => [
                 'options' => null,
-                'uri' => 'mongodb://localhost/?' . self::makeOptionString($multipleTagsets),
+                'uri' => 'mongodb://localhost/?' . self::makeOptionString($multipleTags),
                 'expectedTagsets' => [['a' => 'b', 'c' => 'd']],
+            ],
+            'multipleTagsStringInOptions' => [
+                'options' => $multipleTagsAsString,
+                'uri' => 'mongodb://localhost',
+                'expectedTagsets' => [['a' => 'b', 'c' => 'd']],
+            ],
+            'multipleTagSetsInOptions' => [
+                'options' => $multipleTagSets,
+                'uri' => 'mongodb://localhost',
+                'expectedTagsets' => [['a' => 'b', 'c' => 'd'], ['e' => 'f'], []],
+            ],
+            'multipleTagSetsInQueryString' => [
+                'options' => null,
+                'uri' => 'mongodb://localhost/?' . self::makeOptionString($multipleTagSets),
+                'expectedTagsets' => [['a' => 'b', 'c' => 'd'], ['e' => 'f'], []],
+            ],
+            'mergedTagSets' => [
+                'options' => $multipleTagSets,
+                'uri' => 'mongodb://localhost/?' . self::makeOptionString($multipleTagSets) . '&readPreferenceTags=g:h',
+                'expectedTagsets' => [['a' => 'b', 'c' => 'd'], ['e' => 'f'], [], ['g' => 'h']],
             ],
         ];
     }
@@ -289,12 +334,28 @@ class MongoClientTest extends TestCase
      */
     private static function makeOptionString(array $options)
     {
-        return implode('&', array_map(
-            function ($key, $value) {
-                return $key . '=' . $value;
-            },
-            array_keys($options),
-            array_values($options)
-        ));
+        $query = '';
+
+        foreach ($options as $key => $value) {
+            if (is_array($value)) {
+                if ($key === 'readPreferenceTags') {
+                    foreach ($value as $tagSet) {
+                        $tagString = implode(',', array_map(
+                            function ($k, $v) {
+                                return $k . ':' . $v;
+                            },
+                            array_keys($tagSet),
+                            array_values($tagSet)
+                        ));
+
+                        $query .= $key . '=' . $tagString . '&';
+                    }
+                }
+            } else {
+                $query .= $key . '=' . $value . '&';
+            }
+        }
+
+        return rtrim($query, '&');
     }
 }
