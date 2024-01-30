@@ -334,7 +334,7 @@ class MongoClient
     /**
      * Forces a connection by executing the ping command
      */
-    private function forceConnect()
+    public function forceConnect()
     {
         try {
             $command = new \MongoDB\Driver\Command(['ping' => 1]);
