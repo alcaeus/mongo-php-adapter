@@ -76,6 +76,7 @@ class MongoDeleteBatchTest extends TestCase
         ];
 
         $this->assertSame($expected, $batch->execute(['w' => 0]));
+        usleep(250000); // 250 ms
 
         $newCollection = $this->getCheckDatabase()->selectCollection('test');
         $this->assertSame(0, $newCollection->count());

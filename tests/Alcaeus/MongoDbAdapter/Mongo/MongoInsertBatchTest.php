@@ -8,13 +8,13 @@ class MongoInsertBatchTest extends TestCase
 {
     public function testSerialize()
     {
-        $batch = new \MongoInsertBatch($this->getCollection());
+        $batch = new \MongoInsertBatch($this->getCollection('MongoInsertBatchTest_testSerialize'));
         $this->assertIsString(serialize($batch));
     }
 
     public function testInsertBatch()
     {
-        $batch = new \MongoInsertBatch($this->getCollection());
+        $batch = new \MongoInsertBatch($this->getCollection('MongoInsertBatchTest_testInsertBatch'));
 
         $this->assertTrue($batch->add(['foo' => 'bar']));
         $this->assertTrue($batch->add(['bar' => 'foo']));
@@ -26,7 +26,7 @@ class MongoInsertBatchTest extends TestCase
 
         $this->assertSame($expected, $batch->execute());
 
-        $newCollection = $this->getCheckDatabase()->selectCollection('test');
+        $newCollection = $this->getCheckDatabase()->selectCollection('MongoInsertBatchTest_testInsertBatch');
         $this->assertSame(2, $newCollection->count());
         $record = $newCollection->findOne();
         $this->assertNotNull($record);
@@ -35,7 +35,7 @@ class MongoInsertBatchTest extends TestCase
 
     public function testInsertBatchWithoutAck()
     {
-        $batch = new \MongoInsertBatch($this->getCollection());
+        $batch = new \MongoInsertBatch($this->getCollection('MongoInsertBatchTest_testInsertBatchWithoutAck'));
 
         $this->assertTrue($batch->add(['foo' => 'bar']));
         $this->assertTrue($batch->add(['bar' => 'foo']));
@@ -46,8 +46,9 @@ class MongoInsertBatchTest extends TestCase
         ];
 
         $this->assertSame($expected, $batch->execute(['w' => 0]));
+        usleep(250000); // 250 ms
 
-        $newCollection = $this->getCheckDatabase()->selectCollection('test');
+        $newCollection = $this->getCheckDatabase()->selectCollection('MongoInsertBatchTest_testInsertBatchWithoutAck');
         $this->assertSame(2, $newCollection->count());
         $record = $newCollection->findOne();
         $this->assertNotNull($record);
@@ -56,7 +57,7 @@ class MongoInsertBatchTest extends TestCase
 
     public function testInsertBatchError()
     {
-        $collection = $this->getCollection();
+        $collection = $this->getCollection('MongoInsertBatchTest_testInsertBatchError');
         $batch = new \MongoInsertBatch($collection);
         $collection->createIndex(['foo' => 1], ['unique' => true]);
 

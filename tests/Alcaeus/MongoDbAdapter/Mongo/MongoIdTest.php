@@ -20,7 +20,14 @@ class MongoIdTest extends TestCase
         $this->assertSame($stringId, $id->{'$id'});
 
         $serialized = serialize($id);
-        $this->assertSame(sprintf('C:7:"MongoId":24:{%s}', $stringId), $serialized);
+
+        if (PHP_VERSION_ID >= 70400) {
+            $serializedStr = 'O:7:"MongoId":1:{s:8:"objectID";s:24:"%s";}';
+        } else {
+            $serializedStr = 'C:7:"MongoId":24:{%s}';
+        }
+
+        $this->assertSame(sprintf($serializedStr, $stringId), $serialized);
 
         $unserialized = unserialize($serialized);
         $this->assertInstanceOf('MongoId', $unserialized);

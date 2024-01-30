@@ -6,8 +6,6 @@ use ArrayObject;
 use MongoDB\BSON\Regex;
 use MongoDB\Driver\ReadPreference;
 use Alcaeus\MongoDbAdapter\Tests\TestCase;
-use MongoId;
-use PHPUnit\Framework\Error\Warning;
 use function extension_loaded;
 use function strcasecmp;
 
@@ -56,12 +54,21 @@ class MongoCollectionTest extends TestCase
 
     public function testInsertInvalidData()
     {
-        // Dirty hack to support both PHPUnit 5.x and 6.x
-        $this->expectWarning();
-        $this->expectWarningMessage('MongoCollection::insert(): expects parameter 1 to be an array or object, integer given');
+        // Workaround for PHPUnit 10
+        set_error_handler(static function ($errno, $errstr) {
+            throw new \Exception($errstr, $errno);
+        }, E_ALL);
 
-        $document = 8;
-        $this->getCollection()->insert($document);
+        // Dirty hack to support both PHPUnit 5.x and 6.x
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('MongoCollection::insert(): expects parameter 1 to be an array or object, integer given');
+
+        try {
+            $document = 8;
+            $this->getCollection()->insert($document);
+        } finally {
+            restore_error_handler();
+        }
     }
 
     public function testInsertEmptyArray()
@@ -195,7 +202,7 @@ class MongoCollectionTest extends TestCase
         unset($document['_id']);
 
         $this->expectException(\MongoDuplicateKeyException::class);
-        $this->expectErrorMessageMatches('/E11000 duplicate key error .* mongo-php-adapter\.test/');
+        $this->expectExceptionMessageMatches('/E11000 duplicate key error .* mongo-php-adapter\.test/');
         $this->expectExceptionCode(11000);
         $collection->insert($document);
     }
@@ -303,7 +310,7 @@ class MongoCollectionTest extends TestCase
         $documents = [['_id' => $id, 'foo' => 'bar'], ['_id' => $id, 'foo' => 'bleh']];
 
         $this->expectException(\MongoDuplicateKeyException::class);
-        $this->expectErrorMessageMatches('/E11000 duplicate key error .* mongo-php-adapter.test.*_id_/');
+        $this->expectExceptionMessageMatches('/E11000 duplicate key error .* mongo-php-adapter.test.*_id_/');
         $this->expectExceptionCode(11000);
 
         $this->getCollection()->batchInsert($documents);
@@ -415,7 +422,7 @@ class MongoCollectionTest extends TestCase
     public function testUpdateReplaceMultiple()
     {
         $this->expectException(\MongoWriteConcernException::class);
-        $this->expectErrorMessageMatches('/multi update only works with \$ operators/', 9);
+        $this->expectExceptionMessageMatches('/multi update only works with \$ operators/', 9);
         $this->getCollection()->update(['foo' => 'bar'], ['foo' => 'foo'], ['multiple' => true]);
     }
 
