@@ -96,7 +96,7 @@ class MongoClient
         if (false === strpos($this->server, '://')) {
             $this->server = 'mongodb://' . $this->server;
         }
-        $this->client = new Client($this->server, $options, $driverOptions);
+        $this->client = new Client($this->server, $options, $driverOptions + ['driver' => ['name' => 'mongo-php-adapter']]);
         $info = $this->client->__debugInfo();
         $this->manager = $info['manager'];
 

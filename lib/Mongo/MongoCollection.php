@@ -21,6 +21,7 @@ use Alcaeus\MongoDbAdapter\Helper;
 use Alcaeus\MongoDbAdapter\TypeConverter;
 use Alcaeus\MongoDbAdapter\ExceptionConverter;
 use MongoDB\Driver\Exception\CommandException;
+use MongoDB\Model\IndexInput;
 
 /**
  * Represents a database collection.
@@ -597,7 +598,7 @@ class MongoCollection
         }
 
         if (! isset($options['name'])) {
-            $options['name'] = \MongoDB\generate_index_name($keys);
+            $options['name'] = $this->generateIndexName($keys);
         }
 
         $indexes = iterator_to_array($this->collection->listIndexes());
@@ -677,7 +678,7 @@ class MongoCollection
                 $indexName .= '_1';
             }
         } elseif (is_array($keys)) {
-            $indexName = \MongoDB\generate_index_name($keys);
+            $indexName = $this->generateIndexName($keys);
         } else {
             throw new \InvalidArgumentException();
         }
@@ -1037,6 +1038,22 @@ class MongoCollection
         } elseif (strpos($name, chr(0)) !== false) {
             throw new Exception('Collection name cannot contain null bytes');
         }
+    }
+
+
+    /**
+     * @param array $keys Field or fields to use as index.
+     * @return string
+     */
+    private function generateIndexName($keys)
+    {
+        $name = '';
+
+        foreach ($keys as $field => $type) {
+            $name .= ($name !== '' ? '_' : '') . $field . '_' . $type;
+        }
+
+        return $name;
     }
 
     /**
