@@ -96,13 +96,34 @@ class MongoClient
         if (false === strpos($this->server, '://')) {
             $this->server = 'mongodb://' . $this->server;
         }
-        $this->client = new Client($this->server, $options, $driverOptions + ['driver' => ['name' => 'mongo-php-adapter']]);
-        $info = $this->client->__debugInfo();
-        $this->manager = $info['manager'];
+        $client = new Client($this->server, $options, $driverOptions + ['driver' => ['name' => 'mongo-php-adapter']]);
+        $this->setClient($client);
 
         if (isset($options['connect']) && $options['connect']) {
             $this->connect();
         }
+    }
+
+    /**
+     * @return self
+     * @throws MongoConnectionException
+     */
+    public static function fromClient(Client $client)
+    {
+        $self = new self((string) $client);
+        $self->setClient($client);
+
+        return $self;
+    }
+
+    /**
+     * @return void
+     */
+    private function setClient(Client $client)
+    {
+        $this->client = $client;
+        $info = $client->__debugInfo();
+        $this->manager = $info['manager'];
     }
 
 
@@ -328,7 +349,7 @@ class MongoClient
      */
     public function __toString()
     {
-        return $this->server;
+        return (string) $this->client;
     }
 
     /**
