@@ -3,6 +3,7 @@
 namespace Alcaeus\MongoDbAdapter\Tests\Mongo;
 
 use Alcaeus\MongoDbAdapter\Tests\TestCase;
+use MongoDB\Client;
 
 /**
  * @author alcaeus <alcaeus@alcaeus.org>
@@ -23,6 +24,13 @@ class MongoClientTest extends TestCase
         yield ['default', sprintf('mongodb://%s:%d', \MongoClient::DEFAULT_HOST, \MongoClient::DEFAULT_PORT)];
         yield ['localhost', 'mongodb://localhost'];
         yield ['mongodb://localhost', 'mongodb://localhost'];
+    }
+
+    public function testCreateFromClient()
+    {
+        $sourceClient = new Client();
+        $client = \MongoClient::fromClient($sourceClient);
+        self::assertSame($sourceClient, $client->getClient());
     }
 
     public function testSerialize()
