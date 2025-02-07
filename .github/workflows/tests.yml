@@ -10,17 +10,16 @@ on:
   schedule:
     # Run workflow on every Sunday
     - cron: '25 5 * * 0'
+  workflow_dispatch:
 
 jobs:
   verification:
     name: "Verification tests"
-    runs-on: "ubuntu-20.04"
+    runs-on: ubuntu-latest
 
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@v2"
-        with:
-          fetch-depth: 2
+        uses: actions/checkout@v4
 
       - name: Setup cache environment
         id: extcache
@@ -31,7 +30,7 @@ jobs:
           key: "extcache-v1"
 
       - name: Cache extensions
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ${{ steps.extcache.outputs.dir }}
           key: ${{ steps.extcache.outputs.key }}
@@ -53,7 +52,7 @@ jobs:
         run: "php --ri mongodb"
 
       - name: "Cache dependencies installed with composer"
-        uses: "actions/cache@v2"
+        uses: "actions/cache@v4"
         with:
           path: "~/.composer/cache"
           key: "php-5.6-composer-locked-${{ hashFiles('composer.json') }}"
@@ -65,7 +64,7 @@ jobs:
       - id: setup-mongodb
         uses: mongodb-labs/drivers-evergreen-tools@master
         with:
-          version: "3.0"
+          version: "4.0"
 
       - name: "Run PHPUnit"
         run: "vendor/bin/simple-phpunit -v"
@@ -75,16 +74,12 @@ jobs:
 
   phpunit:
     name: "PHPUnit tests"
-    runs-on: "${{ matrix.os }}"
+    runs-on: ubuntu-latest
 
     strategy:
       fail-fast: true
       matrix:
-        os:
-          - "ubuntu-20.04"
         php-version:
-          - "7.2"
-          - "7.3"
           - "7.4"
           - "8.0"
           - "8.1"
@@ -96,24 +91,21 @@ jobs:
           - "normal"
         include:
           - deps: "low"
-            os: "ubuntu-20.04"
             php-version: "5.6"
-            mongodb-version: "3.0"
+            mongodb-version: "4.0"
             driver-version: "1.2.0"
           - deps: "normal"
-            os: "ubuntu-20.04"
-            php-version: "7.0"
+            php-version: "7.4"
             mongodb-version: "4.4"
             driver-version: "1.9.2"
           - deps: "normal"
-            os: "ubuntu-20.04"
-            php-version: "7.1"
+            php-version: "7.4"
             mongodb-version: "4.4"
             driver-version: "1.11.1"
 
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@v2"
+        uses: "actions/checkout@v4"
         with:
           fetch-depth: 2
 
@@ -126,7 +118,7 @@ jobs:
           key: "extcache-v1"
 
       - name: Cache extensions
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ${{ steps.extcache.outputs.dir }}
           key: ${{ steps.extcache.outputs.key }}
@@ -145,7 +137,7 @@ jobs:
         run: "php --ri mongodb"
 
       - name: "Cache dependencies installed with composer"
-        uses: "actions/cache@v2"
+        uses: "actions/cache@v4"
         with:
           path: "~/.composer/cache"
           key: "php-${{ matrix.php-version }}-composer-locked-${{ hashFiles('composer.json') }}"
